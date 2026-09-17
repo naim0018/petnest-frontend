@@ -1,0 +1,391 @@
+@import "tailwindcss";
+/* Optional: retain only if installed in your project. */
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind v4 / shadcn integration */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-coral: var(--coral);
+  --color-coral-light: var(--tint-rose);
+  --color-coral-dark: var(--coral-hover);
+  --color-sunshine: var(--sunshine);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-peach: var(--border-peach);
+  --color-tint-rose: var(--tint-rose);
+  --color-tint-mint: var(--tint-mint);
+  --color-tint-sky: var(--tint-sky);
+  --color-tint-lav: var(--tint-lav);
+  --color-tint-cream: var(--tint-cream);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-link: var(--link);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+  --font-heading: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+  --font-mono: var(--font-code);
+
+
+  --background-image-sunset-burst: var(--gradient-brand);
+  --background-image-coral-wash: var(--gradient-coral);
+  --background-image-sun-wash: var(--gradient-sun);
+  --background-image-promo: var(--gradient-promo);
+
+  /* PetNest elevation uses borders and tints. */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --shadow-soft-card: none;
+}
+
+/* Foundations */
+:root {
+  color-scheme: light;
+
+  --coral: #ff6b6b;
+  --coral-hover: #e85c5c;
+  --coral-pressed: #d94f4f;
+  --sunshine: #ffe66d;
+  --white: #ffffff;
+
+  --ink: #242424;
+  --ink-muted: #666666;
+  --ink-faint: #999999;
+  /* Decorative or disabled content only. */
+  --surface-soft: #fbfbfb;
+  --surface-muted: #f7f1ee;
+  --border-peach: #f0e5e2;
+
+  --tint-rose: #fff0f0;
+  --tint-mint: #eafbf1;
+  --tint-sky: #eef7ff;
+  --tint-lav: #f4eeff;
+  --tint-cream: #fff8d9;
+
+  --background: var(--surface-soft);
+  --background-community: #faf6f0;
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+
+  --primary: var(--coral);
+  --primary-foreground: #242424;
+  --primary-pressed-foreground: #111111;
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--tint-rose);
+  --accent-foreground: #a82f3a;
+
+  --destructive: #a82f3a;
+  --destructive-foreground: #ffffff;
+  --success: #17643c;
+  --warning: #735600;
+  --info: #245b86;
+  --link: #a82f3a;
+  --ring: #a82f3a;
+
+  --border: var(--border-peach);
+  --input: #8a7d7a;
+  --disabled-background: var(--surface-muted);
+  --disabled-foreground: #8a7d7a;
+
+  --font-code: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --gradient-brand: linear-gradient(135deg, #ff6b6b, #ffe66d);
+  --gradient-coral: linear-gradient(135deg, #ff6b6b, #fff0f0);
+  --gradient-sun: linear-gradient(135deg, #ffe66d, #fff8d9);
+  --gradient-promo: linear-gradient(135deg, var(--tint-rose), var(--tint-cream));
+
+}
+
+/* Optional dark theme */
+.dark {
+  color-scheme: dark;
+
+  --ink: #f5f5f5;
+  --ink-muted: #b8afaa;
+  --ink-faint: #8a817c;
+  --surface-soft: #121212;
+  --surface-muted: #24201e;
+  --border-peach: #453b36;
+
+  --tint-rose: #321d21;
+  --tint-mint: #152b20;
+  --tint-sky: #172838;
+  --tint-lav: #281f38;
+  --tint-cream: #332e18;
+
+  --background-community: #181512;
+  --card: #1a1a1a;
+  --popover: #202020;
+  --accent-foreground: #ffaaaa;
+  --destructive: #ffaaaa;
+  --destructive-foreground: #321015;
+  --success: #93dfb1;
+  --warning: #ffe08a;
+  --info: #a9d5ff;
+  --link: #ffaaaa;
+  --ring: #ffaaaa;
+  --input: #8a7d76;
+  --disabled-foreground: #8a817c;
+}
+
+/* Declare shared aliases at each theme boundary. */
+:root,
+.dark {
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+/* Base: Tailwind Preflight supplies the reset. */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    font-family: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+    scroll-padding-top: calc(var(--header-height) + var(--space-16));
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-size: var(--type-body-sm);
+    line-height: var(--leading-body);
+    letter-spacing: 0;
+  }
+
+  /* ========================================
+     Centralized Typography Design System
+  ======================================== */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  .text-ui,
+  small {
+    font-family: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+    margin: 0;
+  }
+
+  /* ========================================
+     Headings
+  ======================================== */
+
+  /* Page / Hero Title */
+  h1 {
+    font-size: clamp(2rem, 1.5rem + 1.5vw, 2.5rem);
+    /* 32px → 40px */
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+
+  /* Major Section Heading */
+  h2 {
+    font-size: clamp(1.625rem, 1.4rem + 0.8vw, 2rem);
+    /* 26px → 32px */
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  /* Subsection Heading */
+  h3 {
+    font-size: clamp(1.375rem, 1.25rem + 0.4vw, 1.5rem);
+    /* 22px → 24px */
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  /* Card / Widget Title */
+  h4 {
+    font-size: clamp(1.125rem, 1.05rem + 0.25vw, 1.25rem);
+    /* 18px → 20px */
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  /* Small Card / Group Heading */
+  h5 {
+    font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+    /* 16px → 18px */
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+
+  /* Minor Heading */
+  h6 {
+    font-size: 1rem;
+    /* 16px */
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* ========================================
+     Body Typography
+  ======================================== */
+
+  /* Standard Body / Paragraph */
+  p {
+    font-size: 1rem;
+    /* Keep 16px */
+    font-weight: 600;
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* UI Text */
+  .text-ui,
+  span {
+    font-size: 0.875rem;
+    /* Keep 14px */
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0;
+    color: inherit;
+  }
+
+  /* Metadata / Timestamp / Fine Print */
+  small {
+    font-size: 0.75rem;
+    /* Keep 12px */
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    color: var(--ink-faint);
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    color: #242424;
+    background: var(--sunshine);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    accent-color: var(--link);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 107, 0.5);
+}
+
+/* Use Tailwind's sr-only utility for visually hidden labels. */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
