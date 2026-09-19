@@ -148,7 +148,7 @@ export default function PublicNavbar() {
   return (
     <>
       {/* Top Header Navbar - Matching Pencil Spec */}
-      <nav className="w-full h-20 shrink-0 flex flex-row px-4 xl:px-15 justify-between items-center bg-card border-b border-border-peach sticky top-0 z-40 transition-colors">
+      <nav className="w-full h-20 shrink-0 flex flex-row px-4 xl:px-15 justify-between items-center border-b border-border-peach sticky top-0 z-40 transition-colors bg-card">
 
         {/* Logo Group */}
         <Link href="/" className="no-underline shrink-0">

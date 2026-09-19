@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/common/Tooltip";
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 export type AvatarRing = "none" | "gradient" | "solid" | "seen";
 export type AvatarBadgeType = "plus" | "online" | "offline" | "busy" | React.ReactNode;
 
@@ -101,6 +101,16 @@ const sizeConfig: Record<
     titleText: "text-lg font-bold",
     titleGap: "gap-2.5 mt-3",
     pxSize: 96,
+  },
+  "3xl": {
+    avatar: "h-28 w-28 sm:h-32 sm:w-32 text-3xl",
+    ringPadding: "p-1.5 sm:p-2",
+    ringBorder: "border-4",
+    badge: "h-9 w-9",
+    plusIcon: "h-5 w-5 stroke-[3]",
+    titleText: "text-base sm:text-lg font-bold",
+    titleGap: "gap-2.5 mt-3",
+    pxSize: 128,
   },
 };
 
@@ -201,37 +211,30 @@ export const Avatar = ({
   const avatarCore = (
     <div
       onClick={displayTitle ? undefined : onClick}
-      className={cn(
-        "relative inline-flex shrink-0 select-none",
-        interactive && "cursor-pointer group-hover:scale-105 transition-transform duration-200"
-      )}
+      className="relative inline-flex shrink-0 select-none"
     >
       {/* Outer Ring Wrapper */}
       <div
         className={cn(
           "relative flex items-center justify-center rounded-full transition-all duration-200",
-          isGradientRing &&
-            cn(
-              "bg-gradient-to-tr from-[#ff6b6b] via-amber-400 to-[#ffe66d]",
-              config.ringPadding
-            ),
-          isSolidRing &&
-            cn(
-              "border-border-peach dark:border-slate-700 bg-background",
-              config.ringBorder,
-              config.ringPadding
-            ),
-          isSeenRing && cn("bg-muted-foreground/30", config.ringPadding),
+          config.ringPadding,
+          isGradientRing
+            ? "bg-linear-to-br from-[#ff6b6b] to-[#ffe66d]"
+            : isSolidRing
+            ? cn("border-border-peach dark:border-slate-700 bg-background", config.ringBorder)
+            : isSeenRing
+            ? "bg-muted-foreground/30"
+            : "bg-transparent",
           className
         )}
       >
-        {/* Photo Container with white inner separator if gradient/ring active */}
+        {/* Photo Container with white inner separator */}
         <div
           className={cn(
             "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold transition-all font-quicksand",
             config.avatar,
             src ? "bg-muted" : "bg-primary/10 text-primary dark:bg-primary/20",
-            (isGradientRing || isSeenRing) && "border-2 border-background shadow-2xs",
+            isGradientRing ? "border-2 border-white shadow-2xs" : "border-2 border-transparent",
             imageClassName
           )}
         >
@@ -241,7 +244,10 @@ export const Avatar = ({
               alt={alt || name}
               width={config.pxSize}
               height={config.pxSize}
-              className="h-full w-full object-cover"
+              className={cn(
+                "h-full w-full object-cover transition-transform duration-200",
+                interactive && "group-hover:scale-110"
+              )}
             />
           ) : (
             <span>{initials}</span>
