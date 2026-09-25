@@ -5,14 +5,17 @@ import GuidesPetCategorySection from "./GuidesPetCategorySection";
 import PetCareGuideCard from "./PetCareGuideCard";
 import CareArticleCard from "./CareArticleCard";
 import GuidesHelpBanner from "./GuidesHelpBanner";
+import ReusableFAQ from "@/components/common/ReusableFAQ";
 import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
+import { CATEGORY_FAQS_MAP, CATEGORY_FAQ_CONFIG } from "./guideFaqData";
 
 export default function GuidesInteractiveExplorer() {
   const [selectedCategory, setSelectedCategory] = useState<string>("birds");
-  const [, setSelectedBreed] = useState<string>("all");
+  const [selectedBreed, setSelectedBreed] = useState<string>("all");
 
   const currentGuide =
+    (selectedBreed !== "all" && PET_SPECIES_FEATURED_GUIDES[selectedBreed]) ||
     PET_SPECIES_FEATURED_GUIDES[selectedCategory] ||
     PET_SPECIES_FEATURED_GUIDES.birds;
 
@@ -40,6 +43,12 @@ export default function GuidesInteractiveExplorer() {
     if (breedId) setSelectedBreed(breedId);
   };
 
+  const currentFaqs =
+    CATEGORY_FAQS_MAP[selectedCategory] || CATEGORY_FAQS_MAP.birds;
+
+  const currentFaqConfig =
+    CATEGORY_FAQ_CONFIG[selectedCategory] || CATEGORY_FAQ_CONFIG.birds;
+
   return (
     <div className="space-y-8">
       {/* 1. Category and Breed Selector */}
@@ -63,7 +72,7 @@ export default function GuidesInteractiveExplorer() {
         ))}
       </section>
 
-      {/* 4. Reusable Care Article Cards Grid (Remaining Guides) */}
+      {/* 3. Reusable Care Article Cards Grid (Remaining Guides) */}
       <section className="space-y-5 pt-2">
         <div className="flex items-center justify-between">
           <div>
@@ -84,7 +93,23 @@ export default function GuidesInteractiveExplorer() {
         </div>
       </section>
 
-      {/* 3. Help / Ask Community & Expert Banner */}
+      {/* 4. Common Questions / Reusable FAQ Accordion */}
+      <ReusableFAQ
+        title={currentFaqConfig.title}
+        subtitle={currentFaqConfig.subtitle}
+        items={currentFaqs}
+        mascotImage={currentFaqConfig.mascotImage}
+        mascotAlt={currentFaqConfig.mascotAlt}
+        cardImage={currentFaqConfig.cardImage}
+        cardImageAlt={currentFaqConfig.cardImageAlt}
+        bgGradient={currentFaqConfig.bgGradient}
+        bubbleColor={currentFaqConfig.bubbleColor}
+        blendOverlayClass={currentFaqConfig.blendOverlayClass}
+        viewAllHref="/community"
+        viewAllText="View all questions"
+      />
+
+      {/* 5. Help / Ask Community & Expert Banner */}
       <GuidesHelpBanner />
     </div>
   );

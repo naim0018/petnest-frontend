@@ -38,39 +38,39 @@ const CATEGORY_COLOR_STYLES: Record<
   { bg: string; text: string; border: string }
 > = {
   Nutrition: {
-    bg: "bg-[#fff2d6]",
-    text: "text-[#8a5300]",
-    border: "border-[#fed7aa]/60",
+    bg: "bg-[#fff2d6] dark:bg-[#332e18]",
+    text: "text-[#8a5300] dark:text-[#ffe08a]",
+    border: "border-[#fed7aa]/60 dark:border-[#ffe08a]/30",
   },
   "Health & Vet Care": {
-    bg: "bg-[#ffe4e6]",
-    text: "text-[#be123c]",
-    border: "border-[#fecdd3]/60",
+    bg: "bg-[#ffe4e6] dark:bg-[#321d21]",
+    text: "text-[#be123c] dark:text-[#ffaaaa]",
+    border: "border-[#fecdd3]/60 dark:border-[#ffaaaa]/30",
   },
   Training: {
-    bg: "bg-[#f3e8ff]",
-    text: "text-[#7e22ce]",
-    border: "border-[#e9d5ff]/60",
+    bg: "bg-[#f3e8ff] dark:bg-[#281f38]",
+    text: "text-[#7e22ce] dark:text-[#d8b4fe]",
+    border: "border-[#e9d5ff]/60 dark:border-[#d8b4fe]/30",
   },
   Grooming: {
-    bg: "bg-[#e0f2fe]",
-    text: "text-[#0369a1]",
-    border: "border-[#bae6fd]/60",
+    bg: "bg-[#e0f2fe] dark:bg-[#172838]",
+    text: "text-[#0369a1] dark:text-[#7dd3fc]",
+    border: "border-[#bae6fd]/60 dark:border-[#7dd3fc]/30",
   },
   Behavior: {
-    bg: "bg-[#dcfce7]",
-    text: "text-[#15803d]",
-    border: "border-[#bbf7d0]/60",
+    bg: "bg-[#dcfce7] dark:bg-[#152b20]",
+    text: "text-[#15803d] dark:text-[#86efac]",
+    border: "border-[#bbf7d0]/60 dark:border-[#86efac]/30",
   },
   "Life Stage": {
-    bg: "bg-[#fef3c7]",
-    text: "text-[#b45309]",
-    border: "border-[#fde68a]/60",
+    bg: "bg-[#fef3c7] dark:bg-[#332a15]",
+    text: "text-[#b45309] dark:text-[#fde68a]",
+    border: "border-[#fde68a]/60 dark:border-[#fde68a]/30",
   },
   "General Care": {
-    bg: "bg-[#f1f5f9]",
-    text: "text-[#334155]",
-    border: "border-[#cbd5e1]/60",
+    bg: "bg-[#f1f5f9] dark:bg-[#1f2937]",
+    text: "text-[#334155] dark:text-[#cbd5e1]",
+    border: "border-[#cbd5e1]/60 dark:border-[#475569]/50",
   },
 };
 
@@ -107,13 +107,13 @@ export default function CareArticleCard({
   return (
     <article
       className={cn(
-        "group bg-white rounded-2xl border border-[#e8ebe9] overflow-hidden shadow-xs hover:shadow-md hover:border-coral/40 transition-all duration-300 flex flex-col justify-between",
+        "group bg-card text-card-foreground rounded-2xl border border-border overflow-hidden shadow-xs hover:shadow-md hover:border-coral/40 transition-all duration-300 flex flex-col justify-between",
         className
       )}
     >
       <div>
         {/* Card Media Header */}
-        <div className="relative h-48 sm:h-52 w-full bg-slate-100 overflow-hidden">
+        <div className="relative h-48 sm:h-52 w-full bg-surface-muted overflow-hidden">
           <Link href={`/guides/${slug}`} className="block w-full h-full">
             <Image
               src={image}
@@ -141,10 +141,10 @@ export default function CareArticleCard({
 
         {/* Card Body */}
         <div className="p-4 sm:p-5 space-y-2.5">
-          <h3 className="text-base sm:text-[17px] font-bold text-[#1a2e26] leading-snug line-clamp-2 font-quicksand group-hover:text-coral transition-colors">
+          <h3 className="text-base sm:text-[17px] font-bold text-ink leading-snug line-clamp-2 font-quicksand group-hover:text-coral transition-colors">
             <Link href={`/guides/${slug}`}>{title}</Link>
           </h3>
-          <p className="text-xs sm:text-[13px] text-[#556960] leading-relaxed line-clamp-2 font-normal">
+          <p className="text-sm text-ink-muted leading-relaxed line-clamp-3 font-normal">
             {excerpt}
           </p>
 
@@ -152,7 +152,7 @@ export default function CareArticleCard({
           <div className="pt-1">
             <Link
               href={`/guides/${slug}`}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-[#e85c5c] group/btn transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-coral-dark group/btn transition-colors font-quicksand"
             >
               <span>Read More</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
@@ -162,18 +162,18 @@ export default function CareArticleCard({
       </div>
 
       {/* Card Footer: Metadata & Bookmark Action */}
-      <div className="px-4 sm:px-5 py-3 border-t border-slate-100/90 flex items-center justify-between mt-auto bg-slate-50/40">
-        <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold text-[#576b61]">
+      <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-between mt-auto bg-surface-muted/50">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold text-ink-muted">
           {/* Read time */}
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-[#73887d]" />
+            <Clock className="w-3.5 h-3.5 text-ink-muted" />
             <span>{readTime}</span>
           </div>
 
           {/* Expert Reviewed */}
           {expertReviewed && (
-            <div className="flex items-center gap-1 text-[#107044]">
-              <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#107044] text-white">
+            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+              <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white">
                 <ShieldCheck className="w-2.5 h-2.5 stroke-[2.5]" />
               </span>
               <span className="text-[11px] sm:text-xs font-medium">Expert Reviewed</span>
@@ -186,12 +186,12 @@ export default function CareArticleCard({
           type="button"
           onClick={handleBookmarkClick}
           aria-label={isSaved ? "Remove from bookmarks" : "Save guide"}
-          className="p-1 text-[#788e83] hover:text-[#1a2e26] transition-colors cursor-pointer rounded-md focus:outline-none focus:ring-1 focus:ring-coral/40"
+          className="p-1 text-ink-muted hover:text-ink transition-colors cursor-pointer rounded-md focus:outline-none focus:ring-1 focus:ring-coral/40"
         >
           <Bookmark
             className={cn(
               "w-4 h-4 transition-transform active:scale-90",
-              isSaved && "fill-[#1a2e26] text-[#1a2e26]"
+              isSaved && "fill-ink text-ink"
             )}
           />
         </button>
