@@ -2,6 +2,7 @@
 
 import Avatar from "@/components/common/Avatar";
 import { cn } from "@/lib/utils";
+import { useFeedFilter } from "@/context/FeedFilterContext";
 
 export interface StoryItem {
   id: string;
@@ -22,7 +23,7 @@ const defaultStories: StoryItem[] = [
   {
     id: "story-1",
     name: "Bella",
-    avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80",
+    avatar: "/CareGuide/bella-avatar.jpg",
     petIcon: "🐱",
     hasUnseenStory: true,
   },
@@ -83,6 +84,13 @@ export function StorySection({
   onStoryClick,
   className,
 }: StorySectionProps) {
+  let feedFilter: ReturnType<typeof useFeedFilter> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    feedFilter = useFeedFilter();
+  } catch {
+    feedFilter = null;
+  }
   return (
     <div
       className={cn(
@@ -127,7 +135,17 @@ export function StorySection({
             titlePosition="bottom"
             titleClassName="text-xs font-bold text-ink"
             interactive
-            onClick={() => onStoryClick?.(story)}
+            onClick={() => {
+              onStoryClick?.(story);
+              try {
+                // If story viewer context is available, trigger the replacement view
+                if (story.id) {
+                  feedFilter?.setActiveStoryId(story.id);
+                }
+              } catch {
+                // fallback
+              }
+            }}
           />
         );
       })}
