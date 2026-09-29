@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Clock, ChevronRight } from "lucide-react";
 import { getGuides } from "@/lib/data/petnest-data";
 import CommonWrapper from "@/components/common/CommonWrapper";
-import GuidesBanner from "./_components/GuidesBanner";
+// import GuidesBanner from "./_components/GuidesBanner";
 import GuidesInteractiveExplorer from "./_components/GuidesInteractiveExplorer";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ export default async function GuidesPage() {
       />
 
       {/* Header Banner */}
-      <GuidesBanner />
+      {/* <GuidesBanner /> */}
 
       <CommonWrapper className="space-y-8">
         {/* Pet Category Selector & Dynamic Care Guide Card */}
