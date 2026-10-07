@@ -6,6 +6,7 @@ import PetCareGuideCard from "./PetCareGuideCard";
 import CareArticleCard from "./CareArticleCard";
 import GuidesHelpBanner from "./GuidesHelpBanner";
 import ReusableFAQ from "@/components/common/ReusableFAQ";
+import GuidesTopicFilterBar, { GUIDE_TOPIC_FILTERS } from "./GuidesTopicFilterBar";
 import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
 import { CATEGORY_FAQS_MAP, CATEGORY_FAQ_CONFIG } from "./guideFaqData";
@@ -13,6 +14,7 @@ import { CATEGORY_FAQS_MAP, CATEGORY_FAQ_CONFIG } from "./guideFaqData";
 export default function GuidesInteractiveExplorer() {
   const [selectedCategory, setSelectedCategory] = useState<string>("birds");
   const [selectedBreed, setSelectedBreed] = useState<string>("all");
+  const [selectedTopic, setSelectedTopic] = useState<string>("all");
 
   const currentGuide =
     (selectedBreed !== "all" && PET_SPECIES_FEATURED_GUIDES[selectedBreed]) ||
@@ -24,8 +26,28 @@ export default function GuidesInteractiveExplorer() {
 
   // The first two articles will be displayed beside the PetCareGuideCard on the right
   const sideArticles = currentArticles.slice(0, 2);
-  // The rest of the articles display in the grid below
-  const remainingArticles = currentArticles.slice(2);
+
+  // Filter remaining articles based on selected topic
+  const topicCategoryMap: Record<string, string[]> = {
+    "getting-started": ["General Care", "Life Stage"],
+    "daily-care": ["General Care", "Grooming"],
+    nutrition: ["Nutrition"],
+    training: ["Training"],
+    "health-vet-care": ["Health & Vet Care"],
+    grooming: ["Grooming"],
+    behavior: ["Behavior"],
+    "senior-pets": ["Life Stage", "Health & Vet Care"],
+    emergency: ["Health & Vet Care"],
+  };
+
+  const remainingArticles = currentArticles.slice(2).filter((article) => {
+    if (selectedTopic === "all") return true;
+    const allowedCategories = topicCategoryMap[selectedTopic];
+    if (allowedCategories) {
+      return allowedCategories.includes(article.category);
+    }
+    return true;
+  });
 
   const categoryLabelMap: Record<string, string> = {
     birds: "Budgie & Bird",
@@ -72,25 +94,35 @@ export default function GuidesInteractiveExplorer() {
         ))}
       </section>
 
-      {/* 3. Reusable Care Article Cards Grid (Remaining Guides) */}
+      {/* 3. Reusable Care Article Cards Grid with Topic Filter */}
       <section className="space-y-5 pt-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-ink font-quicksand">
-              More Essential {activeCategoryTitle} Guides
-            </h2>
-            <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
-              Vet-reviewed instructions for nutrition, behavior, training, and wellness.
-            </p>
-          </div>
-        </div>
+        {/* Reusable Topic Filter Bar */}
+        <GuidesTopicFilterBar
+          selectedTopic={selectedTopic}
+          onSelectTopic={setSelectedTopic}
+        />
 
         {/* 4 columns on large screens, 2 on tablet, 1 on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-          {remainingArticles.map((article) => (
-            <CareArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+        {remainingArticles.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {remainingArticles.map((article) => (
+              <CareArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 px-4 rounded-2xl bg-surface-muted/50 border border-border-peach dark:border-slate-800">
+            <p className="text-ink-muted font-quicksand font-bold text-sm sm:text-base">
+              No guides found for this topic in {activeCategoryTitle}.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSelectedTopic("all")}
+              className="mt-3 text-xs font-bold text-coral hover:underline cursor-pointer"
+            >
+              Reset filter to All Topics
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 4. Common Questions / Reusable FAQ Accordion */}

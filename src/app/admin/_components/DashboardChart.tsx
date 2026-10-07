@@ -33,12 +33,12 @@ export function DashboardChart() {
     { label: "Jun 24", value: 2500, grey: 2500, green: 0, blue: 0, red: 0 },
   ];
 
-  // Bar configurations for stacked bar mode
+  // Bar configurations for stacked bar mode matching PetNest palette
   const bars = [
-    { dataKey: "grey", name: "Cost of Goods", color: "#8188A2", opacity: 0.65 },
-    { dataKey: "green", name: "Gross Profit", color: "#169E7B" },
-    { dataKey: "blue", name: "Net Sales", color: "#3b82f6" },
-    { dataKey: "red", name: "Refunds", color: "#DA4352" },
+    { dataKey: "grey", name: "Cost of Goods", color: "#a89f91", opacity: 0.65 },
+    { dataKey: "green", name: "Gross Profit", color: "#10b981" },
+    { dataKey: "blue", name: "Net Sales", color: "#ff6b6b" },
+    { dataKey: "red", name: "Refunds", color: "#e85c5c" },
   ];
 
   return (
@@ -71,7 +71,13 @@ export function DashboardChart() {
 
       {/* Chart Container */}
       <div className="w-full h-[460px] select-none min-w-0">
-        <ReusableChart chartType={chartType} data={data} bars={bars} />
+        <ReusableChart
+          chartType={chartType}
+          data={data}
+          bars={bars}
+          strokeColor="#ff6b6b"
+          fillColor="#ff6b6b"
+        />
       </div>
     </div>
   );

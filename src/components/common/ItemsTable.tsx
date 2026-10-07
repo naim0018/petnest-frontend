@@ -30,38 +30,38 @@ export function ItemsTable({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl overflow-hidden bg-layout-bg shadow-all px-5",
+        "flex flex-col rounded-xl overflow-hidden bg-card border border-border-peach p-5 shadow-xs",
         className
       )}
     >
       {/* Card Header */}
-      <div className="flex items-center justify-between py-4">
-        <h3 className="text-card font-semibold text-primary-text">{title}</h3>
+      <div className="flex items-center justify-between pb-4">
+        <h3 className="font-bold text-ink text-base font-quicksand">{title}</h3>
         <PrimaryButton
           variant="ghost"
           size="icon"
-          className="size-8 rounded-lg"
+          className="size-8 rounded-lg text-ink-muted hover:text-ink hover:bg-surface-muted"
           aria-label="More options"
         >
           <MoreVertical className="w-4 h-4" />
         </PrimaryButton>
       </div>
 
-      {/* Brand gradient column header */}
-      <div className="flex items-center justify-between py-3 text-white text-sm font-medium px-5 rounded-md bg-brand-gradient shadow-xs">
+      {/* PetNest header column */}
+      <div className="flex items-center justify-between py-2.5 text-white text-xs font-bold px-4 rounded-lg bg-coral shadow-2xs font-quicksand">
         <span>Items Name</span>
         <span>{colLabel}</span>
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+      <div className="divide-y divide-border-peach">
         {rows.map((row) => (
           <div
             key={row.id}
-            className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="flex items-center justify-between px-4 py-3 hover:bg-surface-muted/60 transition-colors rounded-md my-0.5"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 overflow-hidden border border-border-peach">
                 <Image
                   src={row.image}
                   alt={row.name}
@@ -70,11 +70,11 @@ export function ItemsTable({
                   className="object-contain w-7 h-7"
                 />
               </div>
-              <span className="text-sm font-medium text-primary-text truncate">
+              <span className="text-sm font-semibold text-ink truncate font-quicksand">
                 {row.name}
               </span>
             </div>
-            <span className="text-sm font-semibold text-secondary-text shrink-0 ml-4">
+            <span className="text-sm font-bold text-coral shrink-0 ml-4">
               {row.qty}
             </span>
           </div>

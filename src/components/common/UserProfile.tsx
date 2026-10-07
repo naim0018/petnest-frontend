@@ -80,7 +80,7 @@ export default function UserProfile({ className }: UserProfileProps) {
 
       {/* Dropdown Menu - Light Theme Aesthetic */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:left-auto sm:-right-2 top-full mt-2 sm:mt-5 w-auto sm:w-72 bg-primary-background rounded-lg border border-border surface overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute left-0 right-0 sm:left-auto sm:-right-2 top-full mt-2 sm:mt-5 w-auto sm:w-72 bg-background! rounded-lg border border-border surface overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="p-4 bg-light-background border-b border-border">
             <div className="flex items-center gap-3">

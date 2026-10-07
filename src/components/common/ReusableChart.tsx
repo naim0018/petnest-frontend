@@ -28,21 +28,26 @@ export interface ChartBarConfig {
 export interface ReusableChartProps {
   chartType: ChartType;
   data: any[];
-  bars: ChartBarConfig[];
+  bars?: ChartBarConfig[];
   lineValueKey?: string;
+  strokeColor?: string;
+  fillColor?: string;
   margin?: { top: number; right: number; left: number; bottom: number };
 }
 
 export default function ReusableChart({
   chartType,
   data,
-  bars,
+  bars = [],
   lineValueKey = "value",
+  strokeColor = "#3b82f6",
+  fillColor,
   margin = { top: 20, right: 30, left: 20, bottom: 20 },
 }: ReusableChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(51,123,255,0.08)";
+  const effectiveFill = fillColor || strokeColor;
 
   const renderChart = () => {
     switch (chartType) {
@@ -51,8 +56,8 @@ export default function ReusableChart({
           <AreaChart data={data} margin={margin} style={{ outline: "none" }}>
             <defs>
               <linearGradient id="reusableAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="5%" stopColor={effectiveFill} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={effectiveFill} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -87,7 +92,7 @@ export default function ReusableChart({
             <Area
               type="monotone"
               dataKey={lineValueKey}
-              stroke="#3b82f6"
+              stroke={strokeColor}
               strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#reusableAreaGrad)"
@@ -129,9 +134,9 @@ export default function ReusableChart({
             <Line
               type="monotone"
               dataKey={lineValueKey}
-              stroke="#3b82f6"
+              stroke={strokeColor}
               strokeWidth={2.5}
-              dot={{ r: 4, stroke: "#3b82f6", strokeWidth: 2.5, fill: "white" }}
+              dot={{ r: 4, stroke: strokeColor, strokeWidth: 2.5, fill: "white" }}
               activeDot={{ r: 6 }}
             />
           </LineChart>

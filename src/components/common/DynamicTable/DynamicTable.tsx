@@ -92,7 +92,7 @@ export interface DynamicTableProps<T> {
 // 🎨 Component
 // ============================================
 
-const DynamicTable = <T extends Record<string, unknown>>({
+const DynamicTable = <T extends object>({
   data,
   columns,
   selectable = false,

@@ -38,24 +38,26 @@ export function FilterSelect({
           <button
             {...props}
             className={cn(
-              "flex items-center justify-between gap-1 sm:gap-2 px-2 sm:px-4 h-12 w-full rounded-lg text-body transition-all active:scale-[0.98] outline-none",
+              "flex items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-4 h-11 w-full rounded-xl text-xs sm:text-sm font-bold font-quicksand transition-all active:scale-[0.98] outline-none cursor-pointer border",
               variant === "primary"
-                ? "bg-brand-gradient text-white! shadow-sm hover:opacity-90 font-normal!"
-                : "bg-slate-50 dark:bg-slate-800 text-body surface hover:bg-slate-100 dark:hover:bg-slate-700",
+                ? "bg-coral text-white border-coral shadow-xs hover:bg-coral-dark"
+                : "bg-card text-ink border-border-peach hover:bg-surface-muted hover:border-coral/40",
               open && "pointer-events-none",
               className
             )}
           >
-            {Icon && <Icon className="size-4 sm:size-5 shrink-0" />}
-            <span className="truncate">{displayValue}</span>
-            <FaCaretDown className="size-4 sm:size-5 shrink-0 ml-1" />
+            <div className="flex items-center gap-2 truncate">
+              {Icon && <Icon className="size-4 shrink-0" />}
+              <span className="truncate">{displayValue}</span>
+            </div>
+            <FaCaretDown className="size-3 shrink-0 ml-1 opacity-70" />
           </button>
         )}
       />
       <PopoverContent
-        className="w-[var(--anchor-width)] p-1.5 bg-white dark:bg-slate-900 rounded-lg shadow-xl shadow-slate-500/10"
+        className="w-[var(--anchor-width)] p-1.5 bg-card border border-border-peach rounded-xl shadow-lg"
         align="start"
-        sideOffset={8}
+        sideOffset={6}
       >
         <div className="flex flex-col gap-0.5">
           {options.map((opt) => {
@@ -71,10 +73,10 @@ export function FilterSelect({
                   setOpen(false);
                 }}
                 className={cn(
-                  "text-left px-3 py-2.5 text-body rounded-lg transition-colors outline-none",
+                  "text-left px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors outline-none cursor-pointer",
                   isSelected
-                    ? "bg-blue-50 dark:bg-blue-950/60 text-primary-brand font-medium"
-                    : "text-secondary-text hover:text-primary-brand hover:bg-light-background focus-visible:bg-light-background"
+                    ? "bg-coral-light text-coral font-bold"
+                    : "text-ink-muted hover:text-ink hover:bg-surface-muted"
                 )}
               >
                 {opt}

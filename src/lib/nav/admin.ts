@@ -1,47 +1,93 @@
 import {
-  ChartPie,
-  FileText,
-  List,
-  Package,
+  LayoutDashboard,
+  PawPrint,
+  BookOpen,
+  Store,
   Users,
-  User,
-  Network,
-  Headphones,
-  Settings,
+  BarChart3,
 } from "lucide-react";
 import { NavGroup } from "./types";
 
 export const adminNavItems: NavGroup[] = [
   {
-    group: "Main Menu",
+    group: "Dashboard",
     items: [
-      { name: "Overview", path: "/admin", icon: ChartPie },
-      { 
-        name: "Reports", path: "/admin/reports", icon: FileText,
-        children: [{ name: "All Reports", path: "/admin/reports/all" }] 
+      {
+        name: "Overview",
+        path: "/admin",
+        icon: LayoutDashboard,
       },
-      { 
-        name: "Items", path: "/admin/items", icon: List,
-        children: [{ name: "All Items", path: "/admin/items/all" }] 
+    ],
+  },
+  {
+    group: "Pet Catalog",
+    items: [
+      {
+        name: "Pet Catalog",
+        path: "/admin/pet-catalog",
+        icon: PawPrint,
       },
-      { 
-        name: "Inventory", path: "/admin/inventory", icon: Package,
-        children: [{ name: "Current Inventory", path: "/admin/inventory/current" }] 
+    ],
+  },
+  {
+    group: "Guides & Content",
+    items: [
+      {
+        name: "Guides",
+        path: "/admin/guides",
+        icon: BookOpen,
+        children: [
+          { name: "Overview", path: "/admin/guides" },
+          { name: "All Guides", path: "/admin/guides/all" },
+          { name: "Categories", path: "/admin/guides/categories" },
+          { name: "Create Guide", path: "/admin/guides/create" },
+          { name: "Review Queue", path: "/admin/guides/review-queue" },
+          { name: "Authors", path: "/admin/guides/authors" },
+        ],
       },
-      { 
-        name: "Employees", path: "/admin/employees", icon: Users,
-        children: [{ name: "All Employees", path: "/admin/employees/all" }] 
+    ],
+  },
+  {
+    group: "Marketplace",
+    items: [
+      {
+        name: "Marketplace",
+        path: "/admin/marketplace",
+        icon: Store,
+        children: [
+          { name: "Overview", path: "/admin/marketplace" },
+          { name: "Listings", path: "/admin/marketplace/listings" },
+          { name: "Create Listing", path: "/admin/marketplace/create" },
+          { name: "Review Listing", path: "/admin/marketplace/review" },
+          { name: "Stores", path: "/admin/marketplace/stores" },
+          { name: "Customer Reviews", path: "/admin/marketplace/reviews" },
+        ],
       },
-      { name: "Customers", path: "/admin/customers", icon: User },
-      { 
-        name: "Integrations", path: "/admin/integrations", icon: Network,
-        children: [{ name: "Active", path: "/admin/integrations/active" }] 
+    ],
+  },
+  {
+    group: "Administration",
+    items: [
+      {
+        name: "Users",
+        path: "/admin/users",
+        icon: Users,
+        children: [
+          { name: "All Users", path: "/admin/users/all" },
+          { name: "Verification Requests", path: "/admin/users/verification" },
+          { name: "Roles & Permissions", path: "/admin/users/roles" },
+        ],
       },
-      { 
-        name: "Help", path: "/admin/help", icon: Headphones,
-        children: [{ name: "Support Center", path: "/admin/help/support" }] 
+      {
+        name: "Analytics",
+        path: "/admin/analytics",
+        icon: BarChart3,
+        children: [
+          { name: "Platform Analytics", path: "/admin/analytics/platform" },
+          { name: "Guide Analytics", path: "/admin/analytics/guides" },
+          { name: "Marketplace Analytics", path: "/admin/analytics/marketplace" },
+        ],
       },
-      { name: "settings", path: "/admin/settings", icon: Settings },
     ],
   },
 ];

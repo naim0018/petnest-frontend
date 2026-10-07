@@ -4,11 +4,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { Search, Bell, Menu, Check, CheckCheck, BellOff } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import UserProfile from "@/components/common/UserProfile";
+import Breadcrumbs from "./Breadcrumbs";
 import { cn } from "@/lib/utils";
+import { useHeaderAction } from "@/context/HeaderActionContext";
 
 interface HeaderProps {
-  title?: string;
-  description?: string;
   onMenuClick?: () => void;
 }
 
@@ -23,42 +23,36 @@ interface NotificationItem {
 const initialNotifications: NotificationItem[] = [
   {
     id: "1",
-    title: "New User Registered",
-    description: "Alex joined the reseller admin platform as a Manager.",
+    title: "New Breeder Verification Request",
+    description: "Willow Creek Kennels submitted license documents for review.",
     time: "2 mins ago",
     read: false,
   },
   {
     id: "2",
-    title: "System Performance Alert",
-    description: "Database latency spiked above 250ms on node-1b.",
-    time: "10 mins ago",
+    title: "Care Guide Submitted",
+    description: "Dr. Sarah Jenkins submitted a puppy vaccination guide.",
+    time: "15 mins ago",
     read: false,
   },
   {
     id: "3",
-    title: "Billing Invoice Paid",
-    description: "Invoice #1092-B has been paid by Client BaseKit.",
+    title: "Marketplace Order Placed",
+    description: "Order #PN-9281 confirmed on PetPurity Botanicals.",
     time: "1 hour ago",
     read: true,
   },
   {
     id: "4",
-    title: "Security Policy Updated",
-    description: "Multi-factor authentication (MFA) requirements updated for all administrators.",
+    title: "Listing Flagged",
+    description: "A customer flagged a listing for veterinary clearance verification.",
     time: "2 hours ago",
     read: false,
   },
-  {
-    id: "5",
-    title: "Backup Completed",
-    description: "Automated nightly backup completed successfully for database cluster storage.",
-    time: "5 hours ago",
-    read: true,
-  },
 ];
 
-export default function Header({ title, description, onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick }: HeaderProps) {
+  const { headerAction } = useHeaderAction();
   const [searchVal, setSearchVal] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -100,61 +94,64 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
   };
 
   return (
-    <header className="relative h-20 bg-primary-background sticky top-0 z-30 flex items-center shrink-0 mx-6 rounded-b-xl shadow-md">
-      <div className="flex items-center justify-between w-full px-6">
-        {/* Left Side: Hamburger & Title & Description */}
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+    <header className="relative h-16 bg-card border-b border-border-peach sticky top-0 z-30 flex items-center shrink-0 px-4 sm:px-6 shadow-2xs">
+      <div className="flex items-center justify-between w-full gap-4">
+        {/* Left Side: Mobile Hamburger & Breadcrumbs (removed title/description) */}
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <button
             onClick={onMenuClick}
-            className="p-2 -ml-2 rounded-lg hover:bg-light-background text-secondary-text hover:text-primary-text sm:hidden cursor-pointer shrink-0"
+            className="p-2 -ml-1 rounded-lg hover:bg-surface-muted text-ink-muted hover:text-ink sm:hidden cursor-pointer shrink-0 transition-colors"
+            aria-label="Open sidebar menu"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="size-5" />
           </button>
 
-          <div className="flex flex-col min-w-0">
-            <h1 className="text-base sm:text-lg font-semibold text-primary-text leading-tight truncate">
-              {title || "Overview"}
-            </h1>
-            {description && (
-              <p className="text-xs text-muted-blue mt-0.5 font-medium hidden sm:block truncate">
-                {description}
-              </p>
-            )}
+          {/* Breadcrumb relocated directly into header */}
+          <div className="min-w-0 overflow-hidden">
+            <Breadcrumbs />
           </div>
         </div>
 
         {/* Right Side: Actions & Profile */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0 h-full">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 h-full">
+          {/* Dynamic Page Action Button Slot */}
+          {headerAction && (
+            <div className="flex items-center mr-1">
+              {headerAction}
+            </div>
+          )}
+
           {/* Search Input */}
           <div className="static sm:relative flex items-center h-full" ref={searchRef}>
             {/* Desktop Search */}
-            <div className="relative w-60 hidden lg:block transition-all duration-300">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                <Search className="size-5 text-slate-400" />
+            <div className="relative w-56 lg:w-64 hidden md:block transition-all duration-300">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="size-4 text-ink-faint" />
               </span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search PetNest admin..."
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
-                className="w-full pl-9 pr-4 h-11 bg-light-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/5 focus:border-blue-500 transition-all text-primary-text placeholder:text-slate-400"
+                className="w-full pl-9 pr-3.5 h-9 bg-surface-muted border border-border-peach rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint"
               />
             </div>
 
-            {/* Mobile/Tablet Search Icon */}
+            {/* Mobile Search Icon */}
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 text-slate-500 hover:text-primary-text hover:bg-light-background rounded-lg transition-colors cursor-pointer lg:hidden"
+              className="p-2 text-ink-muted hover:text-ink hover:bg-surface-muted rounded-lg transition-colors cursor-pointer md:hidden"
+              aria-label="Search"
             >
-              <Search className="size-6" />
+              <Search className="size-5" />
             </button>
 
-            {/* Mobile/Tablet Search Popover */}
+            {/* Mobile Search Popover */}
             {isSearchOpen && (
-              <div className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 sm:mt-7 w-auto sm:w-72 bg-primary-background border border-border rounded-lg p-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100 lg:hidden">
+              <div className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 w-auto sm:w-72 bg-card border border-border-peach rounded-xl p-2.5 z-50 shadow-md animate-in fade-in zoom-in-95 duration-100 md:hidden">
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Search className="w-5 h-5 text-slate-400" />
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Search className="size-4 text-ink-faint" />
                   </span>
                   <input
                     type="text"
@@ -162,7 +159,7 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
                     value={searchVal}
                     onChange={(e) => setSearchVal(e.target.value)}
                     autoFocus
-                    className="w-full pl-9 pr-4 py-2 bg-light-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/5 focus:border-blue-500 transition-all text-primary-text placeholder:text-slate-400"
+                    className="w-full pl-9 pr-3.5 py-1.5 bg-surface-muted border border-border-peach rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint"
                   />
                 </div>
               </div>
@@ -173,11 +170,12 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
           <div className="static sm:relative flex items-center h-full" ref={notifRef}>
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="size-11 text-slate-500 hover:text-primary-text hover:bg-light-background rounded-lg relative transition-colors cursor-pointer flex items-center justify-center"
+              className="size-9 text-ink-muted hover:text-ink hover:bg-surface-muted rounded-lg relative transition-colors cursor-pointer flex items-center justify-center"
+              aria-label="Notifications"
             >
-              <Bell className="size-6" />
+              <Bell className="size-4.5" />
               {unreadCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white scale-85 origin-top-right">
+                <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-coral text-[9px] font-bold text-white ring-2 ring-card">
                   {unreadCount}
                 </span>
               )}
@@ -185,25 +183,25 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
 
             {/* Notification Dropdown Panel */}
             {isNotifOpen && (
-              <div className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 sm:mt-8 w-auto sm:w-80 bg-primary-background border border-border rounded-lg py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-border mb-1">
-                  <p className="text-xs text-primary-text font-bold uppercase tracking-wider">
+              <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-full mt-2 w-auto sm:w-80 bg-card border border-border-peach rounded-xl py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-border-peach mb-1">
+                  <p className="text-xs text-ink font-bold uppercase tracking-wider font-quicksand">
                     Notifications
                   </p>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-[10px] text-blue-600 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                      className="text-[11px] text-coral hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                     >
-                      <CheckCheck className="w-4 h-4" /> Mark all read
+                      <CheckCheck className="size-3.5" /> Mark read
                     </button>
                   )}
                 </div>
 
-                <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                <div className="max-h-64 overflow-y-auto divide-y divide-border-peach">
                   {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-400 flex flex-col items-center gap-1">
-                      <BellOff className="w-8 h-8 opacity-40 mb-1" />
+                    <div className="p-4 text-center text-xs text-ink-faint flex flex-col items-center gap-1">
+                      <BellOff className="size-7 opacity-40 mb-1" />
                       No notifications
                     </div>
                   ) : (
@@ -211,28 +209,28 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
                       <div
                         key={n.id}
                         className={cn(
-                          "px-4 py-3 hover:bg-light-background transition-colors flex gap-3 items-start",
-                          !n.read && "bg-blue-50/10 dark:bg-blue-900/10"
+                          "px-4 py-2.5 hover:bg-surface-muted transition-colors flex gap-2.5 items-start",
+                          !n.read && "bg-coral-light/40"
                         )}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline gap-2">
-                            <p className={cn("text-xs truncate font-semibold", n.read ? "text-secondary-text" : "text-primary-text")}>
+                            <p className={cn("text-xs truncate font-bold font-quicksand", n.read ? "text-ink-muted" : "text-ink")}>
                               {n.title}
                             </p>
-                            <span className="text-[9px] text-slate-400 shrink-0">{n.time}</span>
+                            <span className="text-[10px] text-ink-faint shrink-0">{n.time}</span>
                           </div>
-                          <p className="text-[11px] text-secondary-text mt-0.5 line-clamp-2">
+                          <p className="text-[11px] text-ink-muted mt-0.5 line-clamp-2">
                             {n.description}
                           </p>
                         </div>
                         {!n.read && (
                           <button
                             onClick={() => markAsRead(n.id)}
-                            className="text-blue-500 hover:text-blue-700 p-1 hover:bg-light-background rounded-full shrink-0 cursor-pointer"
+                            className="text-coral hover:text-coral-dark p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
                             title="Mark as read"
                           >
-                            <Check className="w-3.5 h-3.5" />
+                            <Check className="size-3" />
                           </button>
                         )}
                       </div>
@@ -240,13 +238,13 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
                   )}
                 </div>
 
-                <div className="border-t border-border mt-1 pt-1.5 px-3">
+                <div className="border-t border-border-peach mt-1 pt-1.5 px-3">
                   <button
                     onClick={() => {
                       setIsNotifOpen(false);
                       setIsModalOpen(true);
                     }}
-                    className="w-full text-center text-xs font-semibold text-secondary-text hover:text-blue-600 py-1.5 hover:bg-light-background rounded-lg transition-colors cursor-pointer"
+                    className="w-full text-center text-xs font-semibold text-ink-muted hover:text-coral py-1.5 hover:bg-surface-muted rounded-lg transition-colors cursor-pointer"
                   >
                     View all notifications
                   </button>
@@ -258,7 +256,7 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          <div className="h-6 w-px bg-border"></div>
+          <div className="h-5 w-px bg-border-peach"></div>
 
           {/* User Profile */}
           <UserProfile />
@@ -267,44 +265,44 @@ export default function Header({ title, description, onMenuClick }: HeaderProps)
 
       {/* View All Notifications Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-primary-background rounded-xl border border-border max-w-lg w-full p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-              <h3 className="text-lg font-semibold text-primary-text">All Notifications</h3>
+        <div className="fixed inset-0 bg-ink/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl border border-border-peach max-w-lg w-full p-6 animate-in zoom-in-95 duration-200 shadow-xl">
+            <div className="flex items-center justify-between border-b border-border-peach pb-4 mb-4">
+              <h3 className="text-base font-bold text-ink font-quicksand">All Notifications</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-secondary-text hover:text-primary-text font-semibold text-sm cursor-pointer"
+                className="text-ink-muted hover:text-coral font-bold text-xs cursor-pointer px-2 py-1 rounded hover:bg-surface-muted"
               >
                 Close
               </button>
             </div>
-            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
               {notifications.map((n) => (
                 <div
                   key={n.id}
                   className={cn(
-                    "p-4 rounded-lg border flex gap-3 items-start",
+                    "p-3 rounded-lg border flex gap-3 items-start",
                     n.read 
-                      ? "border-border bg-light-background/50" 
-                      : "border-blue-500/20 bg-blue-500/5"
+                      ? "border-border-peach bg-surface-muted/60" 
+                      : "border-coral/20 bg-coral-light/50"
                   )}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-2">
-                      <h4 className={cn("text-sm font-semibold", n.read ? "text-secondary-text" : "text-primary-text")}>
+                      <h4 className={cn("text-xs font-bold font-quicksand", n.read ? "text-ink-muted" : "text-ink")}>
                         {n.title}
                       </h4>
-                      <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
+                      <span className="text-[10px] text-ink-faint shrink-0">{n.time}</span>
                     </div>
-                    <p className="text-xs text-secondary-text mt-1 leading-relaxed">{n.description}</p>
+                    <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">{n.description}</p>
                   </div>
                   {!n.read && (
                     <button
                       onClick={() => markAsRead(n.id)}
-                      className="text-blue-500 hover:text-blue-700 p-1 hover:bg-light-background rounded-full shrink-0 cursor-pointer"
+                      className="text-coral hover:text-coral-dark p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
                       title="Mark as read"
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="size-3.5" />
                     </button>
                   )}
                 </div>

@@ -11,13 +11,13 @@ export default function OverviewPage() {
     <div className="space-y-6">
       <AnimatedContainer delay={0.1}>
         <div
-          className="flex flex-col gap-6 p-8 rounded-2xl w-full bg-card surface shadow-all"
+          className="flex flex-col gap-6 p-6 sm:p-8 rounded-xl w-full bg-card border border-border-peach shadow-xs"
         >
           <DashboardFilters />
           <DashboardStats />
 
           <div
-            className="mt-2 p-6 border rounded-xl border-slate-200 dark:border-slate-800/80 bg-gradient-to-b from-white to-[#EAF1FF] dark:from-[#0f172a] dark:to-[#020617]"
+            className="mt-2 p-6 border rounded-xl border-border-peach bg-surface-soft/60"
           >
             <DashboardChart />
           </div>

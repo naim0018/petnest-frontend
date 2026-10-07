@@ -1,37 +1,43 @@
 import React from "react";
 import { StatsCard } from "@/components/common/StatsCard";
+import { PawPrint, BookOpen, ShoppingBag, Users, DollarSign } from "lucide-react";
 
 export function DashboardStats() {
   const stats = [
     {
-      title: "Gross sales",
-      value: "$ 33,180.00",
-      trendText: "+Tk3,3180.00 (+100%)",
+      title: "Total Pets Cataloged",
+      value: "2,480",
+      trendText: "+148 this month",
       trendType: "positive" as const,
+      icon: <PawPrint className="w-5 h-5 text-coral" />,
     },
     {
-      title: "Refunds",
-      value: "$ 800.00",
-      trendText: "+$ 800.00 (+100%)",
-      trendType: "negative" as const,
-    },
-    {
-      title: "Discounts",
-      value: "$ 1.40",
-      trendText: "+$ 1.40 (+100%)",
-      trendType: "negative" as const,
-    },
-    {
-      title: "Net sales",
-      value: "$ 18,221",
-      trendText: "+$ 37378_60 (+100%)",
+      title: "Care Guides Published",
+      value: "412",
+      trendText: "+24 new guides",
       trendType: "positive" as const,
+      icon: <BookOpen className="w-5 h-5 text-coral" />,
     },
     {
-      title: "Gross profit",
-      value: "$ 914.40",
-      trendText: "+$ 914.40 (+100%)",
+      title: "Active Listings",
+      value: "1,290",
+      trendText: "+8.2% vs last week",
       trendType: "positive" as const,
+      icon: <ShoppingBag className="w-5 h-5 text-coral" />,
+    },
+    {
+      title: "Registered Users",
+      value: "18,450",
+      trendText: "+1,210 new accounts",
+      trendType: "positive" as const,
+      icon: <Users className="w-5 h-5 text-coral" />,
+    },
+    {
+      title: "Monthly GMV",
+      value: "$42,850",
+      trendText: "+14.6% platform volume",
+      trendType: "positive" as const,
+      icon: <DollarSign className="w-5 h-5 text-coral" />,
     },
   ];
 
@@ -44,6 +50,7 @@ export function DashboardStats() {
           value={stat.value}
           trendText={stat.trendText}
           trendType={stat.trendType}
+          icon={stat.icon}
         />
       ))}
     </div>

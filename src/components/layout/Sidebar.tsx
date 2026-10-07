@@ -15,38 +15,44 @@ interface SidebarProps {
   setIsMobileOpen: (open: boolean) => void;
 }
 
-const exactMatchPaths = ["/admin", "/user"];
-
-
-
-const isRouteActive = (item: NavItem, pathname: string): boolean => {
+// Check if a specific route item matches the current pathname
+const isItemActive = (item: NavItem, pathname: string): boolean => {
   if (!item.path) return false;
-
-  if (pathname === item.path) return true;
-
-  if (exactMatchPaths.includes(item.path)) return false;
-
-  if (item.path !== "/" && pathname.startsWith(item.path + "/")) return true;
-
-  if (item.children) {
-    return item.children.some((child) => isRouteActive(child, pathname));
+  // If item has children, it is active if any descendant matches
+  if (item.children && item.children.length > 0) {
+    return item.children.some((child) => isItemActive(child, pathname));
   }
-
+  // Exact match
+  if (pathname === item.path) return true;
+  // Prefix match for nested sub-routes (avoid matching root "/" or "/admin" prefixes unintentionally)
+  if (item.path !== "/" && item.path !== "/admin" && item.path !== "/user") {
+    if (pathname.startsWith(`${item.path}/`)) {
+      return true;
+    }
+  }
   return false;
 };
 
-const hasActiveChild = (menuItem: NavItem, path: string): boolean => {
-  if (!menuItem.children) return false;
-  return menuItem.children.some(
-    (child) => isRouteActive(child, path) || hasActiveChild(child, path)
-  );
+// Check if a parent expandable item has an active descendant
+const hasActiveChild = (menuItem: NavItem, pathname: string): boolean => {
+  if (!menuItem.children || menuItem.children.length === 0) return false;
+  return menuItem.children.some((child) => isItemActive(child, pathname));
 };
 
 const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: string; depth?: number }) => {
-  const [isOpen, setIsOpen] = useState(() => hasActiveChild(item, pathname));
   const hasChildren = !!item.children?.length;
-  const isActive = isRouteActive(item, pathname);
+  const isChildActive = hasActiveChild(item, pathname);
+  const [isOpen, setIsOpen] = useState(() => isChildActive);
 
+  // Keep parent open when navigating into its children
+  useEffect(() => {
+    if (isChildActive) {
+      setIsOpen(true);
+    }
+  }, [isChildActive]);
+
+  // Item is active if it matches the current path or has an active descendant
+  const isActive = isItemActive(item, pathname);
   const Icon = item.icon;
 
   return (
@@ -56,38 +62,38 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "flex items-center justify-between w-full rounded-xl transition-all duration-200 group cursor-pointer",
-              depth === 0 ? "h-12 px-4 text-base font-semibold" : "h-10 px-3 text-[15px] font-medium",
+              "flex items-center justify-between w-full rounded-lg transition-all duration-200 group cursor-pointer",
+              depth === 0 ? "h-11 px-3.5 text-sm font-bold font-quicksand" : "h-9 px-3 text-xs font-semibold font-quicksand",
               isActive 
                 ? depth === 0
-                  ? "bg-brand-gradient text-white font-semibold"
-                  : "text-secondary-brand font-semibold"
-                : "text-muted-blue hover:bg-light-background hover:text-primary-text"
+                  ? "bg-coral text-white font-bold shadow-xs"
+                  : "text-coral font-bold bg-coral-light/60"
+                : "text-ink-muted hover:bg-surface-muted hover:text-ink"
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
               {Icon && <Icon className={cn("shrink-0 transition-colors", 
-                depth === 0 ? "w-6 h-6" : "w-4 h-4",
+                depth === 0 ? "size-5" : "size-4",
                 isActive
-                  ? depth === 0 ? "text-white" : "text-secondary-brand"
-                  : "text-muted-blue group-hover:text-primary-text"
+                  ? depth === 0 ? "text-white" : "text-coral"
+                  : "text-ink-muted group-hover:text-ink"
               )} />}
               <span className="truncate">{item.name}</span>
             </div>
             <ChevronRight
               className={cn(
-                "w-3.5 h-3.5 transition-transform duration-200 shrink-0",
+                "size-3.5 transition-transform duration-200 shrink-0",
                 isActive
-                  ? depth === 0 ? "text-white" : "text-secondary-brand"
-                  : "text-muted-blue group-hover:text-primary-text",
+                  ? depth === 0 ? "text-white" : "text-coral"
+                  : "text-ink-faint group-hover:text-ink",
                 isOpen && "rotate-90"
               )}
             />
           </button>
           {isOpen && (
             <div className={cn(
-              "mt-1 space-y-1 border-l border-border animate-in slide-in-from-top-1 duration-200",
-              depth === 0 ? "ml-6 pl-3" : "ml-3 pl-2 border-l-border/60"
+              "mt-1 space-y-1 border-l border-border-peach animate-in slide-in-from-top-1 duration-200",
+              depth === 0 ? "ml-5 pl-2.5" : "ml-3 pl-2"
             )}>
               {item.children!.map((child) => (
                 <SidebarItem key={child.path} item={child} pathname={pathname} depth={depth + 1} />
@@ -99,20 +105,20 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
         <Link
           href={item.path}
           className={cn(
-            "flex items-center gap-3 rounded-xl transition-all duration-200 group",
-            depth === 0 ? "h-12 px-4 text-base font-semibold" : "h-10 px-3 text-[15px] font-medium",
+            "flex items-center gap-2.5 rounded-lg transition-all duration-200 group",
+            depth === 0 ? "h-11 px-3.5 text-sm font-bold font-quicksand" : "h-9 px-3 text-xs font-semibold font-quicksand",
             isActive
               ? depth === 0
-                ? "bg-brand-gradient text-white font-semibold"
-                : "text-secondary-brand font-semibold"
-              : "text-muted-blue hover:bg-light-background hover:text-primary-text"
+                ? "bg-coral text-white font-bold shadow-xs"
+                : "text-coral font-bold bg-coral-light/60"
+              : "text-ink-muted hover:bg-surface-muted hover:text-ink"
           )}
         >
           {Icon && <Icon className={cn("shrink-0 transition-colors", 
-            depth === 0 ? "w-6 h-6" : "w-4 h-4",
+            depth === 0 ? "size-5" : "size-4",
             isActive
-              ? depth === 0 ? "text-white" : "text-secondary-brand"
-              : "text-muted-blue group-hover:text-primary-text"
+              ? depth === 0 ? "text-white" : "text-coral"
+              : "text-ink-muted group-hover:text-ink"
           )} />}
           <span className="truncate">{item.name}</span>
         </Link>
@@ -185,65 +191,67 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
   return (
     <aside
       className={cn(
-        "bg-primary-background text-primary-text h-screen flex flex-col transition-all duration-300 z-50 shrink-0 shadow-lg",
+        "bg-card text-ink h-screen flex flex-col transition-all duration-300 z-50 shrink-0 border-r border-border-peach shadow-xs",
         // Desktop layouts
         "sm:sticky sm:top-0 sm:translate-x-0",
-        showCollapsed ? "sm:w-20" : "sm:w-[280px]",
+        showCollapsed ? "sm:w-20" : "sm:w-[270px]",
         // Mobile layouts (drawer overlay style)
-        "fixed left-0 top-0 h-screen w-[280px] sm:static",
+        "fixed left-0 top-0 h-screen w-[270px] sm:static",
         isMobileOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
       )}
     >
-      {/* Floating Collapse/Expand Button aligned exactly on the border intersection */}
+      {/* Floating Collapse/Expand Button */}
       {isMounted && (
         <button
           onClick={toggleCollapse}
-          className="absolute right-[-12px] top-20 z-50 transform -translate-y-1/2 w-6 h-6 rounded-full bg-primary-background border border-border hidden sm:flex items-center justify-center cursor-pointer hover:border-border transition-colors text-secondary-text hover:text-primary-text focus:outline-none"
+          className="absolute right-[-12px] top-8 z-50 transform -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border-peach hidden sm:flex items-center justify-center cursor-pointer hover:border-coral transition-colors text-ink-muted hover:text-coral focus:outline-none shadow-xs"
+          aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {showCollapsed ? (
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="size-3.5" />
           ) : (
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="size-3.5" />
           )}
         </button>
       )}
 
-      {/* Sidebar Header with Site-styled BaseKit Logo - h-20 to align with Top Header */}
-      <div className={cn("h-20 flex items-center justify-center border-b border-border shrink-0", showCollapsed ? "px-1" : "px-4")}>
-        <Link href={navGroups[0]?.items?.[0]?.path || "/"} className="w-full no-underline outline-none">
+      {/* Sidebar Header with PetNest Logo */}
+      <div className={cn("h-16 flex items-center justify-center border-b border-border-peach shrink-0", showCollapsed ? "px-1" : "px-4")}>
+        <Link href={navGroups[0]?.items?.[0]?.path || "/admin"} className="w-full no-underline outline-none">
           <Logo collapsed={showCollapsed} className="w-full justify-center sm:justify-start" />
         </Link>
       </div>
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-7 scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="flex-1 overflow-y-auto px-3.5 py-5 space-y-6 scrollbar-thin scrollbar-thumb-border-peach">
         {navGroups.map((group, idx) => (
-          <div key={idx} className="space-y-2">
+          <div key={idx} className="space-y-1.5">
             {!showCollapsed && (
-              <span className="text-xs uppercase tracking-wider font-semibold text-muted-blue px-4 block">
+              <span className="text-[11px] uppercase tracking-wider font-bold text-ink-faint px-3 block font-quicksand">
                 {group.group}
               </span>
             )}
-            <div className="space-y-2">
+            <div className="space-y-1">
               {group.items.map((item) =>
                 showCollapsed ? (
                   <Link
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "flex items-center justify-center h-12 rounded-xl transition-all duration-200",
-                      isRouteActive(item, pathname)
-                        ? "bg-brand-gradient text-white"
-                        : "text-muted-blue hover:bg-light-background hover:text-primary-text"
+                      "flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-200",
+                      isItemActive(item, pathname)
+                        ? "bg-coral text-white shadow-xs"
+                        : "text-ink-muted hover:bg-surface-muted hover:text-ink"
                     )}
+                    title={item.name}
                   >
                     {item.icon && (
                       <item.icon
                         className={cn(
-                          "w-6 h-6 shrink-0",
-                          isRouteActive(item, pathname)
+                          "size-5 shrink-0",
+                          isItemActive(item, pathname)
                             ? "text-white"
-                            : "text-muted-blue hover:text-primary-text"
+                            : "text-ink-muted hover:text-ink"
                         )}
                       />
                     )}
@@ -258,40 +266,45 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
       </div>
 
       {/* User Profile Card at Bottom */}
-      <div className="p-4 pb-6 border-t border-border mt-auto shrink-0">
+      <div className="p-3.5 border-t border-border-peach mt-auto shrink-0 bg-surface-soft">
         {showCollapsed ? (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3">
+            <Image
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
+              alt="User Avatar"
+              width={36}
+              height={36}
+              className="size-9 rounded-full border border-border-peach object-cover"
+            />
+            <button
+              onClick={() => window.location.href = "/"}
+              className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1 rounded-md hover:bg-surface-muted"
+              title="Sign Out"
+            >
+              <LogOut className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between p-2.5 border border-border-peach rounded-lg bg-card">
+            <div className="flex items-center gap-2.5 min-w-0">
               <Image
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
                 alt="User Avatar"
                 width={40}
                 height={40}
-                className="w-10 h-10 rounded-xl border border-border object-cover"
+                className="size-10 rounded-full border border-border-peach object-cover shrink-0"
               />
-            <button className="text-muted-blue hover:text-red-500 transition-colors cursor-pointer">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-3 border border-border rounded-xl bg-primary-background">
-            <div className="flex items-center gap-3">
-              <Image
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
-                alt="User Avatar"
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-xl border border-border object-cover"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-primary-text leading-tight">Alex</span>
-                <span className="text-xs text-muted-blue leading-tight mt-0.5">Manager Admin</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold text-ink leading-tight truncate font-quicksand">Alex Morgan</span>
+                <span className="text-[11px] text-coral font-medium leading-tight mt-0.5 truncate">PetNest Admin</span>
               </div>
             </div>
             <button 
               onClick={() => window.location.href = "/"}
-              className="text-muted-blue hover:text-red-500 transition-colors cursor-pointer"
+              className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-coral-light shrink-0"
+              title="Sign Out"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="size-4" />
             </button>
           </div>
         )}
