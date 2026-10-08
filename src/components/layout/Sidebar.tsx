@@ -110,7 +110,7 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
             isActive
               ? depth === 0
                 ? "bg-coral text-white font-bold shadow-xs"
-                : "text-coral font-bold bg-coral-light/60"
+                : "text-coral font-bold"
               : "text-ink-muted hover:bg-surface-muted hover:text-ink"
           )}
         >
@@ -204,7 +204,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
       {isMounted && (
         <button
           onClick={toggleCollapse}
-          className="absolute right-[-12px] top-8 z-50 transform -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border-peach hidden sm:flex items-center justify-center cursor-pointer hover:border-coral transition-colors text-ink-muted hover:text-coral focus:outline-none shadow-xs"
+          className="absolute right-[-12px] top-16 z-50 transform -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border-peach hidden sm:flex items-center justify-center cursor-pointer hover:border-coral transition-colors text-ink-muted hover:text-coral focus:outline-none shadow-xs"
           aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {showCollapsed ? (
@@ -216,9 +216,9 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
       )}
 
       {/* Sidebar Header with PetNest Logo */}
-      <div className={cn("h-16 flex items-center justify-center border-b border-border-peach shrink-0", showCollapsed ? "px-1" : "px-4")}>
-        <Link href={navGroups[0]?.items?.[0]?.path || "/admin"} className="w-full no-underline outline-none">
-          <Logo collapsed={showCollapsed} className="w-full justify-center sm:justify-start" />
+      <div className={cn("h-16 flex items-center border-b border-border-peach shrink-0", showCollapsed ? "justify-center px-0" : "px-4")}>
+        <Link href={navGroups[0]?.items?.[0]?.path || "/admin"} className={cn("no-underline outline-none flex items-center", showCollapsed ? "justify-center" : "w-full")}>
+          <Logo collapsed={showCollapsed} className={showCollapsed ? "justify-center gap-0" : "w-full justify-start"} />
         </Link>
       </div>
 
