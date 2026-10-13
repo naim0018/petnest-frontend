@@ -10,11 +10,23 @@ import GuidesTopicFilterBar, { GUIDE_TOPIC_FILTERS } from "./GuidesTopicFilterBa
 import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
 import { CATEGORY_FAQS_MAP, CATEGORY_FAQ_CONFIG } from "./guideFaqData";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { setPetFilter } from "@/store/features/PetFilterSlice/petFilterSlice";
 
 export default function GuidesInteractiveExplorer() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("birds");
-  const [selectedBreed, setSelectedBreed] = useState<string>("all");
+  const dispatch = useAppDispatch();
+  const reduxFilter = useAppSelector((state) => state.petFilter);
+
+  // Sync selectedCategory and selectedBreed with Redux (fallback to birds / all if 'all')
+  const reduxType = reduxFilter?.selectedType && reduxFilter.selectedType !== "all"
+    ? reduxFilter.selectedType
+    : "birds";
+  const reduxBreed = reduxFilter?.selectedBreed || "all";
+
+  const selectedCategory = reduxType;
+  const selectedBreed = reduxBreed;
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
+
 
   const currentGuide =
     (selectedBreed !== "all" && PET_SPECIES_FEATURED_GUIDES[selectedBreed]) ||
@@ -61,9 +73,16 @@ export default function GuidesInteractiveExplorer() {
   const activeCategoryTitle = categoryLabelMap[selectedCategory] || "Pet";
 
   const handleSelectCategory = (categoryId: string, breedId?: string) => {
-    setSelectedCategory(categoryId);
-    if (breedId) setSelectedBreed(breedId);
+    dispatch(
+      setPetFilter({
+        typeId: categoryId,
+        typeLabel: categoryLabelMap[categoryId] || categoryId,
+        breedId: breedId || "all",
+        breedLabel: breedId ? breedId : `All ${categoryId}`,
+      })
+    );
   };
+
 
   const currentFaqs =
     CATEGORY_FAQS_MAP[selectedCategory] || CATEGORY_FAQS_MAP.birds;
@@ -74,10 +93,10 @@ export default function GuidesInteractiveExplorer() {
   return (
     <div className="space-y-8">
       {/* 1. Category and Breed Selector */}
-      <GuidesPetCategorySection
+      {/* <GuidesPetCategorySection
         selectedCategoryId={selectedCategory}
         onSelectCategory={handleSelectCategory}
-      />
+      /> */}
 
       {/* 2. Top Row: Care Guide Card takes 2-card width on the left + 2 individual cards on the right */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">

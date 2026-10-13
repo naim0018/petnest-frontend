@@ -21,6 +21,7 @@ import {
   Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PetSelectorPopover from "./PetSelectorPopover";
 
 interface NotificationItem {
   id: string;
@@ -91,12 +92,13 @@ const initialMessages: MessageItem[] = [
 ];
 
 const navLinks = [
-  { label: "Feed", href: "/", icon: Rss },
-  { label: "Community", href: "/community", icon: Users },
-  { label: "Guides", href: "/guides", icon: BookOpen },
-  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-  { label: "Adoption", href: "/adoption", icon: HeartHandshake },
-  { label: "Shelter", href: "/shelter", icon: Building2 },
+  // { label: "Feed", href: "/", icon: Rss },
+  // { label: "Community", href: "/community", icon: Users },
+  // { label: "Guides", href: "/guides", icon: BookOpen },
+  { label: "Guides", href: "/", icon: BookOpen },
+  // { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+  // { label: "Adoption", href: "/adoption", icon: HeartHandshake },
+  // { label: "Shelter", href: "/shelter", icon: Building2 },
 ];
 
 export default function PublicNavbar() {
@@ -183,6 +185,8 @@ export default function PublicNavbar() {
 
         {/* Nav Tabs */}
         <div className="hidden lg:flex flex-row gap-1.5 justify-start items-center shrink-0">
+
+
           {navLinks.map((link) => {
             const LinkIcon = link.icon;
             const active =
@@ -222,10 +226,14 @@ export default function PublicNavbar() {
         </div>
 
         {/* Right User Group */}
-        <div className="flex flex-row gap-4 xl:gap-6 justify-start items-center shrink-0">
+        <div className="flex flex-row gap-3 sm:gap-4 xl:gap-5 justify-start items-center shrink-0">
+
+          {/* Select Pets Pill Dropdown */}
+          <PetSelectorPopover />
 
           {/* Notification Bell Button */}
           <div className="relative" ref={notifRef}>
+
             <button
               onClick={() => {
                 setIsNotifOpen(!isNotifOpen);

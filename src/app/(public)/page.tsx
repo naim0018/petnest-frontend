@@ -1,4 +1,5 @@
-import FeedPage, { metadata } from "./feed/page";
+import GuidesPage, { metadata } from "./guides/page";
 
 export { metadata };
-export default FeedPage;
+export default GuidesPage;
+

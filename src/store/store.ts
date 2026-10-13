@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/AuthSlice/authSlice";
+import petFilterReducer from "./features/PetFilterSlice/petFilterSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import baseApi from "./Api/BaseApi/BaseApi";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
@@ -33,12 +34,14 @@ export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
     auth: persistedAuthReducer,
+    petFilter: petFilterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
     }).concat(baseApi.middleware),
 });
+
 
 export const persistor = persistStore(store);
 export type RootState = ReturnType<typeof store.getState>;

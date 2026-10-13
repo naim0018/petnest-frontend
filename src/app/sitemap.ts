@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { guidesData, adoptablePetsData } from "@/lib/data/petnest-data";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://petnest.org";
+  const baseUrl = "https://petnest-guide.vercel.app";
 
   // Static public routes
   const staticRoutes: MetadataRoute.Sitemap = [
