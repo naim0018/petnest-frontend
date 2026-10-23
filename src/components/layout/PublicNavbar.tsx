@@ -191,7 +191,8 @@ export default function PublicNavbar() {
             const LinkIcon = link.icon;
             const active =
               pathname === link.href ||
-              (link.href !== "/" && pathname.startsWith(link.href + "/"));
+              (link.href !== "/" && pathname.startsWith(link.href + "/")) ||
+              (link.href === "/" && link.label === "Guides" && (pathname === "/" || pathname.startsWith("/guides")));
 
             return (
               <Link
@@ -256,7 +257,7 @@ export default function PublicNavbar() {
 
             {/* Notification Dropdown */}
             {isNotifOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-2xl z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Notifications
@@ -327,7 +328,7 @@ export default function PublicNavbar() {
 
             {/* Messages Dropdown */}
             {isMessagesOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-2xl z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Messages
@@ -385,7 +386,7 @@ export default function PublicNavbar() {
         {isHomePopoverOpen && (
           <div
             ref={homePopoverRef}
-            className="fixed bottom-20 left-3 right-3 z-[9999] bg-popover/95 backdrop-blur-xl border border-border-peach shadow-2xl rounded-xl p-4 animate-in fade-in slide-in-from-bottom-5 duration-200 overflow-hidden"
+            className="fixed bottom-20 left-3 right-3 z-[9999] bg-popover/95 backdrop-blur-xl border border-border-peach shadow-2xl rounded-lg p-4 animate-in fade-in slide-in-from-bottom-5 duration-200 overflow-hidden"
           >
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-border-peach">
               <span className="text-xs font-bold text-ink uppercase tracking-wider">
@@ -402,14 +403,17 @@ export default function PublicNavbar() {
             <div className="grid grid-cols-2 gap-2 mb-3">
               {navLinks.map((item) => {
                 const ItemIcon = item.icon;
-                const active = pathname === item.href;
+                const active =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(item.href + "/")) ||
+                  (item.href === "/" && item.label === "Guides" && (pathname === "/" || pathname.startsWith("/guides")));
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsHomePopoverOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-2xl no-underline transition-all duration-200 border",
+                      "flex items-center gap-3 p-3 rounded-lg no-underline transition-all duration-200 border",
                       active
                         ? "bg-coral-light border-coral/30 text-coral font-bold"
                         : "bg-surface-muted border-border-peach text-ink"
@@ -417,7 +421,7 @@ export default function PublicNavbar() {
                   >
                     <div
                       className={cn(
-                        "p-2 rounded-xl flex items-center justify-center shrink-0",
+                        "p-2 rounded-lg flex items-center justify-center shrink-0",
                         active ? "bg-coral text-white" : "bg-card text-ink-muted"
                       )}
                     >
