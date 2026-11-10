@@ -1,47 +1,28 @@
 import {
-  ChartPie,
-  FileText,
-  List,
-  Package,
-  Users,
-  User,
-  Network,
-  Headphones,
+  LayoutDashboard,
   Settings,
+  Headphones,
+  Compass,
+  PawPrint,
 } from "lucide-react";
 import { NavGroup } from "./types";
 
 export const userNavItems: NavGroup[] = [
   {
-    group: "Main Menu",
+    group: "My Account",
     items: [
-      { name: "Overview", path: "/user", icon: ChartPie },
+      { name: "Dashboard Overview", path: "/user", icon: LayoutDashboard },
+      { name: "Account Settings", path: "/user/settings", icon: Settings },
       { 
-        name: "Reports", path: "/user/reports", icon: FileText,
-        children: [{ name: "All Reports", path: "/user/reports/all" }] 
+        name: "Help & Support", path: "/user/help/support", icon: Headphones,
       },
-      { 
-        name: "Items", path: "/user/items", icon: List,
-        children: [{ name: "All Items", path: "/user/items/all" }] 
-      },
-      { 
-        name: "Inventory", path: "/user/inventory", icon: Package,
-        children: [{ name: "Current Inventory", path: "/user/inventory/current" }] 
-      },
-      { 
-        name: "Employees", path: "/user/employees", icon: Users,
-        children: [{ name: "All Employees", path: "/user/employees/all" }] 
-      },
-      { name: "Customers", path: "/user/customers", icon: User },
-      { 
-        name: "Integrations", path: "/user/integrations", icon: Network,
-        children: [{ name: "Active", path: "/user/integrations/active" }] 
-      },
-      { 
-        name: "Help", path: "/user/help", icon: Headphones,
-        children: [{ name: "Support Center", path: "/user/help/support" }] 
-      },
-      { name: "settings", path: "/user/settings", icon: Settings },
+    ],
+  },
+  {
+    group: "Explore PetNest",
+    items: [
+      { name: "Care Guides", path: "/guides", icon: Compass },
+      { name: "Adopt a Pet", path: "/adoption", icon: PawPrint },
     ],
   },
 ];

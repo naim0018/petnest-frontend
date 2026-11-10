@@ -1,26 +1,45 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
-import { User, Settings, ShieldCheck, Mail } from "lucide-react";
+import { User, Settings, ShieldCheck, Mail, Phone, Heart } from "lucide-react";
+import { useAppSelector } from "@/hooks/useRedux";
+import { useGetMeQuery } from "@/store/Api/User/user.api";
 
 export default function UserPage() {
+  const user = useAppSelector((state) => state.auth.user);
+  const { data: meResponse } = useGetMeQuery(undefined, {
+    skip: !user,
+  });
+
+  const me = meResponse?.data;
+  const displayName = me?.name || user?.name || user?.email?.split("@")[0] || "Pet Lover";
+  const displayEmail = me?.email || user?.email || "user@example.com";
+  const displayPhone = me?.phone || user?.phone;
+  const avatarUrl =
+    me?.profile?.avatar ||
+    `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`;
+
   const profileSteps = [
     {
       title: "Personal Information",
       desc: "Set up your avatar, display name, and contact details",
-      completed: true,
+      completed: Boolean(me?.name && me?.email),
       icon: User,
     },
     {
-      title: "Account Preferences",
-      desc: "Configure notification settings and dashboard styling",
-      completed: false,
-      icon: Settings,
+      title: "Pet Preferences",
+      desc: me?.interestedSpecies
+        ? `Interested in ${me.interestedSpecies.name}${me.interestedBreed ? ` (${me.interestedBreed.name})` : ""}`
+        : "Choose your favorite pet species and breeds",
+      completed: Boolean(me?.interestedSpeciesId),
+      icon: Heart,
     },
     {
-      title: "Security & MFA",
-      desc: "Configure multi-factor authentication and passwords",
-      completed: false,
+      title: "Account Security",
+      desc: "Keep your password and credentials secure",
+      completed: true,
       icon: ShieldCheck,
     },
   ];
@@ -29,49 +48,54 @@ export default function UserPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Profile Overview Card */}
       <AnimatedContainer delay={0.1} className="lg:col-span-2 space-y-6">
-        <div className="p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-6">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 border border-gray-200 shadow-inner flex-shrink-0">
+        <div className="p-6 bg-card border border-border-peach rounded-2xl shadow-xs flex flex-col md:flex-row items-center gap-6">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-surface-muted border border-border-peach shadow-inner shrink-0">
             <Image
-              src="https://api.dicebear.com/9.x/avataaars/svg?seed=John"
-              alt="John Doe"
+              src={avatarUrl}
+              alt={displayName}
               width={96}
               height={96}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1 space-y-2 text-center md:text-left">
-            <h2 className="text-xl font-black text-slate-800 dark:text-white">John Doe</h2>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs font-bold text-gray-500">
-              <span className="flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5" /> john@example.com
+            <h2 className="text-xl font-bold font-quicksand text-ink">{displayName}</h2>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs font-semibold text-ink-muted">
+              <span className="flex items-center gap-1.5">
+                <Mail className="size-3.5 text-coral" /> {displayEmail}
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 uppercase tracking-wider text-[9px] font-black">
-                Active Client
+              {displayPhone && (
+                <span className="flex items-center gap-1.5">
+                  <Phone className="size-3.5 text-coral" /> {displayPhone}
+                </span>
+              )}
+              <span className="px-2.5 py-0.5 rounded-full bg-coral/10 text-coral uppercase tracking-wider text-[10px] font-bold">
+                PetNest Member
               </span>
             </div>
-            <p className="text-xs text-gray-400 max-w-lg">
-              Manage your personal preferences, keep your security parameters up to date, and monitor session activity log from your profile manager.
+            <p className="text-xs text-ink-muted max-w-lg mt-1 leading-relaxed">
+              Welcome to your personal PetNest Dashboard. Explore pet care guides, track favorite companion breeds, and manage your account settings.
             </p>
           </div>
         </div>
 
         {/* Completion progress */}
-        <div className="p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-800 dark:text-white">Profile Setup Guide</h3>
+        <div className="p-6 bg-card border border-border-peach rounded-2xl shadow-xs space-y-4">
+          <h3 className="text-base font-bold font-quicksand text-ink">Account Overview & Progress</h3>
           <div className="space-y-4">
             {profileSteps.map((step, idx) => {
               const Icon = step.icon;
               return (
-                <div key={idx} className="flex items-start gap-4 p-4 border border-gray-50 dark:border-slate-800/80 rounded-xl hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                  <div className={`p-2.5 rounded-xl ${step.completed ? "bg-emerald-500/10 text-emerald-500" : "bg-gray-100 dark:bg-slate-800 text-gray-500"}`}>
-                    <Icon className="w-4 h-4" />
+                <div key={idx} className="flex items-start gap-4 p-4 border border-border-peach/60 rounded-xl hover:bg-surface-muted/40 transition-colors">
+                  <div className={`p-2.5 rounded-xl ${step.completed ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-surface-muted text-ink-muted"}`}>
+                    <Icon className="size-4" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white">{step.title}</h4>
-                    <p className="text-xs text-gray-400 mt-0.5">{step.desc}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-ink font-quicksand">{step.title}</h4>
+                    <p className="text-xs text-ink-muted mt-0.5">{step.desc}</p>
                   </div>
-                  <span className={`text-xs font-black uppercase tracking-wider ${step.completed ? "text-emerald-500" : "text-gray-400"}`}>
-                    {step.completed ? "Completed" : "Pending"}
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${step.completed ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-surface-muted text-ink-muted"}`}>
+                    {step.completed ? "Active" : "Optional"}
                   </span>
                 </div>
               );
@@ -82,20 +106,20 @@ export default function UserPage() {
 
       {/* Right Column: Mini Info Cards */}
       <AnimatedContainer delay={0.3} className="space-y-6">
-        <div className="p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-white">Security Summary</h3>
+        <div className="p-6 bg-card border border-border-peach rounded-2xl shadow-xs space-y-4">
+          <h3 className="text-sm font-bold font-quicksand text-ink">Account Security</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">MFA Status</span>
-              <span className="font-bold text-red-500">Disabled</span>
+              <span className="text-ink-muted font-medium">Status</span>
+              <span className="font-bold text-emerald-600">Active</span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">Password Last Reset</span>
-              <span className="font-bold text-slate-700 dark:text-slate-350">3 months ago</span>
+              <span className="text-ink-muted font-medium">Account Role</span>
+              <span className="font-bold text-coral">{me?.role || user?.role || "USER"}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">Recent Locations</span>
-              <span className="font-bold text-slate-700 dark:text-slate-350">Dhaka, Bangladesh</span>
+              <span className="text-ink-muted font-medium">Session</span>
+              <span className="font-bold text-ink">Authenticated</span>
             </div>
           </div>
         </div>

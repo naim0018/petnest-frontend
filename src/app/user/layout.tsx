@@ -1,18 +1,45 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardShell from "@/components/layout/DashboardShell";
 import { userNavItems } from "@/lib/nav";
+import { useAppSelector } from "@/hooks/useRedux";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function UserLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const user = useAppSelector((state) => state.auth.user);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const isLoggedIn = Boolean(
+      user && (user.userId || user.email || user.accessToken)
+    );
+    if (!isLoggedIn) {
+      toast.error("Please log in to view your dashboard");
+      router.replace("/login");
+    }
+  }, [user, router]);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-soft">
+        <Loader2 className="size-8 animate-spin text-coral" />
+      </div>
+    );
+  }
+
   return (
     <DashboardShell
       navGroups={userNavItems}
-      logoText="BASEKIT USER"
+      logoText="PETNEST"
       title="User Dashboard"
       description="Manage your personal settings, profile, and activities."
     >

@@ -95,9 +95,9 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "petlover@petnest.org",
-      password: "password123",
-      rememberMe: true,
+      email: "",
+      password: "",
+      rememberMe: false,
     },
   });
 
@@ -111,12 +111,12 @@ export default function LoginPage() {
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      name: "Alex Morgan",
-      email: "alex@petnest.org",
-      password: "password123",
-      petType: "dogs",
-      breed: "Golden Retriever",
-      agreeTerms: true,
+      name: "",
+      email: "",
+      password: "",
+      petType: "",
+      breed: "",
+      agreeTerms: false,
     },
   });
 
@@ -145,10 +145,7 @@ export default function LoginPage() {
 
   const handlePetTypeChange = (newType: string) => {
     setSignupValue("petType", newType, { shouldValidate: true });
-    const category = PET_CATEGORIES_WITH_BREEDS.find((c) => c.id === newType);
-    const firstBreed =
-      category?.breeds.find((b) => b.id !== "all")?.label || "Mixed / Other";
-    setSignupValue("breed", firstBreed, { shouldValidate: true });
+    setSignupValue("breed", "", { shouldValidate: false });
   };
 
   // Handle Login Submission
@@ -160,20 +157,21 @@ export default function LoginPage() {
         password: data.password,
       }).unwrap();
 
-      if (response?.accessToken) {
-        dispatch(setUser(response));
+      const user = response?.data;
+      if (user) {
+        dispatch(setUser(user));
       }
       toast.success("Welcome back! Login successful.");
       router.push("/");
-    } catch {
-      setTimeout(() => {
-        toast.success("Welcome back! Login successful.");
-        router.push("/");
-      }, 700);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const errorMessage =
+        err?.data?.message ||
+        err?.message ||
+        "Invalid email or password. Please try again.";
+      toast.error(errorMessage);
     } finally {
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 700);
+      setIsSubmitting(false);
     }
   };
 
@@ -185,22 +183,24 @@ export default function LoginPage() {
         name: data.name,
         email: data.email,
         password: data.password,
+        phone: "+14155552671",
       }).unwrap();
 
-      if (response?.accessToken) {
-        dispatch(setUser(response));
+      const user = response?.data?.user || response?.data;
+      if (user) {
+        dispatch(setUser(user));
       }
       toast.success("Account created successfully! Welcome to PetNest.");
       router.push("/");
-    } catch {
-      setTimeout(() => {
-        toast.success("Account created successfully! Welcome to PetNest.");
-        router.push("/");
-      }, 700);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const errorMessage =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to create account. Please check your details.";
+      toast.error(errorMessage);
     } finally {
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 700);
+      setIsSubmitting(false);
     }
   };
 
@@ -346,517 +346,511 @@ export default function LoginPage() {
           {/* 🔄 REDESIGNED 3D CARD ROTATION (SMOOTH, CRISP & NO CUTOFF) */}
           {/* ======================================================== */}
           <div
-            style={{ perspective: 1800 }}
+            style={{ perspective: 1400 }}
             className="w-full max-w-md shrink-0 relative self-start"
           >
-            <motion.div
-              animate={{ rotateY: isSignUp ? 180 : 0 }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-              style={{ transformStyle: "preserve-3d" }}
-              className="relative w-full min-h-[640px]"
-            >
-              {/* ==================================================== */}
-              {/* 🚪 FRONT FACE: LOGIN CARD                            */}
-              {/* ==================================================== */}
-              <div
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                }}
-                className={cn(
-                  "w-full min-h-[640px] bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col justify-between relative",
-                  isSignUp && "pointer-events-none select-none"
-                )}
-              >
-                {/* Decorative Watermark Paw in Top Right */}
-                <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-                  <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
-                    <PawPrint className="size-24" />
-                  </div>
-                </div>
-
-                {/* 🔘 Segmented Capsule Tab Control (Login Active) */}
-                <div className="relative z-10">
-                  {renderSegmentedTab(false)}
-                </div>
-
-                {/* Card Header */}
-                <div className="text-center space-y-1 mb-5 relative z-10">
-                  <h2 className="text-2xl sm:text-3xl font-bold font-quicksand text-ink tracking-tight">
-                    Welcome Back!
-                  </h2>
-                  <p className="text-xs sm:text-sm text-ink-muted">
-                    Login to continue your pet journey
-                  </p>
-                </div>
-
-                {/* Login Form */}
-                <form
-                  onSubmit={handleLoginSubmit(onLoginSubmit)}
-                  noValidate
-                  className="space-y-3.5 relative z-10"
+            <AnimatePresence mode="wait" initial={false}>
+              {!isSignUp ? (
+                /* ==================================================== */
+                /* 🚪 FRONT FACE: LOGIN CARD                            */
+                /* ==================================================== */
+                <motion.div
+                  key="login"
+                  initial={{ rotateY: -75, opacity: 0, scale: 0.98 }}
+                  animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotateY: 75, opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ transformOrigin: "center center" }}
+                  className="w-full bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
                 >
-                  {/* Email Address */}
-                  <div className="space-y-1">
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors",
-                        loginErrors.email
-                          ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
-                          : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
-                      )}
-                    >
-                      <Mail className="size-5 text-ink-muted shrink-0" />
-                      <input
-                        type="email"
-                        id="login-email"
-                        placeholder="Email Address"
-                        autoComplete="email"
-                        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-                        {...registerLogin("email")}
-                      />
+                  {/* Decorative Watermark Paw in Top Right */}
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                    <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
+                      <PawPrint className="size-24" />
                     </div>
-                    {loginErrors.email && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {loginErrors.email.message}
-                      </p>
-                    )}
                   </div>
 
-                  {/* Password */}
-                  <div className="space-y-1">
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors",
-                        loginErrors.password
-                          ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
-                          : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
-                      )}
-                    >
-                      <Lock className="size-5 text-ink-muted shrink-0" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        id="login-password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-                        {...registerLogin("password")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </button>
-                    </div>
-                    {loginErrors.password && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {loginErrors.password.message}
-                      </p>
-                    )}
+                  {/* 🔘 Segmented Capsule Tab Control (Login Active) */}
+                  <div className="relative z-10">
+                    {renderSegmentedTab(false)}
                   </div>
 
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-sm pt-0.5">
-                    <label
-                      htmlFor="login-rememberMe"
-                      className="flex items-center gap-2 cursor-pointer group select-none"
-                    >
+                  {/* Card Header */}
+                  <div className="text-center space-y-1 mb-5 relative z-10">
+                    <h2 className="text-2xl sm:text-3xl font-bold font-quicksand text-ink tracking-tight">
+                      Welcome Back!
+                    </h2>
+                    <p className="text-xs sm:text-sm text-ink-muted">
+                      Login to continue your pet journey
+                    </p>
+                  </div>
+
+                  {/* Login Form */}
+                  <form
+                    onSubmit={handleLoginSubmit(onLoginSubmit)}
+                    noValidate
+                    className="space-y-3.5 relative z-10"
+                  >
+                    {/* Email Address */}
+                    <div className="space-y-1">
                       <div
                         className={cn(
-                          "size-4 rounded-md border flex items-center justify-center transition-all",
-                          rememberMe
-                            ? "bg-coral border-coral text-white"
-                            : "border-border-peach bg-card group-hover:border-coral"
+                          "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
+                          loginErrors.email
+                            ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                            : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
                         )}
                       >
-                        {rememberMe && <Check className="size-3 stroke-[3]" />}
+                        <Mail className="size-5 text-ink-muted shrink-0" />
+                        <input
+                          type="email"
+                          id="login-email"
+                          placeholder="Email Address"
+                          autoComplete="email"
+                          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                          {...registerLogin("email")}
+                        />
                       </div>
-                      <input
-                        type="checkbox"
-                        id="login-rememberMe"
-                        className="sr-only"
-                        checked={rememberMe}
-                        onChange={(e) => setLoginValue("rememberMe", e.target.checked)}
-                      />
-                      <span className="text-xs sm:text-sm font-medium text-ink-muted group-hover:text-ink transition-colors">
-                        Remember me
-                      </span>
-                    </label>
-
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs sm:text-sm font-semibold text-coral hover:underline"
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
-
-                  {/* Submit Action using PetNest PrimaryButton */}
-                  <div className="pt-1">
-                    <PrimaryButton
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      isLoading={isSubmitting}
-                      leftIcon={<PawPrint className="size-4 shrink-0" />}
-                      title="Login"
-                      className="rounded-full shadow-xs"
-                    />
-                  </div>
-                </form>
-
-                {/* Social Separator */}
-                <div className="relative my-3.5 flex items-center justify-center z-10">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border-peach" />
-                  </div>
-                  <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-ink-faint font-semibold">
-                    or
-                  </span>
-                </div>
-
-                {/* Social Buttons */}
-                <div className="space-y-2.5 relative z-10">
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("Google")}
-                    className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                  >
-                    <svg className="size-5 shrink-0" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                      />
-                    </svg>
-                    <span>Continue with Google</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("Apple")}
-                    className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                  >
-                    <svg
-                      className="size-5 shrink-0 fill-current text-ink"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
-                    </svg>
-                    <span>Continue with Apple</span>
-                  </button>
-                </div>
-
-                {/* Footer prompt that flips card to Sign Up */}
-                <p className="text-center text-sm text-ink-muted mt-3.5 relative z-10">
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setIsSignUp(true)}
-                    className="text-coral font-bold hover:underline ml-1 cursor-pointer"
-                  >
-                    Sign Up
-                  </button>
-                </p>
-              </div>
-
-              {/* ==================================================== */}
-              {/* 🚪 BACK FACE: SIGN UP CARD                           */}
-              {/* ==================================================== */}
-              <div
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                  transform: "rotateY(180deg)",
-                }}
-                className={cn(
-                  "absolute inset-0 w-full min-h-[640px] bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col justify-between",
-                  !isSignUp && "pointer-events-none select-none"
-                )}
-              >
-                {/* Decorative Watermark Paw in Top Right */}
-                <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-                  <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
-                    <PawPrint className="size-24" />
-                  </div>
-                </div>
-
-                {/* 🔘 Segmented Capsule Tab Control (Sign Up Active) */}
-                <div className="relative z-10">
-                  {renderSegmentedTab(true)}
-                </div>
-
-                {/* Card Header */}
-                <div className="text-center space-y-1 mb-3 relative z-10">
-                  <h2 className="text-2xl sm:text-3xl font-bold font-quicksand text-ink tracking-tight">
-                    Join PetNest!
-                  </h2>
-                  <p className="text-xs sm:text-sm text-ink-muted">
-                    Create your account to start your pet journey
-                  </p>
-                </div>
-
-                {/* Sign Up Form */}
-                <form
-                  onSubmit={handleSignupSubmit(onSignupSubmit)}
-                  noValidate
-                  className="space-y-2.5 relative z-10"
-                >
-                  {/* Full Name */}
-                  <div className="space-y-1">
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors",
-                        signupErrors.name
-                          ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
-                          : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
+                      {loginErrors.email && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {loginErrors.email.message}
+                        </p>
                       )}
-                    >
-                      <User className="size-5 text-ink-muted shrink-0" />
-                      <input
-                        type="text"
-                        id="signup-name"
-                        placeholder="Full Name"
-                        autoComplete="name"
-                        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-                        {...registerSignup("name")}
-                      />
                     </div>
-                    {signupErrors.name && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {signupErrors.name.message}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Email Address */}
-                  <div className="space-y-1">
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors",
-                        signupErrors.email
-                          ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
-                          : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
-                      )}
-                    >
-                      <Mail className="size-5 text-ink-muted shrink-0" />
-                      <input
-                        type="email"
-                        id="signup-email"
-                        placeholder="Email Address"
-                        autoComplete="email"
-                        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-                        {...registerSignup("email")}
-                      />
-                    </div>
-                    {signupErrors.email && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {signupErrors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Password */}
-                  <div className="space-y-1">
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors",
-                        signupErrors.password
-                          ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
-                          : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
-                      )}
-                    >
-                      <Lock className="size-5 text-ink-muted shrink-0" />
-                      <input
-                        type={showSignupPassword ? "text" : "password"}
-                        id="signup-password"
-                        placeholder="Create Password"
-                        autoComplete="new-password"
-                        className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-                        {...registerSignup("password")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSignupPassword(!showSignupPassword)}
-                        aria-label={showSignupPassword ? "Hide password" : "Show password"}
-                        className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
-                      >
-                        {showSignupPassword ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </button>
-                    </div>
-                    {signupErrors.password && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {signupErrors.password.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 🐾 Pet Type & Breed Select Fields (2 Columns) */}
-                  <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                    <FormSelect
-                      id="signup-pet-type"
-                      placeholder="Pet Type"
-                      options={petTypeOptions}
-                      value={watchSignup("petType")}
-                      onChange={handlePetTypeChange}
-                      leftIcon={<PawPrint className="size-4" />}
-                      error={signupErrors.petType?.message}
-                    />
-
-                    <FormSelect
-                      id="signup-breed"
-                      placeholder="Breed"
-                      options={breedOptions}
-                      value={watchSignup("breed")}
-                      onChange={(val) =>
-                        setSignupValue("breed", val, { shouldValidate: true })
-                      }
-                      leftIcon={<Sparkles className="size-4" />}
-                      searchable
-                      error={signupErrors.breed?.message}
-                    />
-                  </div>
-
-                  {/* Terms Agreement Checkbox */}
-                  <div className="space-y-1 pt-0.5">
-                    <label
-                      htmlFor="signup-agreeTerms"
-                      className="flex items-center gap-2 cursor-pointer group select-none"
-                    >
+                    {/* Password */}
+                    <div className="space-y-1">
                       <div
                         className={cn(
-                          "size-4 rounded-md border flex items-center justify-center transition-all shrink-0",
-                          agreeTerms
-                            ? "bg-coral border-coral text-white"
-                            : "border-border-peach bg-card group-hover:border-coral"
+                          "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
+                          loginErrors.password
+                            ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                            : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
                         )}
                       >
-                        {agreeTerms && <Check className="size-3 stroke-[3]" />}
+                        <Lock className="size-5 text-ink-muted shrink-0" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          id="login-password"
+                          placeholder="Password"
+                          autoComplete="current-password"
+                          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                          {...registerLogin("password")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </button>
                       </div>
-                      <input
-                        type="checkbox"
-                        id="signup-agreeTerms"
-                        className="sr-only"
-                        checked={agreeTerms}
-                        onChange={(e) => setSignupValue("agreeTerms", e.target.checked)}
+                      {loginErrors.password && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {loginErrors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Remember Me & Forgot Password */}
+                    <div className="flex items-center justify-between text-sm pt-0.5">
+                      <label
+                        htmlFor="login-rememberMe"
+                        className="flex items-center gap-2 cursor-pointer group select-none"
+                      >
+                        <div
+                          className={cn(
+                            "size-4 rounded-md border flex items-center justify-center transition-all",
+                            rememberMe
+                              ? "bg-coral border-coral text-white"
+                              : "border-border-peach bg-card group-hover:border-coral"
+                          )}
+                        >
+                          {rememberMe && <Check className="size-3 stroke-[3]" />}
+                        </div>
+                        <input
+                          type="checkbox"
+                          id="login-rememberMe"
+                          className="sr-only"
+                          checked={rememberMe}
+                          onChange={(e) => setLoginValue("rememberMe", e.target.checked)}
+                        />
+                        <span className="text-xs sm:text-sm font-medium text-ink-muted group-hover:text-ink transition-colors">
+                          Remember me
+                        </span>
+                      </label>
+
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs sm:text-sm font-semibold text-coral hover:underline"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+
+                    {/* Submit Action using PetNest PrimaryButton */}
+                    <div className="pt-1">
+                      <PrimaryButton
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        isLoading={isSubmitting}
+                        leftIcon={<PawPrint className="size-4 shrink-0" />}
+                        title="Login"
+                        className="rounded-full shadow-xs"
                       />
-                      <span className="text-xs text-ink-muted group-hover:text-ink transition-colors leading-tight">
-                        I agree to the{" "}
-                        <span className="text-coral underline">Terms of Service</span> &{" "}
-                        <span className="text-coral underline">Privacy Policy</span>
-                      </span>
-                    </label>
-                    {signupErrors.agreeTerms && (
-                      <p className="text-xs font-semibold text-red-500 px-1">
-                        {signupErrors.agreeTerms.message}
-                      </p>
-                    )}
+                    </div>
+                  </form>
+
+                  {/* Social Separator */}
+                  <div className="relative my-3.5 flex items-center justify-center z-10">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-border-peach" />
+                    </div>
+                    <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-ink-faint font-semibold">
+                      or
+                    </span>
                   </div>
 
-                  {/* Submit Action using PetNest PrimaryButton */}
-                  <div className="pt-0.5">
-                    <PrimaryButton
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      isLoading={isSubmitting}
-                      leftIcon={<PawPrint className="size-4 shrink-0" />}
-                      title="Create Account"
-                      className="rounded-full shadow-xs"
-                    />
-                  </div>
-                </form>
-
-                {/* Social Separator */}
-                <div className="relative my-2.5 flex items-center justify-center z-10">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border-peach" />
-                  </div>
-                  <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-ink-faint font-semibold">
-                    or
-                  </span>
-                </div>
-
-                {/* Social Buttons */}
-                <div className="space-y-2 relative z-10">
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("Google")}
-                    className="w-full h-10 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-xs sm:text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                  >
-                    <svg className="size-4 shrink-0" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                      />
-                    </svg>
-                    <span>Sign up with Google</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("Apple")}
-                    className="w-full h-10 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-xs sm:text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                  >
-                    <svg
-                      className="size-4 shrink-0 fill-current text-ink"
-                      viewBox="0 0 24 24"
+                  {/* Social Buttons */}
+                  <div className="space-y-2.5 relative z-10">
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin("Google")}
+                      className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
                     >
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
-                    </svg>
-                    <span>Sign up with Apple</span>
-                  </button>
-                </div>
+                      <svg className="size-5 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
 
-                {/* Footer prompt that flips card to Login */}
-                <p className="text-center text-sm text-ink-muted mt-2.5 relative z-10">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setIsSignUp(false)}
-                    className="text-coral font-bold hover:underline ml-1 cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin("Apple")}
+                      className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
+                    >
+                      <svg
+                        className="size-5 shrink-0 fill-current text-ink"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
+                      </svg>
+                      <span>Continue with Apple</span>
+                    </button>
+                  </div>
+
+                  {/* Footer prompt that flips card to Sign Up */}
+                  <p className="text-center text-sm text-ink-muted mt-3.5 relative z-10">
+                    Don&apos;t have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(true)}
+                      className="text-coral font-bold hover:underline ml-1 cursor-pointer"
+                    >
+                      Sign Up
+                    </button>
+                  </p>
+                </motion.div>
+              ) : (
+                /* ==================================================== */
+                /* 🚪 BACK FACE: SIGN UP CARD                           */
+                /* ==================================================== */
+                <motion.div
+                  key="signup"
+                  initial={{ rotateY: -75, opacity: 0, scale: 0.98 }}
+                  animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotateY: 75, opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ transformOrigin: "center center" }}
+                  className="w-full bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
+                >
+                  {/* Decorative Watermark Paw in Top Right */}
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                    <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
+                      <PawPrint className="size-24" />
+                    </div>
+                  </div>
+
+                  {/* 🔘 Segmented Capsule Tab Control (Sign Up Active) */}
+                  <div className="relative z-10">
+                    {renderSegmentedTab(true)}
+                  </div>
+
+                  {/* Card Header */}
+                  <div className="text-center space-y-1 mb-3 relative z-10">
+                    <h2 className="text-2xl sm:text-3xl font-bold font-quicksand text-ink tracking-tight">
+                      Join PetNest!
+                    </h2>
+                    <p className="text-xs sm:text-sm text-ink-muted">
+                      Create your account to start your pet journey
+                    </p>
+                  </div>
+
+                  {/* Sign Up Form */}
+                  <form
+                    onSubmit={handleSignupSubmit(onSignupSubmit)}
+                    noValidate
+                    className="space-y-2.5 relative z-10"
                   >
-                    Login
-                  </button>
-                </p>
-              </div>
-            </motion.div>
+                    {/* Full Name */}
+                    <div className="space-y-1">
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
+                          signupErrors.name
+                            ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                            : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
+                        )}
+                      >
+                        <User className="size-5 text-ink-muted shrink-0" />
+                        <input
+                          type="text"
+                          id="signup-name"
+                          placeholder="Full Name"
+                          autoComplete="name"
+                          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                          {...registerSignup("name")}
+                        />
+                      </div>
+                      {signupErrors.name && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {signupErrors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Email Address */}
+                    <div className="space-y-1">
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
+                          signupErrors.email
+                            ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                            : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
+                        )}
+                      >
+                        <Mail className="size-5 text-ink-muted shrink-0" />
+                        <input
+                          type="email"
+                          id="signup-email"
+                          placeholder="Email Address"
+                          autoComplete="email"
+                          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                          {...registerSignup("email")}
+                        />
+                      </div>
+                      {signupErrors.email && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {signupErrors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-1">
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
+                          signupErrors.password
+                            ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                            : "border-border-peach focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20"
+                        )}
+                      >
+                        <Lock className="size-5 text-ink-muted shrink-0" />
+                        <input
+                          type={showSignupPassword ? "text" : "password"}
+                          id="signup-password"
+                          placeholder="Create Password"
+                          autoComplete="new-password"
+                          className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                          {...registerSignup("password")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                          className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
+                        >
+                          {showSignupPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                      {signupErrors.password && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {signupErrors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 🐾 Pet Type & Breed Select Fields (2 Columns) */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                      <FormSelect
+                        id="signup-pet-type"
+                        placeholder="Pet Type"
+                        options={petTypeOptions}
+                        value={watchSignup("petType")}
+                        onChange={handlePetTypeChange}
+                        leftIcon={<PawPrint className="size-4" />}
+                        error={signupErrors.petType?.message}
+                      />
+
+                      <FormSelect
+                        id="signup-breed"
+                        placeholder="Breed"
+                        options={breedOptions}
+                        value={watchSignup("breed")}
+                        onChange={(val) =>
+                          setSignupValue("breed", val, { shouldValidate: true })
+                        }
+                        leftIcon={<Sparkles className="size-4" />}
+                        searchable
+                        error={signupErrors.breed?.message}
+                      />
+                    </div>
+
+                    {/* Terms Agreement Checkbox */}
+                    <div className="space-y-1 pt-0.5">
+                      <label
+                        htmlFor="signup-agreeTerms"
+                        className="flex items-center gap-2 cursor-pointer group select-none"
+                      >
+                        <div
+                          className={cn(
+                            "size-4 rounded-md border flex items-center justify-center transition-all shrink-0",
+                            agreeTerms
+                              ? "bg-coral border-coral text-white"
+                              : "border-border-peach bg-card group-hover:border-coral"
+                          )}
+                        >
+                          {agreeTerms && <Check className="size-3 stroke-[3]" />}
+                        </div>
+                        <input
+                          type="checkbox"
+                          id="signup-agreeTerms"
+                          className="sr-only"
+                          checked={agreeTerms}
+                          onChange={(e) => setSignupValue("agreeTerms", e.target.checked)}
+                        />
+                        <span className="text-xs text-ink-muted group-hover:text-ink transition-colors leading-tight">
+                          I agree to the{" "}
+                          <span className="text-coral underline">Terms of Service</span> &{" "}
+                          <span className="text-coral underline">Privacy Policy</span>
+                        </span>
+                      </label>
+                      {signupErrors.agreeTerms && (
+                        <p className="text-xs font-semibold text-red-500 px-1">
+                          {signupErrors.agreeTerms.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Submit Action using PetNest PrimaryButton */}
+                    <div className="pt-0.5">
+                      <PrimaryButton
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        isLoading={isSubmitting}
+                        leftIcon={<PawPrint className="size-4 shrink-0" />}
+                        title="Create Account"
+                        className="rounded-full shadow-xs"
+                      />
+                    </div>
+                  </form>
+
+                  {/* Social Separator */}
+                  <div className="relative my-2.5 flex items-center justify-center z-10">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-border-peach" />
+                    </div>
+                    <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-ink-faint font-semibold">
+                      or
+                    </span>
+                  </div>
+
+                  {/* Social Buttons */}
+                  <div className="space-y-2 relative z-10">
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin("Google")}
+                      className="w-full h-10 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-xs sm:text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
+                    >
+                      <svg className="size-4 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                      <span>Sign up with Google</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin("Apple")}
+                      className="w-full h-10 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-xs sm:text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
+                    >
+                      <svg
+                        className="size-4 shrink-0 fill-current text-ink"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
+                      </svg>
+                      <span>Sign up with Apple</span>
+                    </button>
+                  </div>
+
+                  {/* Footer prompt that flips card to Login */}
+                  <p className="text-center text-sm text-ink-muted mt-3 relative z-10">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(false)}
+                      className="text-coral font-bold hover:underline ml-1 cursor-pointer"
+                    >
+                      Login
+                    </button>
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </CommonWrapper>
       </main>

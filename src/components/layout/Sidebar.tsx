@@ -3,11 +3,16 @@
 import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { NavGroup, NavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { logOut } from "@/store/features/AuthSlice/authSlice";
+import { useLogoutMutation } from "@/store/Api/Auth/auth.api";
+import { useGetMeQuery } from "@/store/Api/User/user.api";
+import { toast } from "sonner";
 
 interface SidebarProps {
   navGroups: NavGroup[];
@@ -188,6 +193,51 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
 
   const showCollapsed = isCollapsed && !isMobile;
 
+  const user = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [logoutMutation] = useLogoutMutation();
+
+  const isLoggedIn = Boolean(
+    user && (user.userId || user.email || user.accessToken)
+  );
+
+  const { data: meResponse } = useGetMeQuery(undefined, {
+    skip: !isLoggedIn,
+  });
+
+  const me = meResponse?.data;
+  const displayName = me?.name || user?.name || user?.email?.split("@")[0] || "Pet Lover";
+  const userRole = (me?.role || user?.role || "USER").toUpperCase();
+  const roleDisplay =
+    userRole === "SUPERADMIN"
+      ? "Super Admin"
+      : userRole === "ADMIN"
+      ? "PetNest Admin"
+      : userRole === "VET"
+      ? "Veterinarian"
+      : userRole === "AUTHOR"
+      ? "Author"
+      : "PetNest Member";
+
+  const displayAvatar =
+    me?.profile?.avatar ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (user as any)?.avatar ||
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80";
+
+  const handleSidebarLogout = async () => {
+    try {
+      await logoutMutation().unwrap();
+    } catch {
+      // ignore
+    } finally {
+      dispatch(logOut());
+      toast.success("Logged out successfully");
+      router.push("/");
+    }
+  };
+
   return (
     <aside
       className={cn(
@@ -270,14 +320,14 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
         {showCollapsed ? (
           <div className="flex flex-col items-center gap-3">
             <Image
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
-              alt="User Avatar"
+              src={displayAvatar}
+              alt={displayName}
               width={36}
               height={36}
               className="size-9 rounded-full border border-border-peach object-cover"
             />
             <button
-              onClick={() => window.location.href = "/"}
+              onClick={handleSidebarLogout}
               className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1 rounded-md hover:bg-surface-muted"
               title="Sign Out"
             >
@@ -288,19 +338,23 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
           <div className="flex items-center justify-between p-2.5 border border-border-peach rounded-lg bg-card">
             <div className="flex items-center gap-2.5 min-w-0">
               <Image
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80"
-                alt="User Avatar"
+                src={displayAvatar}
+                alt={displayName}
                 width={40}
                 height={40}
                 className="size-10 rounded-full border border-border-peach object-cover shrink-0"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-ink leading-tight truncate font-quicksand">Alex Morgan</span>
-                <span className="text-[11px] text-coral font-medium leading-tight mt-0.5 truncate">PetNest Admin</span>
+                <span className="text-xs font-bold text-ink leading-tight truncate font-quicksand">
+                  {displayName}
+                </span>
+                <span className="text-[11px] text-coral font-medium leading-tight mt-0.5 truncate">
+                  {roleDisplay}
+                </span>
               </div>
             </div>
             <button 
-              onClick={() => window.location.href = "/"}
+              onClick={handleSidebarLogout}
               className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-coral-light shrink-0"
               title="Sign Out"
             >

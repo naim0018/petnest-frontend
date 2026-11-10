@@ -90,17 +90,7 @@ export default function PetCatalogPage() {
       </AnimatedContainer>
 
       {/* Search Bar Row */}
-      <div className="flex items-center justify-between gap-3 bg-card border border-border-peach rounded-xl p-3 shadow-2xs">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-ink-faint" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search pet types, scientific names, or descriptions..."
-            className="w-full pl-9 pr-4 py-2 bg-surface-soft border border-border-peach rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint"
-          />
-        </div>
+      <div className="flex items-center justify-end gap-3">
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
@@ -109,6 +99,16 @@ export default function PetCatalogPage() {
             Clear filter
           </button>
         )}
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search pet types, scientific names, or descriptions..."
+            className="w-full h-11 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Pet Types Cards Grid - 4 to 5 cards per row */}

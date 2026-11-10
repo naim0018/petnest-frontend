@@ -79,11 +79,11 @@ export default function FormSelect({
               type="button"
               disabled={disabled}
               className={cn(
-                "w-full h-[42px] shrink-0 box-border overflow-hidden flex items-center justify-between gap-2 px-3 sm:px-3.5 rounded-xl border bg-surface-soft dark:bg-surface-muted transition-colors duration-200 text-left outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+                "w-full h-[42px] shrink-0 box-border overflow-hidden flex items-center justify-between gap-2 px-3 sm:px-3.5 rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors duration-200 text-left outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
                 error
                   ? "border-red-500 ring-2 ring-red-500/20"
                   : open
-                  ? "border-coral ring-2 ring-coral/20 bg-card"
+                  ? "border-coral ring-2 ring-coral/20"
                   : "border-border-peach hover:border-coral/50",
                 className
               )}
@@ -124,7 +124,7 @@ export default function FormSelect({
         <PopoverContent
           align="start"
           sideOffset={6}
-          className="w-[var(--anchor-width)] min-w-[180px] p-1.5 bg-card border border-border-peach rounded-xl shadow-xl z-50 overflow-hidden flex flex-col"
+          className="w-[var(--anchor-width)] min-w-[180px] p-1.5 bg-card border border-border-peach rounded-md shadow-xl z-50 overflow-hidden flex flex-col"
         >
           {searchable && (
             <div className="flex items-center px-2 py-1.5 mb-1 border-b border-border-peach text-ink-muted">
