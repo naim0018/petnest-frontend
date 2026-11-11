@@ -4,6 +4,7 @@ import "./global.css";
 import StoreProvider from "@/store/StoreProvider";
 import ThemeProvider from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
+import QueryProvider from "@/providers/QueryProviders";
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",
@@ -40,10 +41,12 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <StoreProvider>
+          <QueryProvider>
           <ThemeProvider>
             {children}
-            <Toaster position="top-right" richColors />
+            <Toaster position="bottom-right" richColors />
           </ThemeProvider>
+          </QueryProvider>
         </StoreProvider>
       </body>
     </html>

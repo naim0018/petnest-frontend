@@ -5,22 +5,42 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
+import { FormInput } from "@/components/common/FormInput";
+import { FormTextarea } from "@/components/common/FormTextarea";
 import ImageUpload from "@/components/common/ImageUpload";
 import { useHeaderAction } from "@/context/HeaderActionContext";
+import { useCreateSpeciesMutation } from "@/store/Api/Pets/pets.api";
+import { useUploadMediaMutation } from "@/store/Api/Media/media.api";
 import { PawPrint, CheckCircle2, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+
+const presetImages = [
+  { label: "Dog", url: "/CareGuideCard/dog-faq-mascot.png" },
+  { label: "Cat", url: "/CareGuideCard/cat-faq-mascot.png" },
+  { label: "Bird", url: "/CareGuideCard/budgie-faq-mascot.png" },
+  { label: "Aquatic", url: "/CareGuideCard/aquatic-faq-mascot.png" },
+  { label: "Small Pet", url: "/CareGuideCard/hamster-faq-mascot.png" },
+  { label: "Reptile", url: "/CareGuideCard/reptile-faq-mascot.png" },
+];
 
 export default function AddPetTypePage() {
   const router = useRouter();
   const { setHeaderAction } = useHeaderAction();
 
+  const [createSpecies, { isLoading: isCreating }] = useCreateSpeciesMutation();
+  const [uploadMedia, { isLoading: isUploading }] = useUploadMediaMutation();
+
   const [name, setName] = useState("");
   const [scientificGroup, setScientificGroup] = useState("");
   const [description, setDescription] = useState("");
   const [selectedImage, setSelectedImage] = useState("/CareGuideCard/dog-faq-mascot.png");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string }>({});
 
-  // Set cancel/back button on Header or let breadcrumb do it
+  const isSubmitting = isCreating || isUploading;
+
+  // Header Cancel Action
   useEffect(() => {
     setHeaderAction(
       <PrimaryButton
@@ -37,64 +57,50 @@ export default function AddPetTypePage() {
     return () => setHeaderAction(null);
   }, [router, setHeaderAction]);
 
-  const [previewUrl, setPreviewUrl] = useState<string>("/CareGuideCard/dog-faq-mascot.png");
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPreviewUrl(result);
-      setSelectedImage(result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setErrors({ name: "Pet type name must be at least 2 characters" });
+      toast.error("Please enter a valid pet type name (minimum 2 characters)");
+      return;
     }
-  };
+    setErrors({});
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+    try {
+      let finalImageUrl = selectedImage;
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
+      // If user selected a new local file, upload it to media endpoint first
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("folder", "pets");
+        const uploadRes = await uploadMedia(formData).unwrap();
+        if (uploadRes?.data?.url) {
+          finalImageUrl = uploadRes.data.url;
+        }
+      }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  };
+      await createSpecies({
+        name: trimmedName,
+        scientificGroup: scientificGroup.trim() || undefined,
+        shortDescription: description.trim() || undefined,
+        image: finalImageUrl || undefined,
+      }).unwrap();
 
-  const presetImages = [
-    { label: "Dog", url: "/CareGuideCard/dog-faq-mascot.png" },
-    { label: "Cat", url: "/CareGuideCard/cat-faq-mascot.png" },
-    { label: "Bird", url: "/CareGuideCard/budgie-faq-mascot.png" },
-    { label: "Aquatic", url: "/CareGuideCard/aquatic-faq-mascot.png" },
-    { label: "Small Pet", url: "/CareGuideCard/hamster-faq-mascot.png" },
-    { label: "Reptile", url: "/CareGuideCard/reptile-faq-mascot.png" },
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+      toast.success(`Pet Type "${trimmedName}" created successfully!`);
       setSuccess(true);
       setTimeout(() => {
         router.push("/admin/pet-catalog");
-      }, 800);
-    }, 500);
+      }, 700);
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { data?: { message?: string } })?.data?.message ||
+        (err as { message?: string })?.message ||
+        "Failed to create pet species. Please try again.";
+      toast.error(errorMsg);
+    }
   };
 
   return (
@@ -121,53 +127,40 @@ export default function AddPetTypePage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Two Column Layout: Left Details, Right Image Upload */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Left Column */}
+                {/* Left Column: Reusable Inputs */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 font-quicksand">
-                      Pet Type Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Horses (Equine)"
-                      className="w-full px-3.5 py-2.5 bg-surface-soft border border-border-peach rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all"
-                    />
-                  </div>
+                  <FormInput
+                    label="Pet Type Name"
+                    required
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errors.name) setErrors({});
+                    }}
+                    placeholder="e.g. Horses (Equine)"
+                    error={errors.name}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 font-quicksand">
-                      Scientific Classification
-                    </label>
-                    <input
-                      type="text"
-                      value={scientificGroup}
-                      onChange={(e) => setScientificGroup(e.target.value)}
-                      placeholder="e.g. Equus caballus"
-                      className="w-full px-3.5 py-2.5 bg-surface-soft border border-border-peach rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all"
-                    />
-                  </div>
+                  <FormInput
+                    label="Scientific Classification"
+                    value={scientificGroup}
+                    onChange={(e) => setScientificGroup(e.target.value)}
+                    placeholder="e.g. Equus caballus"
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold text-ink mb-1.5 font-quicksand">
-                      Description
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Provide an overview of species companionship, lifestyle compatibility, and care overview..."
-                      className="w-full px-3.5 py-2.5 bg-surface-soft border border-border-peach rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all resize-none"
-                    />
-                  </div>
+                  <FormTextarea
+                    label="Description"
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Provide an overview of species companionship, lifestyle compatibility, and care overview..."
+                  />
                 </div>
 
                 {/* Right Column: Mascots & Reusable Image Upload */}
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs font-bold text-ink font-quicksand mb-1.5">
+                    <p className="text-xs font-bold text-ink font-quicksand mb-1.5 uppercase tracking-wider">
                       Or choose a preset mascot:
                     </p>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -177,9 +170,10 @@ export default function AddPetTypePage() {
                           key={img.label}
                           onClick={() => {
                             setSelectedImage(img.url);
+                            setSelectedFile(null);
                           }}
                           className={`relative p-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                            selectedImage === img.url
+                            selectedImage === img.url && !selectedFile
                               ? "border-coral bg-coral-light/60 ring-2 ring-coral/20"
                               : "border-border-peach bg-surface-soft hover:border-coral/50"
                           }`}
@@ -204,6 +198,7 @@ export default function AddPetTypePage() {
                     label="Class Mascot / Display Photo"
                     value={selectedImage}
                     onChange={(url) => setSelectedImage(url)}
+                    onFileSelect={(file) => setSelectedFile(file)}
                     placeholder="Click to upload or drag & drop mascot photo"
                     helperText="PNG, JPG, SVG, or WEBP (Up to 10MB)"
                     height="h-[300px]"
@@ -217,6 +212,7 @@ export default function AddPetTypePage() {
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/admin/pet-catalog")}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </PrimaryButton>
@@ -224,9 +220,9 @@ export default function AddPetTypePage() {
                   type="submit"
                   variant="primary"
                   disabled={isSubmitting}
-                  className="min-w-32"
+                  className="min-w-36"
                 >
-                  {isSubmitting ? "Saving..." : "Create Pet Type"}
+                  {isSubmitting ? "Creating..." : "Create Pet Type"}
                 </PrimaryButton>
               </div>
             </form>

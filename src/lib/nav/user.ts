@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  User,
   Settings,
   Headphones,
   Compass,
@@ -9,10 +10,9 @@ import { NavGroup } from "./types";
 
 export const userNavItems: NavGroup[] = [
   {
-    group: "My Account",
+    group: "Dashboard",
     items: [
-      { name: "Dashboard Overview", path: "/user", icon: LayoutDashboard },
-      { name: "Account Settings", path: "/user/settings", icon: Settings },
+      { name: "Overview", path: "/user/dashboard", icon: LayoutDashboard },
       { 
         name: "Help & Support", path: "/user/help/support", icon: Headphones,
       },
@@ -23,6 +23,13 @@ export const userNavItems: NavGroup[] = [
     items: [
       { name: "Care Guides", path: "/guides", icon: Compass },
       { name: "Adopt a Pet", path: "/adoption", icon: PawPrint },
+    ],
+  },
+  {
+    group: "Settings",
+    items: [
+      { name: "My Profile", path: "/user/profile", icon: User },
+      { name: "Settings", path: "/user/settings", icon: Settings },
     ],
   },
 ];

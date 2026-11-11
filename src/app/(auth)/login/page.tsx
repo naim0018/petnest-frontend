@@ -39,8 +39,7 @@ import { setUser } from "@/store/features/AuthSlice/authSlice";
 const loginSchema = z.object({
   email: z
     .string()
-    .min(1, { message: "Email address is required" })
-    .email({ message: "Please enter a valid email address" }),
+    .min(1, { message: "Email or username is required" }),
   password: z
     .string()
     .min(1, { message: "Password is required" })
@@ -95,9 +94,9 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
+      email: "naim0018@gmail.com",
+      password: "naim@@18",
+      rememberMe: true,
     },
   });
 
@@ -162,7 +161,11 @@ export default function LoginPage() {
         dispatch(setUser(user));
       }
       toast.success("Welcome back! Login successful.");
-      router.push("/");
+      if (user?.role === "ADMIN" || user?.role === "SUPERADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMessage =
@@ -253,16 +256,15 @@ export default function LoginPage() {
       {/* 🖼️ SINGLE UNIFIED FULL-SCREEN BACKGROUND                */}
       {/* ======================================================== */}
       <Image
-        src="/CareGuide/petnest-guides.png"
+        src="/auth-bg.jpg"
         alt="PetNest companions and cozy room backdrop"
         fill
         priority
-        className="object-cover object-center pointer-events-none z-0 -scale-x-100"
+        className="object-cover object-bottom pointer-events-none z-0"
       />
 
-      {/* Subtle top & side vignettes for crystal clear text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent pointer-events-none z-1" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent pointer-events-none z-1" />
+      {/* Subtle top vignette for crystal clear text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none z-1" />
 
       {/* ======================================================== */}
       {/* 🐾 TOP BAR: Brand Logo & Theme Switcher via CommonWrapper*/}
@@ -295,14 +297,14 @@ export default function LoginPage() {
             className="w-full lg:max-w-xl space-y-6 lg:pb-32 self-start pt-2 lg:pt-4"
           >
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-quicksand text-white leading-[1.15] tracking-tight drop-shadow-md">
-              A Happier Life
+              A Happier Life <br className="hidden sm:inline" />
               for Your{" "}
-              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-b from-[#ff8e8e] via-coral to-coral-dark bg-clip-text text-transparent drop-shadow-xs">
+              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#818CF8] bg-clip-text text-transparent drop-shadow-md">
                 Furry Friend
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base lg:text-lg text-white/85 font-normal leading-relaxed max-w-md drop-shadow-xs">
+            <p className="text-sm sm:text-base lg:text-lg text-white/90 font-normal leading-relaxed max-w-md drop-shadow-xs">
               Discover pet care tips, connect with fellow pet lovers, and give
               your pets the best life.
             </p>
@@ -310,10 +312,10 @@ export default function LoginPage() {
             {/* Feature Tags matching system design & mockup */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-5 pt-2">
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 rounded-full bg-coral/20 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <Heart className="size-4 text-coral fill-coral" />
+                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <Heart className="size-4 text-[#C084FC] fill-[#C084FC]" />
                 </div>
-                <span className="text-white/95 text-xs sm:text-sm font-medium tracking-normal select-none">
+                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Expert Care Tips
                 </span>
               </div>
@@ -321,10 +323,10 @@ export default function LoginPage() {
               <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 rounded-full bg-coral/20 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <Users className="size-4 text-coral" strokeWidth={2.2} />
+                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <Users className="size-4 text-[#C084FC]" strokeWidth={2.2} />
                 </div>
-                <span className="text-white/95 text-xs sm:text-sm font-medium tracking-normal select-none">
+                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Pet Community
                 </span>
               </div>
@@ -332,10 +334,10 @@ export default function LoginPage() {
               <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 rounded-full bg-coral/20 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <ShoppingCart className="size-4 text-coral" strokeWidth={2.2} />
+                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <ShoppingCart className="size-4 text-[#C084FC]" strokeWidth={2.2} />
                 </div>
-                <span className="text-white/95 text-xs sm:text-sm font-medium tracking-normal select-none">
+                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Shop Essentials
                 </span>
               </div>
@@ -403,10 +405,10 @@ export default function LoginPage() {
                       >
                         <Mail className="size-5 text-ink-muted shrink-0" />
                         <input
-                          type="email"
+                          type="text"
                           id="login-email"
-                          placeholder="Email Address"
-                          autoComplete="email"
+                          placeholder="Email or Username"
+                          autoComplete="username"
                           className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
                           {...registerLogin("email")}
                         />
@@ -857,7 +859,7 @@ export default function LoginPage() {
 
       {/* Spacer footer via CommonWrapper */}
       <footer className="w-full relative z-10">
-        <CommonWrapper className="max-w-[1600px] py-3 text-center text-xs text-white/50">
+        <CommonWrapper className="max-w-[1600px] py-3 text-center text-xs text-white/60">
           © {new Date().getFullYear()} PetNest Inc. All rights reserved.
         </CommonWrapper>
       </footer>

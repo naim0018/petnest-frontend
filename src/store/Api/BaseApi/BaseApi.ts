@@ -19,12 +19,7 @@ function getOrCreateVisitorId(): string {
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000",
   credentials: "include", // REQUIRED so browser sends & stores httpOnly cookies
-  prepareHeaders: (headers, { getState }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const token = (getState() as any)?.auth?.user?.accessToken;
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
+  prepareHeaders: (headers) => {
     headers.set("x-visitor-id", getOrCreateVisitorId());
     return headers;
   },

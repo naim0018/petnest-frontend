@@ -19,14 +19,21 @@ export default function UserLayout({
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+      return;
+    }
     const isLoggedIn = Boolean(
-      user && (user.userId || user.email || user.accessToken)
+      user && (user.userId || user.email)
     );
     if (!isLoggedIn) {
       toast.error("Please log in to view your dashboard");
       router.replace("/login");
     }
   }, [user, router]);
+
+  if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+    return null;
+  }
 
   if (!mounted) {
     return (

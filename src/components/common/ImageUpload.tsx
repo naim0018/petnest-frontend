@@ -6,26 +6,28 @@ import { cn } from "@/lib/utils";
 
 export interface ImageUploadProps {
   value?: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
+  /**
+   * Returns the selected File object to the parent component.
+   * This allows the parent to hold the file in state and only upload it to Cloudflare R2
+   * when the user explicitly clicks "Save" / "Submit" (preventing orphaned files).
+   */
+  onFileSelect?: (file: File | null) => void;
   label?: string;
   placeholder?: string;
   helperText?: string;
   allowManualInput?: boolean;
   className?: string;
-  /**
-   * Fixed/dynamic height for the container to prevent layout jumping between upload and preview.
-   * Can be a tailwind height class (e.g. "h-[340px]", "h-[400px]") or full style string.
-   * Defaults to "h-[340px]".
-   */
   height?: string;
 }
 
 export function ImageUpload({
   value = "",
   onChange,
+  onFileSelect,
   label,
   placeholder = "Click or drag & drop to upload image",
-  helperText = "PNG, JPG, WEBP, or SVG (Up to 10MB)",
+  helperText = "PNG, JPG, WEBP, or AVIF (Up to 5MB)",
   allowManualInput = true,
   className,
   height = "h-[340px]",
@@ -39,13 +41,11 @@ export function ImageUpload({
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPreviewUrl(result);
-      onChange(result);
-    };
-    reader.readAsDataURL(file);
+    // Fast instant local blob preview without network roundtrip
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+    onChange?.(localUrl);
+    onFileSelect?.(file);
   };
 
   const handleDrop = useCallback(
@@ -56,7 +56,7 @@ export function ImageUpload({
         handleFile(e.dataTransfer.files[0]);
       }
     },
-    [onChange]
+    [onFileSelect, onChange]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -75,8 +75,12 @@ export function ImageUpload({
   };
 
   const handleRemove = () => {
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewUrl("");
-    onChange("");
+    onChange?.("");
+    onFileSelect?.(null);
   };
 
   return (
@@ -131,7 +135,9 @@ export function ImageUpload({
             {/* Status info bar */}
             <div className="mt-2.5 pt-2 border-t border-border-peach/60 flex items-center justify-between gap-2 shrink-0">
               <span className="text-[11px] text-ink-muted truncate font-mono max-w-[260px]">
-                {previewUrl.startsWith("data:") ? "Local file ready" : previewUrl}
+                {previewUrl.startsWith("blob:") || previewUrl.startsWith("data:")
+                  ? "Local file ready (uploads on save)"
+                  : previewUrl}
               </span>
               <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 shrink-0">
                 <CheckCircle2 className="size-3" /> Ready to save
@@ -176,7 +182,7 @@ export function ImageUpload({
                   value={value}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
-                    onChange(e.target.value);
+                    onChange?.(e.target.value);
                     setPreviewUrl(e.target.value);
                   }}
                   placeholder="/CareGuide/breeds/dogs/breed.jpg"

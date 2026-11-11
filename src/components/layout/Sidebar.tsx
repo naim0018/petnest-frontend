@@ -30,7 +30,13 @@ const isItemActive = (item: NavItem, pathname: string): boolean => {
   // Exact match
   if (pathname === item.path) return true;
   // Prefix match for nested sub-routes (avoid matching root "/" or "/admin" prefixes unintentionally)
-  if (item.path !== "/" && item.path !== "/admin" && item.path !== "/user") {
+  if (
+    item.path !== "/" &&
+    item.path !== "/admin" &&
+    item.path !== "/user" &&
+    item.path !== "/admin/dashboard" &&
+    item.path !== "/user/dashboard"
+  ) {
     if (pathname.startsWith(`${item.path}/`)) {
       return true;
     }
@@ -199,7 +205,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
   const [logoutMutation] = useLogoutMutation();
 
   const isLoggedIn = Boolean(
-    user && (user.userId || user.email || user.accessToken)
+    user && (user.userId || user.email)
   );
 
   const { data: meResponse } = useGetMeQuery(undefined, {
@@ -228,13 +234,22 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
 
   const handleSidebarLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("just_logged_out", "true");
+      }
       await logoutMutation().unwrap();
     } catch {
       // ignore
     } finally {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("just_logged_out", "true");
+        setTimeout(() => {
+          sessionStorage.removeItem("just_logged_out");
+        }, 3000);
+      }
       dispatch(logOut());
-      toast.success("Logged out successfully");
-      router.push("/");
+      toast.success("Successfully logged out. See you soon!");
+      router.replace("/");
     }
   };
 
@@ -267,7 +282,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
 
       {/* Sidebar Header with PetNest Logo */}
       <div className={cn("h-16 flex items-center border-b border-border-peach shrink-0", showCollapsed ? "justify-center px-0" : "px-4")}>
-        <Link href={navGroups[0]?.items?.[0]?.path || "/admin"} className={cn("no-underline outline-none flex items-center", showCollapsed ? "justify-center" : "w-full")}>
+        <Link href={navGroups[0]?.items?.[0]?.path || "/admin/dashboard"} className={cn("no-underline outline-none flex items-center", showCollapsed ? "justify-center" : "w-full")}>
           <Logo collapsed={showCollapsed} className={showCollapsed ? "justify-center gap-0" : "w-full justify-start"} />
         </Link>
       </div>
@@ -324,6 +339,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
               alt={displayName}
               width={36}
               height={36}
+              unoptimized
               className="size-9 rounded-full border border-border-peach object-cover"
             />
             <button
@@ -342,6 +358,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
                 alt={displayName}
                 width={40}
                 height={40}
+                unoptimized
                 className="size-10 rounded-full border border-border-peach object-cover shrink-0"
               />
               <div className="flex flex-col min-w-0">

@@ -19,9 +19,13 @@ export default function AdminLayout({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+      return;
+    }
+
     // 1. Verify if user is logged in
     const isLoggedIn = Boolean(
-      user && (user.userId || user.email || user.accessToken)
+      user && (user.userId || user.email)
     );
 
     if (!isLoggedIn) {
@@ -46,6 +50,11 @@ export default function AdminLayout({
 
     setIsAuthorized(true);
   }, [user, router]);
+
+  // If logging out, do not render admin shell while redirecting to homepage
+  if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+    return null;
+  }
 
   // Loading state while verifying role
   if (isAuthorized === null) {

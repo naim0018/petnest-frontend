@@ -5,6 +5,8 @@ import {
   Store,
   Users,
   BarChart3,
+  User,
+  Settings,
 } from "lucide-react";
 import { NavGroup } from "./types";
 
@@ -14,7 +16,7 @@ export const adminNavItems: NavGroup[] = [
     items: [
       {
         name: "Overview",
-        path: "/admin",
+        path: "/admin/dashboard",
         icon: LayoutDashboard,
       },
     ],
@@ -87,6 +89,21 @@ export const adminNavItems: NavGroup[] = [
           { name: "Guide Analytics", path: "/admin/analytics/guides" },
           { name: "Marketplace Analytics", path: "/admin/analytics/marketplace" },
         ],
+      },
+    ],
+  },
+  {
+    group: "Settings",
+    items: [
+      {
+        name: "My Profile",
+        path: "/admin/profile",
+        icon: User,
+      },
+      {
+        name: "Settings",
+        path: "/admin/settings",
+        icon: Settings,
       },
     ],
   },

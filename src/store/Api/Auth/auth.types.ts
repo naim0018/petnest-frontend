@@ -24,8 +24,6 @@ export interface AuthUser {
   profile?: UserProfileSummary | null;
   interestedSpecies?: { id: string; name: string; image?: string | null } | null;
   interestedBreed?: { id: string; name: string; image?: string | null } | null;
-  accessToken?: string;
-  refreshToken?: string;
 }
 
 export interface LoginPayload {

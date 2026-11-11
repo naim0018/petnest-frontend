@@ -44,8 +44,7 @@ export default function UserProfile({ className }: UserProfileProps) {
     Boolean(
       user &&
         ((typeof user.email === "string" && user.email.trim().length > 0) ||
-          (typeof user.userId === "string" && user.userId.trim().length > 0) ||
-          (typeof user.accessToken === "string" && user.accessToken.trim().length > 0))
+          (typeof user.userId === "string" && user.userId.trim().length > 0))
     );
 
   const { data: meResponse } = useGetMeQuery(undefined, {
@@ -82,10 +81,10 @@ export default function UserProfile({ className }: UserProfileProps) {
   const isEditorial = currentRole === "AUTHOR" || currentRole === "VET";
 
   const dashboardPath = isAdminOrSuper
-    ? "/admin"
+    ? "/admin/dashboard"
     : isEditorial
     ? "/admin/guides"
-    : "/user";
+    : "/user/dashboard";
 
   const dashboardLabel = isAdminOrSuper
     ? "Admin Dashboard"
@@ -94,19 +93,28 @@ export default function UserProfile({ className }: UserProfileProps) {
     : "Dashboard";
 
   const settingsPath = isAdminOrSuper ? "/admin/settings" : "/user/settings";
-  const profilePath = "/user";
-  const activityLogPath = isAdminOrSuper ? "/admin/analytics" : "/user";
+  const profilePath = isAdminOrSuper ? "/admin/profile" : "/user/profile";
+  const activityLogPath = isAdminOrSuper ? "/admin/analytics" : "/user/dashboard";
 
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("just_logged_out", "true");
+      }
       await logoutMutation().unwrap();
     } catch {
       // Even if network API call fails, proceed to clear local auth state
     } finally {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("just_logged_out", "true");
+        setTimeout(() => {
+          sessionStorage.removeItem("just_logged_out");
+        }, 3000);
+      }
       dispatch(logOut());
-      toast.success("Logged out successfully");
+      toast.success("Successfully logged out. See you soon!");
       setIsOpen(false);
-      router.push("/");
+      router.replace("/");
     }
   };
 
@@ -144,6 +152,7 @@ export default function UserProfile({ className }: UserProfileProps) {
             alt={displayName}
             width={36}
             height={36}
+            unoptimized
             className="w-full h-full object-cover"
           />
         </div>
@@ -170,6 +179,7 @@ export default function UserProfile({ className }: UserProfileProps) {
                   alt={displayName}
                   width={40}
                   height={40}
+                  unoptimized
                   className="w-full h-full object-cover"
                 />
               </div>

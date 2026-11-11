@@ -22,7 +22,10 @@ export interface FormSelectProps {
   error?: string;
   leftIcon?: React.ReactNode;
   searchable?: boolean;
+  required?: boolean;
   className?: string;
+  labelClassName?: string;
+  containerClassName?: string;
 }
 
 export default function FormSelect({
@@ -36,7 +39,10 @@ export default function FormSelect({
   error,
   leftIcon,
   searchable = false,
+  required = false,
   className,
+  labelClassName,
+  containerClassName,
 }: FormSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,13 +66,16 @@ export default function FormSelect({
   };
 
   return (
-    <div className="w-full relative">
+    <div className={cn("w-full relative space-y-1.5", containerClassName)}>
       {label && (
         <label
           htmlFor={id}
-          className="text-xs font-semibold text-ink-muted select-none block px-1 mb-1"
+          className={cn(
+            "block text-xs font-bold uppercase tracking-wider text-ink select-none",
+            labelClassName
+          )}
         >
-          {label}
+          {label} {required && <span className="text-coral">*</span>}
         </label>
       )}
 
