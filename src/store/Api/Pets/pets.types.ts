@@ -3,6 +3,13 @@ import { ApiResponse, MessageResponse, PaginatedData, PaginationQuery } from "..
 export type PetSize = "SMALL" | "MEDIUM" | "LARGE" | "GIANT";
 export type CareLevel = "LOW" | "MODERATE" | "HIGH";
 
+export interface PetSpeciesBreed {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string | null;
+}
+
 export interface PetBreedSummary {
   id: string;
   name: string;
@@ -27,7 +34,7 @@ export interface PetSpecies {
   shortDescription?: string | null;
   image?: string | null;
   categoryIcon?: string | null;
-  breeds?: PetBreedSummary[];
+  breeds?: PetSpeciesBreed[];
   _count?: {
     breeds: number;
     guides?: number;
@@ -45,6 +52,8 @@ export interface SpeciesQuery extends PaginationQuery {}
 export interface BreedQuery extends PaginationQuery {
   speciesId?: string;
 }
+
+export interface SpeciesBreedsQuery extends PaginationQuery {}
 
 export interface CreateSpeciesPayload {
   name: string;

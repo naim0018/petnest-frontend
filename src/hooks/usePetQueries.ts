@@ -21,8 +21,7 @@ const GET_SPECIES = gql`
         id
         name
         slug
-        size
-        careLevel
+        image
       }
     }
   }

@@ -27,6 +27,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'api.dicebear.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'pub-d912dcfb2a174d82867520b7b2d5ae92.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.r2.dev',
+      },
     ],
   },
 };

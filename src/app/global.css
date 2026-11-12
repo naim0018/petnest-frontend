@@ -58,6 +58,7 @@
 
   --font-sans: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
   --font-heading: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
+  --font-quicksand: var(--font-quicksand), "Quicksand", system-ui, sans-serif;
   --font-mono: var(--font-code);
 
 

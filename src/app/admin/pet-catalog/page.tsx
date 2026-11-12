@@ -9,6 +9,12 @@ import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
 import { useHeaderAction } from "@/context/HeaderActionContext";
 import { useFindAllSpeciesQuery } from "@/store/Api/Pets/pets.api";
+import type { PetSpecies } from "@/store/Api/Pets/pets.types";
+import {
+  SpeciesDeleteModal,
+} from "@/components/admin/pet-catalog/SpeciesModals";
+import PetCatalogCard from "@/components/admin/pet-catalog/PetCatalogCard";
+import { PetCatalogGridSkeleton } from "@/components/admin/pet-catalog/PetCatalogCardSkeleton";
 import {
   PawPrint,
   Plus,
@@ -17,14 +23,13 @@ import {
   Layers,
   Award,
   AlertCircle,
-  ArrowRight,
-  Loader2,
 } from "lucide-react";
 
 export default function PetCatalogPage() {
   const router = useRouter();
   const { setHeaderAction } = useHeaderAction();
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteSpecies, setDeleteSpecies] = useState<PetSpecies | null>(null);
 
   const { data: speciesResponse, isLoading, isError, refetch } = useFindAllSpeciesQuery({
     limit: 10,
@@ -104,29 +109,31 @@ export default function PetCatalogPage() {
       </AnimatedContainer>
 
       {/* Search Bar Row (Preserved on the right) */}
-      <div className="flex items-center justify-end gap-3">
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer"
-          >
-            Clear filter
-          </button>
-        )}
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search pet types, scientific names, or descriptions..."
-            className="w-full h-11 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
-          />
+      <AnimatedContainer delay={0.1}>
+        <div className="flex items-center justify-end gap-3">
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer"
+            >
+              Clear filter
+            </button>
+          )}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search pet types, scientific names, or descriptions..."
+              className="w-full h-11 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
+            />
+          </div>
         </div>
-      </div>
+      </AnimatedContainer>
 
       {/* Pet Types Cards Grid */}
-      <AnimatedContainer delay={0.1}>
+      <AnimatedContainer delay={0.15}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
@@ -139,22 +146,12 @@ export default function PetCatalogPage() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-card border border-border-peach rounded-xl overflow-hidden shadow-2xs h-72 animate-pulse flex flex-col justify-between p-3.5"
-                >
-                  <div className="h-44 w-full bg-surface-soft/60 rounded-lg flex items-center justify-center">
-                    <Loader2 className="size-6 text-coral/40 animate-spin" />
-                  </div>
-                  <div className="space-y-2 mt-2">
-                    <div className="h-4 bg-surface-soft rounded w-3/4" />
-                    <div className="h-3 bg-surface-soft rounded w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PetCatalogGridSkeleton
+              count={10}
+              hasTags={false}
+              hasSubtitle={false}
+              gridClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            />
           ) : isError ? (
             <div className="p-12 text-center rounded-xl bg-card border border-border-peach space-y-3">
               <AlertCircle className="size-10 text-coral mx-auto" />
@@ -185,62 +182,47 @@ export default function PetCatalogPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {filteredPetTypes.map((type) => {
                 const breedCount = type.breeds?.length ?? type._count?.breeds ?? 0;
                 const linkHref = `/admin/pet-catalog/${type.slug || type.id}`;
 
                 return (
-                  <Link
+                  <PetCatalogCard
                     key={type.id}
-                    href={linkHref}
-                    className="group relative bg-card border border-border-peach hover:border-coral rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer transform hover:-translate-y-1"
-                  >
-                    {/* Clean Product/Mascot Card Image */}
-                    <div className="relative h-44 w-full bg-gradient-to-b from-surface-soft to-surface-muted/60 p-3 flex items-center justify-center overflow-hidden border-b border-border-peach/60">
-                      <div className="relative size-32 group-hover:scale-108 transition-transform duration-300">
-                        <Image
-                          src={type.image || "/CareGuideCard/dog-faq-mascot.png"}
-                          alt={type.name}
-                          fill
-                          className="object-contain drop-shadow-md"
-                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                        />
-                      </div>
-
-                      {/* Breed Count Badge */}
-                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 dark:bg-card/95 text-ink border border-border-peach shadow-2xs">
-                        {breedCount} Breeds
-                      </span>
-                    </div>
-
-                    {/* Body Info */}
-                    <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
-                      <div>
-                        <h4 className="text-sm font-bold font-quicksand text-ink group-hover:text-coral transition-colors line-clamp-1">
-                          {type.name}
-                        </h4>
-                        <p className="text-[11px] text-ink-muted italic line-clamp-1">
-                          {type.scientificGroup || "Taxonomy Class"}
-                        </p>
-                        <p className="text-[11px] text-ink-muted line-clamp-2 mt-1.5 leading-relaxed">
-                          {type.shortDescription || "Care overview and companion profiles across PetNest."}
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-border-peach flex items-center justify-between text-xs">
-                        <span className="text-coral font-bold text-[11px] group-hover:translate-x-0.5 transition-transform flex items-center gap-1 font-quicksand">
-                          View Breeds <ArrowRight className="size-3" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+                    name={type.name}
+                    image={type.image}
+                    linkHref={linkHref}
+                    badgeText={`${breedCount} Breeds`}
+                    description={type.shortDescription}
+                    secondaryLink={{
+                      href: linkHref,
+                      label: `Browse Breeds (${breedCount})`,
+                    }}
+                    statusLabel="Class"
+                    statusValue="Verified"
+                    metaText={`${breedCount} Breeds`}
+                    onReadMore={() => router.push(linkHref)}
+                    onDetails={() => router.push(linkHref)}
+                    onEdit={() =>
+                      router.push(`/admin/pet-catalog/${type.slug || type.id}/edit`)
+                    }
+                    onDelete={() => setDeleteSpecies(type)}
+                    deleteTooltip="Delete Pet Type"
+                  />
                 );
               })}
             </div>
           )}
         </div>
       </AnimatedContainer>
+
+      {/* Delete Confirmation Modal */}
+      <SpeciesDeleteModal
+        species={deleteSpecies}
+        isOpen={Boolean(deleteSpecies)}
+        onClose={() => setDeleteSpecies(null)}
+      />
     </div>
   );
 }

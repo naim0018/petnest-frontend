@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "relative overflow-hidden group inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer before:absolute before:inset-0 before:rounded-full before:-translate-x-[110%] hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out",
+  "relative overflow-hidden group/btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer before:absolute before:inset-0 before:rounded-full before:-translate-x-[110%] hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out",
   {
     variants: {
       variant: {
@@ -76,12 +76,13 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
     const isPrimary = variant === "primary" || variant === "danger" || variant === "success";
 
     const hoverTextColorClass = isPrimary
-      ? "group-hover:text-coral [&_svg]:group-hover:text-coral"
-      : "group-hover:text-white [&_svg]:group-hover:text-white";
+      ? "group-hover/btn:text-coral [&_svg]:group-hover/btn:text-coral"
+      : "group-hover/btn:text-white [&_svg]:group-hover/btn:text-white";
 
     return (
       <button
         ref={ref}
+        title={title}
         disabled={disabled || isLoading}
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         {...props}
@@ -96,7 +97,7 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
             )}
           >
             {leftIcon && <span className="shrink-0">{leftIcon}</span>}
-            {title || children}
+            {children ?? title}
             {rightIcon && <span className="shrink-0">{rightIcon}</span>}
           </span>
         )}
