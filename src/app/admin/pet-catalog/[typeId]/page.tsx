@@ -14,11 +14,9 @@ import {
 } from "@/store/Api/Pets/pets.api";
 import type { PetBreed, PetSpecies } from "@/store/Api/Pets/pets.types";
 import {
-  BreedDetailsModal,
   BreedDeleteModal,
 } from "@/components/admin/pet-catalog/BreedModals";
 import {
-  SpeciesDetailsModal,
   SpeciesDeleteModal,
 } from "@/components/admin/pet-catalog/SpeciesModals";
 import PetCatalogCard from "@/components/admin/pet-catalog/PetCatalogCard";
@@ -83,10 +81,7 @@ export default function PetTypeBreedsPage({
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [detailsBreed, setDetailsBreed] = useState<PetBreed | null>(null);
   const [deleteBreed, setDeleteBreed] = useState<PetBreed | null>(null);
-
-  const [isSpeciesDetailsOpen, setIsSpeciesDetailsOpen] = useState(false);
   const [isSpeciesDeleteOpen, setIsSpeciesDeleteOpen] = useState(false);
 
   // Place "Add Breed" button on the Header dynamically
@@ -217,13 +212,26 @@ export default function PetTypeBreedsPage({
       {/* Dynamic 4 Stats Row with Pet Type on 1st Card */}
       <AnimatedContainer delay={0.05}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1st Card: Pet Type with Image / Mascot */}
-          <div className="relative overflow-hidden p-4 sm:p-5 rounded-xl bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group">
+          {/* 1st Card: Pet Type with Image / Mascot (links to Species Details) */}
+          <div
+            onClick={() => router.push(`/admin/pet-catalog/${typeId}/details`)}
+            className="relative overflow-hidden p-4 sm:p-5 rounded-xl bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group cursor-pointer"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                router.push(`/admin/pet-catalog/${typeId}/details`);
+              }
+            }}
+          >
             <div className="absolute -right-6 -top-6 size-24 rounded-full bg-coral/5 blur-xl pointer-events-none group-hover:bg-coral/10 transition-colors" />
 
             <div className="flex w-full items-center justify-between">
-              <h3 className="text-ink-muted text-xs font-bold uppercase tracking-wider font-quicksand group-hover:text-ink transition-colors">
+              <h3 className="text-ink-muted text-xs font-bold uppercase tracking-wider font-quicksand group-hover:text-coral transition-colors flex items-center gap-1.5">
                 Pet Classification
+                <span className="text-[10px] lowercase text-coral opacity-0 group-hover:opacity-100 transition-opacity font-normal">
+                  (details →)
+                </span>
               </h3>
             </div>
 
@@ -281,41 +289,35 @@ export default function PetTypeBreedsPage({
         </div>
       </AnimatedContainer>
 
-      {/* Search Filter Bar (Aligned to right) */}
+      {/* Breeds Header (Title & Search Filter in same row) + Grid */}
       <AnimatedContainer delay={0.1}>
-        <div className="flex items-center justify-end gap-3">
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer"
-            >
-              Clear filter
-            </button>
-          )}
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${petSpecies.name.split(" ")[0]} breeds, traits, origin...`}
-              className="w-full h-11 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
-            />
-          </div>
-        </div>
-      </AnimatedContainer>
-
-      {/* Breeds Grid */}
-      <AnimatedContainer delay={0.15}>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
               <PawPrint className="size-4.5 text-coral" />
               All Registered Breeds
             </h3>
-            <span className="text-xs text-ink-muted font-medium">
-              Showing {filteredBreeds.length} of {breeds.length} breeds
-            </span>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer shrink-0"
+                >
+                  Clear filter
+                </button>
+              )}
+              <div className="relative w-full sm:w-72 md:w-80">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Search ${petSpecies.name.split(" ")[0]} breeds, traits, origin...`}
+                  className="w-full h-10 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
+                />
+              </div>
+            </div>
           </div>
 
           {isLoadingBreeds ? (
@@ -350,12 +352,14 @@ export default function PetTypeBreedsPage({
               {filteredBreeds.map((breed) => {
                 const formattedCare = formatCareLevel(breed.careLevel);
                 const formattedSizeText = formatSize(breed.size);
+                const breedDetailsHref = `/admin/pet-catalog/${typeId}/breed/${breed.id}`;
 
                 return (
                   <PetCatalogCard
                     key={breed.id}
                     name={breed.name}
                     image={breed.image || petSpecies.image}
+                    linkHref={breedDetailsHref}
                     badgeText={formattedCare ? `${formattedCare} Care` : "Standard Care"}
                     subtitle={breed.originCountry || "Worldwide"}
                     pillText={formattedSizeText || undefined}
@@ -364,8 +368,8 @@ export default function PetTypeBreedsPage({
                     statusLabel="Status"
                     statusValue="Active"
                     metaText="Loved by Pet Lovers"
-                    onReadMore={() => setDetailsBreed(breed)}
-                    onDetails={() => setDetailsBreed(breed)}
+                    onReadMore={() => router.push(breedDetailsHref)}
+                    onDetails={() => router.push(breedDetailsHref)}
                     onEdit={() =>
                       router.push(`/admin/pet-catalog/${typeId}/edit-breed/${breed.id}`)
                     }
@@ -379,37 +383,15 @@ export default function PetTypeBreedsPage({
         </div>
       </AnimatedContainer>
 
-      {/* Breed Details & Delete Modals */}
-      <BreedDetailsModal
-        breed={detailsBreed}
-        speciesName={petSpecies.name}
-        isOpen={Boolean(detailsBreed)}
-        onClose={() => setDetailsBreed(null)}
-        onEdit={() => {
-          if (detailsBreed) {
-            router.push(`/admin/pet-catalog/${typeId}/edit-breed/${detailsBreed.id}`);
-            setDetailsBreed(null);
-          }
-        }}
-      />
-
+      {/* Breed Delete Modal */}
       <BreedDeleteModal
         breed={deleteBreed}
+        speciesName={petSpecies.name}
         isOpen={Boolean(deleteBreed)}
         onClose={() => setDeleteBreed(null)}
       />
 
-      {/* Species Details & Delete Modals for Active Classification */}
-      <SpeciesDetailsModal
-        species={petSpecies}
-        isOpen={isSpeciesDetailsOpen}
-        onClose={() => setIsSpeciesDetailsOpen(false)}
-        onEdit={() => {
-          setIsSpeciesDetailsOpen(false);
-          router.push(`/admin/pet-catalog/${typeId}/edit`);
-        }}
-      />
-
+      {/* Species Delete Modal for Active Classification */}
       <SpeciesDeleteModal
         species={petSpecies}
         isOpen={isSpeciesDeleteOpen}

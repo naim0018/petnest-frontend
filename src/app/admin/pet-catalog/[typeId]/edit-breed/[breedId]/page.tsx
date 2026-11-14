@@ -20,7 +20,7 @@ import { useUploadMediaMutation } from "@/store/Api/Media/media.api";
 import { COUNTRY_OPTIONS } from "@/lib/data/countries";
 import { TEMPERAMENT_OPTIONS } from "@/lib/data/temperaments";
 import type { PetSize, CareLevel } from "@/store/Api/Pets/pets.types";
-import { Award, CheckCircle2, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { Award, CheckCircle2, ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const sizeOptions: FormSelectOption[] = [
@@ -181,9 +181,58 @@ export default function EditBreedPage({
 
   if (isSpeciesLoading || isBreedLoading) {
     return (
-      <div className="p-16 text-center flex flex-col items-center justify-center gap-3">
-        <Loader2 className="size-8 text-coral animate-spin" />
-        <p className="text-sm font-semibold text-ink-muted">Loading breed profile details...</p>
+      <div className="w-full space-y-6">
+        <div className="bg-card border border-border-peach rounded-xl p-6 sm:p-8 shadow-xs animate-pulse">
+          {/* Header skeleton */}
+          <div className="border-b border-border-peach pb-4 mb-6 space-y-2">
+            <div className="h-6 w-52 bg-surface-muted rounded" />
+            <div className="h-3 w-96 bg-surface-muted/60 rounded" />
+          </div>
+
+          {/* Form skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* Left Inputs */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="h-3 w-24 bg-surface-muted rounded" />
+                <div className="h-10 w-full bg-surface-muted/40 rounded-xl" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="h-3 w-28 bg-surface-muted rounded" />
+                  <div className="h-10 w-full bg-surface-muted/40 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 w-20 bg-surface-muted rounded" />
+                  <div className="h-10 w-full bg-surface-muted/40 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-28 bg-surface-muted rounded" />
+                <div className="h-10 w-full bg-surface-muted/40 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-32 bg-surface-muted rounded" />
+                <div className="h-10 w-full bg-surface-muted/40 rounded-xl" />
+              </div>
+            </div>
+
+            {/* Right Media & Overview */}
+            <div className="space-y-4">
+              <div className="h-44 w-full rounded-xl border-2 border-dashed border-border-peach bg-surface-muted/20" />
+              <div className="space-y-2">
+                <div className="h-3 w-28 bg-surface-muted rounded" />
+                <div className="h-24 w-full bg-surface-muted/40 rounded-xl" />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-border-peach mt-6">
+            <div className="h-10 w-24 bg-surface-muted rounded-xl" />
+            <div className="h-10 w-32 bg-surface-muted rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
