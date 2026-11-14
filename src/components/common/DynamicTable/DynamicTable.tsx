@@ -467,21 +467,28 @@ const DynamicTable = <T extends object>({
 
             <tbody className="">
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={
-                      columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)
-                    }
-                    className="px-6 py-20 text-center"
-                  >
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 border-[3px] border-primary-brand/20 border-t-primary-brand rounded-full animate-spin" />
-                      <p className="text-sm font-semibold text-gray-400">
-                        Loading data...
-                      </p>
-                    </div>
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <tr key={rowIndex} className="border-b border-border/40 animate-pulse">
+                    {selectable && (
+                      <td className="px-4 py-3.5">
+                        <div className="size-4 rounded bg-surface-muted" />
+                      </td>
+                    )}
+                    {columns.map((col, colIndex) => (
+                      <td key={colIndex} className="px-4 py-3.5">
+                        <div
+                          className="h-4 bg-surface-muted rounded"
+                          style={{ width: `${55 + ((colIndex * 15) % 35)}%` }}
+                        />
+                      </td>
+                    ))}
+                    {actions && (
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="h-6 w-16 bg-surface-muted rounded-full ml-auto" />
+                      </td>
+                    )}
+                  </tr>
+                ))
               ) : paginatedData.length === 0 ? (
                 <tr>
                   <td
@@ -611,13 +618,20 @@ const DynamicTable = <T extends object>({
         )}
 
         {loading ? (
-          <div className="px-6 py-20 text-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-[3px] border-primary-brand/20 border-t-primary-brand rounded-full animate-spin" />
-              <p className="text-sm font-semibold text-gray-400">
-                Loading data...
-              </p>
-            </div>
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border border-border-peach bg-card space-y-3 animate-pulse"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-32 bg-surface-muted rounded" />
+                  <div className="h-4 w-16 bg-surface-muted rounded" />
+                </div>
+                <div className="h-3 w-48 bg-surface-muted/60 rounded" />
+                <div className="h-3 w-24 bg-surface-muted/40 rounded" />
+              </div>
+            ))}
           </div>
         ) : paginatedData.length === 0 ? (
           <div className="px-6 py-20 text-center">

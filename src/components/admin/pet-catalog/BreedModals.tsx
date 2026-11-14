@@ -459,11 +459,13 @@ export function BreedEditModal({ breed, isOpen, onClose }: BreedEditModalProps) 
 
 interface BreedDeleteModalProps {
   breed: PetBreed | null;
+  speciesName?: string;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function BreedDeleteModal({ breed, isOpen, onClose }: BreedDeleteModalProps) {
+export function BreedDeleteModal({ breed, isOpen, onClose, onSuccess }: BreedDeleteModalProps) {
   const [removeBreed, { isLoading: isDeleting }] = useRemoveBreedMutation();
 
   if (!breed) return null;
@@ -473,6 +475,7 @@ export function BreedDeleteModal({ breed, isOpen, onClose }: BreedDeleteModalPro
       await removeBreed(breed.id).unwrap();
       toast.success(`Breed "${breed.name}" deleted successfully!`);
       onClose();
+      onSuccess?.();
     } catch (err: unknown) {
       const errorMsg =
         (err as { data?: { message?: string } })?.data?.message ||

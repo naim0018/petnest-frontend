@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import DashboardShell from "@/components/layout/DashboardShell";
 import { userNavItems } from "@/lib/nav";
 import { useAppSelector } from "@/hooks/useRedux";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function UserLayout({
@@ -37,9 +36,30 @@ export default function UserLayout({
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-soft">
-        <Loader2 className="size-8 animate-spin text-coral" />
-      </div>
+      <DashboardShell
+        navGroups={userNavItems}
+        logoText="PETNEST"
+        title="User Dashboard"
+        description="Manage your personal settings, profile, and activities."
+      >
+        <div className="space-y-6 animate-pulse">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="p-4 sm:p-5 rounded-xl bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
+              >
+                <div className="h-3 w-28 bg-surface-muted rounded" />
+                <div className="space-y-2 mt-2">
+                  <div className="h-6 w-36 bg-surface-muted rounded" />
+                  <div className="h-3 w-24 bg-surface-muted/70 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="h-64 rounded-2xl bg-card border border-border-peach shadow-2xs" />
+        </div>
+      </DashboardShell>
     );
   }
 

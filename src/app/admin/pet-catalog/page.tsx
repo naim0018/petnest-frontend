@@ -72,6 +72,49 @@ export default function PetCatalogPage() {
     );
   }, [speciesList, searchQuery]);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Metric Cards Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="p-4 sm:p-5 rounded-xl bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
+            >
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-28 bg-surface-muted rounded" />
+                <div className="size-5 rounded-full bg-surface-muted/70" />
+              </div>
+              <div className="space-y-1.5 mt-2">
+                <div className="h-6 w-24 bg-surface-muted rounded" />
+                <div className="h-3 w-36 bg-surface-muted/60 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search Bar Skeleton */}
+        <div className="flex items-center justify-end">
+          <div className="w-full max-w-md h-11 bg-card border border-border-peach rounded-xl animate-pulse shadow-2xs" />
+        </div>
+
+        {/* Pet Types Cards Grid Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between animate-pulse">
+            <div className="h-5 w-36 bg-surface-muted rounded" />
+          </div>
+          <PetCatalogGridSkeleton
+            count={10}
+            hasTags={false}
+            hasSubtitle={false}
+            gridClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Metric Cards - 4 columns with dynamic gradient design */}
@@ -140,9 +183,6 @@ export default function PetCatalogPage() {
               <Layers className="size-4.5 text-coral" />
               All Pet Types
             </h3>
-            <span className="text-xs text-ink-muted font-medium">
-              Click a card to browse and manage its breeds
-            </span>
           </div>
 
           {isLoading ? (
@@ -185,25 +225,26 @@ export default function PetCatalogPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {filteredPetTypes.map((type) => {
                 const breedCount = type.breeds?.length ?? type._count?.breeds ?? 0;
-                const linkHref = `/admin/pet-catalog/${type.slug || type.id}`;
+                const breedsHref = `/admin/pet-catalog/${type.slug || type.id}`;
+                const detailsHref = `/admin/pet-catalog/${type.slug || type.id}/details`;
 
                 return (
                   <PetCatalogCard
                     key={type.id}
                     name={type.name}
                     image={type.image}
-                    linkHref={linkHref}
+                    linkHref={detailsHref}
                     badgeText={`${breedCount} Breeds`}
                     description={type.shortDescription}
                     secondaryLink={{
-                      href: linkHref,
-                      label: `Browse Breeds (${breedCount})`,
+                      href: breedsHref,
+                      label: `View Breeds (${breedCount})`,
                     }}
                     statusLabel="Class"
                     statusValue="Verified"
                     metaText={`${breedCount} Breeds`}
-                    onReadMore={() => router.push(linkHref)}
-                    onDetails={() => router.push(linkHref)}
+                    onReadMore={() => router.push(detailsHref)}
+                    onDetails={() => router.push(detailsHref)}
                     onEdit={() =>
                       router.push(`/admin/pet-catalog/${type.slug || type.id}/edit`)
                     }
