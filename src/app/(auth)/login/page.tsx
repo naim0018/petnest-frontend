@@ -299,7 +299,7 @@ export default function LoginPage() {
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-quicksand text-white leading-[1.15] tracking-tight drop-shadow-md">
               A Happier Life <br className="hidden sm:inline" />
               for Your{" "}
-              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#818CF8] bg-clip-text text-transparent drop-shadow-md">
+              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-coral via-[#FF8566] to-sunshine bg-clip-text text-transparent drop-shadow-md">
                 Furry Friend
               </span>
             </h1>
@@ -312,8 +312,8 @@ export default function LoginPage() {
             {/* Feature Tags matching system design & mockup */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-5 pt-2">
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <Heart className="size-4 text-[#C084FC] fill-[#C084FC]" />
+                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <Heart className="size-4 text-coral fill-coral" />
                 </div>
                 <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Expert Care Tips
@@ -323,8 +323,8 @@ export default function LoginPage() {
               <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <Users className="size-4 text-[#C084FC]" strokeWidth={2.2} />
+                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <Users className="size-4 text-coral" strokeWidth={2.2} />
                 </div>
                 <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Pet Community
@@ -334,8 +334,8 @@ export default function LoginPage() {
               <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-[#7C3AED]/30 border border-[#8B5CF6]/40 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
-                  <ShoppingCart className="size-4 text-[#C084FC]" strokeWidth={2.2} />
+                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                  <ShoppingCart className="size-4 text-coral" strokeWidth={2.2} />
                 </div>
                 <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
                   Shop Essentials

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Bell, Menu, Check, CheckCheck, BellOff } from "lucide-react";
+import { Bell, Menu, Check, CheckCheck, BellOff } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
-import UserProfile from "@/components/common/UserProfile";
 import Breadcrumbs from "./Breadcrumbs";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/context/HeaderActionContext";
@@ -53,9 +52,6 @@ const initialNotifications: NotificationItem[] = [
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const { headerAction } = useHeaderAction();
-  const [searchVal, setSearchVal] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -69,12 +65,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
         !notifRef.current.contains(event.target as Node)
       ) {
         setIsNotifOpen(false);
-      }
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setIsSearchOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -120,51 +110,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
               {headerAction}
             </div>
           )}
-
-          {/* Search Input */}
-          <div className="static sm:relative flex items-center h-full" ref={searchRef}>
-            {/* Desktop Search */}
-            <div className="relative w-56 lg:w-64 hidden md:block transition-all duration-300">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="size-4 text-ink-faint" />
-              </span>
-              <input
-                type="text"
-                placeholder="Search PetNest admin..."
-                value={searchVal}
-                onChange={(e) => setSearchVal(e.target.value)}
-                className="w-full pl-9 pr-3.5 h-9 bg-surface-muted border border-border-peach rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint"
-              />
-            </div>
-
-            {/* Mobile Search Icon */}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 text-ink-muted hover:text-ink hover:bg-surface-muted rounded-lg transition-colors cursor-pointer md:hidden"
-              aria-label="Search"
-            >
-              <Search className="size-5" />
-            </button>
-
-            {/* Mobile Search Popover */}
-            {isSearchOpen && (
-              <div className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 w-auto sm:w-72 bg-card border border-border-peach rounded-xl p-2.5 z-50 shadow-md animate-in fade-in zoom-in-95 duration-100 md:hidden">
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Search className="size-4 text-ink-faint" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchVal}
-                    onChange={(e) => setSearchVal(e.target.value)}
-                    autoFocus
-                    className="w-full pl-9 pr-3.5 py-1.5 bg-surface-muted border border-border-peach rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Notifications Dropdown Container */}
           <div className="static sm:relative flex items-center h-full" ref={notifRef}>
@@ -255,11 +200,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           {/* Theme Toggle */}
           <ThemeToggle />
-
-          <div className="h-5 w-px bg-border-peach"></div>
-
-          {/* User Profile */}
-          <UserProfile />
         </div>
       </div>
 

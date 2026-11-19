@@ -110,6 +110,7 @@ export default function EditBreedPage({
       <PrimaryButton
         variant="outline"
         size="sm"
+        rounded="md"
         onClick={() => router.push(`/admin/pet-catalog/${typeId}`)}
         leftIcon={<ArrowLeft className="size-4" />}
         className="font-bold cursor-pointer"

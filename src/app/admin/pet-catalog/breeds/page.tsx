@@ -162,7 +162,7 @@ export default function BreedsPage() {
       key: "status",
       label: "Catalog Status",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span
           className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -231,18 +231,16 @@ export default function BreedsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search breeds, temperament, or origin..."
-            pagination
-            pageSize={10}
-            title="Pet Breeds Directory"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search breeds, temperament, or origin..."
+          pagination
+          pageSize={10}
+          title="Pet Breeds Directory"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

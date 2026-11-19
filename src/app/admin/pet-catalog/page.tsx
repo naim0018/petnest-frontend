@@ -15,10 +15,10 @@ import {
 } from "@/components/admin/pet-catalog/SpeciesModals";
 import PetCatalogCard from "@/components/admin/pet-catalog/PetCatalogCard";
 import { PetCatalogGridSkeleton } from "@/components/admin/pet-catalog/PetCatalogCardSkeleton";
+import SearchField, { SearchSuggestionItem } from "@/components/common/SearchField";
 import {
   PawPrint,
   Plus,
-  Search,
   Sparkles,
   Layers,
   Award,
@@ -43,6 +43,7 @@ export default function PetCatalogPage() {
       <PrimaryButton
         variant="primary"
         size="sm"
+        rounded="md"
         onClick={() => router.push("/admin/pet-catalog/new")}
         leftIcon={<Plus className="size-4" />}
         className="font-bold cursor-pointer"
@@ -72,6 +73,20 @@ export default function PetCatalogPage() {
     );
   }, [speciesList, searchQuery]);
 
+  const suggestions: SearchSuggestionItem[] = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return filteredPetTypes.slice(0, 6).map((pt) => ({
+      id: pt.id || pt.slug,
+      title: pt.name,
+      subtitle: pt.scientificGroup || (pt.breeds?.length ? `${pt.breeds.length} breeds` : undefined),
+      image: pt.image || "/CareGuideCard/dog-faq-mascot.png",
+      badge: pt.breeds?.length ? `${pt.breeds.length} Breeds` : undefined,
+      onClick: () => {
+        router.push(`/admin/pet-catalog/${pt.id || pt.slug}`);
+      },
+    }));
+  }, [filteredPetTypes, searchQuery, router]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -94,16 +109,14 @@ export default function PetCatalogPage() {
           ))}
         </div>
 
-        {/* Search Bar Skeleton */}
-        <div className="flex items-center justify-end">
-          <div className="w-full max-w-md h-11 bg-card border border-border-peach rounded-xl animate-pulse shadow-2xs" />
+        {/* Pet Types Header Skeleton (Title & Search Filter in same row) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-pulse">
+          <div className="h-6 w-36 bg-surface-muted rounded" />
+          <div className="w-full sm:w-80 md:w-96 h-11 bg-card border border-border-peach rounded-md shadow-2xs" />
         </div>
 
         {/* Pet Types Cards Grid Skeleton */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between animate-pulse">
-            <div className="h-5 w-36 bg-surface-muted rounded" />
-          </div>
           <PetCatalogGridSkeleton
             count={10}
             hasTags={false}
@@ -151,38 +164,24 @@ export default function PetCatalogPage() {
         </div>
       </AnimatedContainer>
 
-      {/* Search Bar Row (Preserved on the right) */}
+      {/* Pet Types Header (Title & Search Filter in same row) + Cards Grid */}
       <AnimatedContainer delay={0.1}>
-        <div className="flex items-center justify-end gap-3">
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer"
-            >
-              Clear filter
-            </button>
-          )}
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search pet types, scientific names, or descriptions..."
-              className="w-full h-11 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
-            />
-          </div>
-        </div>
-      </AnimatedContainer>
-
-      {/* Pet Types Cards Grid */}
-      <AnimatedContainer delay={0.15}>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2 shrink-0">
               <Layers className="size-4.5 text-coral" />
               All Pet Types
             </h3>
+
+            <div className="w-full sm:w-80 md:w-96">
+              <SearchField
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search pet types, scientific names..."
+                suggestions={suggestions}
+                onSelectSuggestion={(item) => item.onClick?.()}
+              />
+            </div>
           </div>
 
           {isLoading ? (

@@ -122,7 +122,7 @@ export default function VerificationRequestsPage() {
       key: "submittedAt",
       label: "Submitted",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.submittedAt}</span>,
     },
   ];
@@ -192,18 +192,16 @@ export default function VerificationRequestsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            actions={actions}
-            searchable
-            searchPlaceholder="Search verification requests by name or license..."
-            emptyMessage="No pending verification requests at this time."
-            title="Professional Credential Verification Queue"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          actions={actions}
+          searchable
+          searchPlaceholder="Search verification requests by name or license..."
+          emptyMessage="No pending verification requests at this time."
+          title="Professional Credential Verification Queue"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

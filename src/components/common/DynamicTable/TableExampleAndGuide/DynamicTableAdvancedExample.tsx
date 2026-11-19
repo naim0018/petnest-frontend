@@ -22,6 +22,7 @@ interface ProjectFile extends Record<string, unknown> {
   id: string;
   name: string;
   type: string;
+  image?: string;
   taskLink: string;
   addedBy: { name: string; avatar?: string };
   assignStaff: { name: string; avatar?: string }[];
@@ -41,9 +42,10 @@ const AdvancedTableExample = () => {
   const files: ProjectFile[] = [
     {
       id: "1",
-      name: "photo_2025-07-22_03-26-36.jpg",
+      name: "golden_retriever_profile.jpg",
       type: "JPG Image",
-      taskLink: "Planning",
+      image: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80",
+      taskLink: "Adoption Review",
       addedBy: { name: "Mike Smith", avatar: "https://i.pravatar.cc/150?u=1" },
       assignStaff: [
         { name: "User 1", avatar: "https://i.pravatar.cc/150?u=10" },
@@ -82,8 +84,9 @@ const AdvancedTableExample = () => {
     },
     {
       id: "3",
-      name: "LMI-PolicyComparisonReport - Home.xlsx",
-      type: "Excel Worksheet",
+      name: "maine_coon_care_guide.png",
+      type: "PNG Image",
+      image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80",
       taskLink: "1st Floor Slab",
       addedBy: { name: "Sam Watson", avatar: "https://i.pravatar.cc/150?u=3" },
       assignStaff: [
@@ -185,6 +188,7 @@ const AdvancedTableExample = () => {
       id: "10",
       name: "interior_design_mockups.png",
       type: "Image",
+      image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
       taskLink: "Staging",
       addedBy: {
         name: "Jennifer Jones",
@@ -358,7 +362,7 @@ const AdvancedTableExample = () => {
       key: "fileSize",
       label: "File Size",
       accessor: "fileSize",
-      align: "right",
+      align: "center",
     },
   ];
 

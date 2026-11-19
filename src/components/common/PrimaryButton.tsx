@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "relative overflow-hidden group/btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer before:absolute before:inset-0 before:rounded-full before:-translate-x-[110%] hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out",
+  "relative overflow-hidden group/btn inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer before:absolute before:inset-0 before:-translate-x-[110%] hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out",
   {
     variants: {
       variant: {
@@ -32,7 +32,14 @@ const buttonVariants = cva(
         sm: "h-9 px-3.5 text-sm",
         md: "h-10 px-5 text-sm",
         lg: "h-12 px-7 text-base",
-        icon: "size-10 p-0 flex items-center justify-center rounded-xl",
+        icon: "size-10 p-0 flex items-center justify-center",
+      },
+      rounded: {
+        full: "rounded-full before:rounded-full",
+        md: "rounded-md before:rounded-md",
+        lg: "rounded-lg before:rounded-lg",
+        xl: "rounded-xl before:rounded-xl",
+        none: "rounded-none before:rounded-none",
       },
       fullWidth: {
         true: "w-full",
@@ -41,6 +48,7 @@ const buttonVariants = cva(
     defaultVariants: {
       variant: "primary",
       size: "md",
+      rounded: "full",
     },
   }
 );
@@ -65,6 +73,7 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
       animatedSweep = false,
       variant = "primary",
       size,
+      rounded,
       fullWidth,
       className,
       children,
@@ -84,7 +93,7 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
         ref={ref}
         title={title}
         disabled={disabled || isLoading}
-        className={cn(buttonVariants({ variant, size, fullWidth, className }))}
+        className={cn(buttonVariants({ variant, size, rounded, fullWidth, className }))}
         {...props}
       >
         {isLoading ? (

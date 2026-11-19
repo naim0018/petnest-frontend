@@ -536,3 +536,30 @@ interface ApiResponse<T> {
 - See `DynamicTableExamples.tsx` for basic examples
 - See `DynamicTableAdvancedExample.tsx` for advanced features
 - Check the main `DynamicTable.tsx` component for all available props
+
+---
+
+## 🎴 Grid View Format
+
+`DynamicTable` includes built-in view mode switching between **Table** and **Grid** layouts.
+
+### Features
+- **View Toggle Buttons**: Switch between Table (`LayoutList`) and Grid (`LayoutGrid`) directly from the header toolbar.
+- **Adaptive Image Cards**: If an item contains an image URL (`image`, `coverImage`, etc.), the card displays a media banner. If an item has **no image**, it renders cleanly as a compact card without any placeholder banner.
+- **Safe Object Text Extraction**: Safely unwraps nested objects (e.g. `{ name: 'Birds' }`) into clean text without producing `[object Object]`.
+- **Refined Typography**: High-contrast dark headings, category pill tags, and crisp uppercase column labels.
+- **Full Feature Compatibility**: Row selection, bulk actions bar, search, pagination, loading skeletons, and row actions operate seamlessly in both table and grid views.
+
+### Usage Example
+
+```tsx
+<DynamicTable
+  data={items}
+  columns={columns}
+  enableViewToggle={true}             // Enables Table / Grid toggle button (default: true)
+  defaultViewMode="table"             // "table" | "grid" (default: "table")
+  getCardImage={(row) => row.image}   // Optional custom image extractor
+  getCardTitle={(row) => row.title}   // Optional custom title extractor
+  getCardSubtitle={(row) => row.type} // Optional custom subtitle extractor
+/>
+```

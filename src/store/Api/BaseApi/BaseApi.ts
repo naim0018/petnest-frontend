@@ -87,6 +87,7 @@ export const baseApi = createApi({
     "GuideFaqs",
     "Bookmarks",
     "Media",
+    "Settings",
   ],
   endpoints: () => ({}),
 });

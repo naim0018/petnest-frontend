@@ -37,6 +37,9 @@ export interface Guide {
   content: string;
   publishedAt: string;
   featured?: boolean;
+  order?: number;
+  displayOrder?: number;
+  tags?: string[];
 }
 
 export interface Product {
@@ -592,7 +595,11 @@ export async function getFeedPostById(id: string): Promise<FeedPost | undefined>
 }
 
 export async function getGuides(): Promise<Guide[]> {
-  return guidesData;
+  return [...guidesData].sort((a, b) => {
+    const aOrder = a.order ?? a.displayOrder ?? 999;
+    const bOrder = b.order ?? b.displayOrder ?? 999;
+    return aOrder - bOrder;
+  });
 }
 
 export async function getGuideBySlug(slug: string): Promise<Guide | undefined> {

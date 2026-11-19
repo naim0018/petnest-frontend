@@ -247,7 +247,7 @@ const ProductTableExample = () => {
       label: "Price",
       accessor: "price",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (product) => `$${product.price.toFixed(2)}`,
     },
     {

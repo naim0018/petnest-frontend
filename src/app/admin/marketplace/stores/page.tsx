@@ -146,7 +146,7 @@ export default function StoresPage() {
       key: "status",
       label: "Store Status",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span
           className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -206,18 +206,16 @@ export default function StoresPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search stores, brands, or categories..."
-            pagination
-            pageSize={10}
-            title="Partner Merchant Directory"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search stores, brands, or categories..."
+          pagination
+          pageSize={10}
+          title="Partner Merchant Directory"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
-import { Clock, Check, X, Eye, FileText, AlertTriangle, ShieldCheck } from "lucide-react";
+import { useHeaderAction } from "@/context/HeaderActionContext";
+import { Clock, Check, X, Eye, FileText, AlertTriangle, ShieldCheck, Plus } from "lucide-react";
+import Link from "next/link";
 
 interface ReviewQueueRecord {
   id: string;
@@ -57,8 +59,27 @@ const mockQueue: ReviewQueueRecord[] = [
 ];
 
 export default function ReviewQueuePage() {
+  const { setHeaderAction } = useHeaderAction();
   const [data, setData] = useState<ReviewQueueRecord[]>(mockQueue);
   const [notification, setNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHeaderAction(
+      <Link href="/admin/guides/create">
+        <PrimaryButton
+          variant="primary"
+          size="sm"
+          rounded="md"
+          leftIcon={<Plus className="size-4" />}
+          className="font-bold cursor-pointer"
+        >
+          Create Guide
+        </PrimaryButton>
+      </Link>
+    );
+
+    return () => setHeaderAction(null);
+  }, [setHeaderAction]);
 
   const handleApprove = (row: ReviewQueueRecord) => {
     setData((prev) => prev.filter((item) => item.id !== row.id));
@@ -137,7 +158,7 @@ export default function ReviewQueuePage() {
     {
       key: "submittedAt",
       label: "Submission Time",
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.submittedAt}</span>,
     },
   ];
@@ -159,15 +180,6 @@ export default function ReviewQueuePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">Guide Review Queue</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Vet medical review, editorial accuracy check, and publication approval for pending submissions.
-          </p>
-        </div>
-      </div>
-
       {notification && (
         <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-sm font-semibold flex items-center justify-between">
           <span>{notification}</span>
@@ -180,7 +192,7 @@ export default function ReviewQueuePage() {
         </div>
       )}
 
-      <AnimatedContainer delay={0.1}>
+      <AnimatedContainer delay={0.05}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard
             title="Pending Approval"
@@ -207,18 +219,20 @@ export default function ReviewQueuePage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            actions={actions}
-            searchable
-            searchPlaceholder="Search review queue..."
-            emptyMessage="No pending guides in review queue! All caught up."
-            title="Articles Awaiting Editorial Review"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          actions={actions}
+          searchable
+          searchPlaceholder="Search review queue..."
+          emptyMessage="No pending guides in review queue! All caught up."
+          title="Articles Awaiting Editorial Review"
+          titleIcon={<Clock className="size-5" />}
+          countBadge={`${data.length} ${
+            data.length === 1 ? "article" : "articles"
+          }`}
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

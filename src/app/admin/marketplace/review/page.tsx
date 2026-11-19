@@ -127,7 +127,7 @@ export default function ReviewListingPage() {
     {
       key: "submittedAt",
       label: "Submitted",
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.submittedAt}</span>,
     },
   ];
@@ -197,18 +197,16 @@ export default function ReviewListingPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            actions={actions}
-            searchable
-            searchPlaceholder="Search listing submissions or sellers..."
-            emptyMessage="All vendor listings have been reviewed and moderated!"
-            title="Pending Marketplace Submissions"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          actions={actions}
+          searchable
+          searchPlaceholder="Search listing submissions or sellers..."
+          emptyMessage="All vendor listings have been reviewed and moderated!"
+          title="Pending Marketplace Submissions"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

@@ -170,7 +170,7 @@ export default function ListingsPage() {
       key: "createdAt",
       label: "Date Added",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.createdAt}</span>,
     },
   ];
@@ -231,18 +231,16 @@ export default function ListingsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search listings, sellers, or products..."
-            pagination
-            pageSize={10}
-            title="Master Marketplace Inventory"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search listings, sellers, or products..."
+          pagination
+          pageSize={10}
+          title="Master Marketplace Inventory"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

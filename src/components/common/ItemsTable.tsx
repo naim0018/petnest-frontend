@@ -48,9 +48,9 @@ export function ItemsTable({
       </div>
 
       {/* PetNest header column */}
-      <div className="flex items-center justify-between py-2.5 text-white text-xs font-bold px-4 rounded-lg bg-coral shadow-2xs font-quicksand">
-        <span>Items Name</span>
-        <span>{colLabel}</span>
+      <div className="grid grid-cols-12 items-center py-2.5 text-white text-xs font-bold px-4 rounded-lg bg-coral shadow-2xs font-quicksand">
+        <span className="col-span-8 text-left">Items Name</span>
+        <span className="col-span-4 text-center">{colLabel}</span>
       </div>
 
       {/* Rows */}
@@ -58,9 +58,9 @@ export function ItemsTable({
         {rows.map((row) => (
           <div
             key={row.id}
-            className="flex items-center justify-between px-4 py-3 hover:bg-surface-muted/60 transition-colors rounded-md my-0.5"
+            className="grid grid-cols-12 items-center px-4 py-3 hover:bg-surface-muted/60 transition-colors rounded-md my-0.5"
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="col-span-8 flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 overflow-hidden border border-border-peach">
                 <Image
                   src={row.image}
@@ -74,7 +74,7 @@ export function ItemsTable({
                 {row.name}
               </span>
             </div>
-            <span className="text-sm font-bold text-coral shrink-0 ml-4">
+            <span className="col-span-4 text-sm font-bold text-coral text-center">
               {row.qty}
             </span>
           </div>

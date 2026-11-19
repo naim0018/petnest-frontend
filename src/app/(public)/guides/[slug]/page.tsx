@@ -71,7 +71,7 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
       name: "PetNest",
       logo: {
         "@type": "ImageObject",
-        url: "https://petnest.org/basekitfavicon.png",
+        url: "https://petnest.org/icon.png",
       },
     },
   };
@@ -113,7 +113,7 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
           </div>
         </header>
 
-        <div className="relative w-full h-80 sm:h-96 rounded-xl overflow-hidden bg-surface-muted border border-border-peach shadow-xs">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-surface-muted border border-border-peach shadow-xs">
           <Image
             src={guide.image}
             alt={guide.title}

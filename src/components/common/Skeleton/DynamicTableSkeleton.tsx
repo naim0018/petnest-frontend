@@ -28,35 +28,42 @@ export const DynamicTableSkeleton = ({
   return (
     <div
       className={cn(
-        "w-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-in fade-in duration-500",
+        "w-full flex flex-col gap-4 animate-in fade-in duration-500",
         className,
       )}
     >
-      {/* Toolbar Skeleton */}
+      {/* Separated Title & Toolbar Skeleton */}
       {showToolbar && (
-        <div className="px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-50">
-          <Skeleton className="h-7 w-40" /> {/* Title Area */}
-          <div className="flex items-center gap-3 ml-auto w-full md:w-auto">
-            <Skeleton className="h-10 flex-1 md:w-64 rounded-lg" /> {/* Search Input */}
-            <Skeleton className="h-10 w-28 rounded-lg" /> {/* Filter Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <Skeleton className="h-6 w-44" /> {/* Title Area */}
+          <div className="flex items-center gap-2.5 sm:ml-auto w-full sm:w-auto justify-end">
+            <Skeleton className="h-10 flex-1 sm:flex-initial sm:w-72 md:w-80 rounded-lg" /> {/* Search Input */}
+            <Skeleton className="h-10 w-28 rounded-lg shrink-0" /> {/* Filter Button */}
           </div>
         </div>
       )}
 
-      {/* Desktop Table Layout (Skeleton) */}
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50/50">
+      {/* Separated Table Card Skeleton */}
+      <div className="w-full bg-card rounded-lg shadow-xs border border-border-peach overflow-hidden">
+        {/* Desktop Table Layout (Skeleton) */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-tint-rose/60 border-b border-border-peach">
               <th className="px-6 py-4 w-12">
                 <Skeleton className="h-4 w-4 rounded" />
               </th>
               {Array.from({ length: columns }).map((_, i) => (
-                <th key={i} className="px-6 py-4">
-                  <Skeleton className="h-4 w-20" />
+                <th
+                  key={i}
+                  className={cn("px-6 py-4", i === 0 ? "text-left" : "text-center")}
+                >
+                  <Skeleton
+                    className={cn("h-4 w-20", i === 0 ? "" : "mx-auto")}
+                  />
                 </th>
               ))}
-              <th className="px-6 py-4 w-24">
+              <th className="px-6 py-4 w-24 text-center">
                 <Skeleton className="h-4 w-16 mx-auto" />
               </th>
             </tr>
@@ -74,8 +81,19 @@ export const DynamicTableSkeleton = ({
                   <Skeleton className="h-4 w-4 rounded" />
                 </td>
                 {Array.from({ length: columns }).map((_, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4">
-                    <div className="flex items-center gap-3">
+                  <td
+                    key={colIndex}
+                    className={cn(
+                      "px-6 py-4",
+                      colIndex === 0 ? "text-left" : "text-center"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex items-center gap-3",
+                        colIndex === 0 ? "" : "justify-center"
+                      )}
+                    >
                       {/* Simulate an avatar/icon for the first column */}
                       {colIndex === 0 && (
                         <Skeleton className="h-8 w-8 rounded-full shrink-0" />
@@ -83,13 +101,13 @@ export const DynamicTableSkeleton = ({
                       <Skeleton
                         className={cn(
                           "h-3.5",
-                          colIndex === 0 ? "w-32" : "w-20",
+                          colIndex === 0 ? "w-32" : "w-20"
                         )}
                       />
                     </div>
                   </td>
                 ))}
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-center">
                   <div className="flex items-center justify-center gap-3">
                     <Skeleton className="h-8 w-8 rounded-lg" />
                     <Skeleton className="h-8 w-8 rounded-lg" />
@@ -139,7 +157,7 @@ export const DynamicTableSkeleton = ({
 
       {/* Pagination Skeleton */}
       {showPagination && (
-        <div className="px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 bg-white">
+        <div className="px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border-peach bg-card">
           <Skeleton className="h-5 w-48" /> {/* Showing X to Y of Z */}
           <div className="flex items-center gap-2">
             <Skeleton className="h-10 w-24 rounded-lg" /> {/* Prev Button */}
@@ -152,6 +170,7 @@ export const DynamicTableSkeleton = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

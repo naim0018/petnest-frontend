@@ -237,10 +237,7 @@ export default function ConfirmModal({
           {/* 🏷️ TITLE & DESCRIPTION                                   */}
           {/* ======================================================== */}
           <div className="space-y-3 sm:space-y-4 text-center flex flex-col items-center w-full px-2">
-            <h2
-              style={{ fontSize: "clamp(1.5rem, 2.5vw, 1.875rem)" }}
-              className="font-extrabold font-quicksand text-ink dark:text-white leading-tight tracking-tight break-words [&_span]:text-[length:inherit] [&_span]:font-extrabold"
-            >
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-quicksand text-ink dark:text-white leading-tight tracking-tight break-words">
               {renderFormattedTitle(title)}
             </h2>
             {description && (
@@ -264,7 +261,7 @@ export default function ConfirmModal({
                 size="lg"
                 onClick={onClose}
                 disabled={loading}
-                className="w-full sm:w-auto min-w-[140px] sm:min-w-[160px] h-12 text-sm sm:text-base font-bold rounded-full"
+                className="w-full sm:w-auto min-w-36 sm:min-w-40 h-12 text-sm sm:text-base font-bold rounded-full"
               >
                 {cancelText}
               </PrimaryButton>
@@ -278,7 +275,7 @@ export default function ConfirmModal({
               isLoading={loading}
               disabled={loading}
               leftIcon={variant === "danger" ? <Trash2 className="size-4.5" /> : undefined}
-              className="w-full sm:w-auto min-w-[170px] sm:min-w-[200px] h-12 text-sm sm:text-base font-bold rounded-full shadow-md"
+              className="w-full sm:w-auto min-w-44 sm:min-w-52 h-12 text-sm sm:text-base font-bold rounded-full shadow-md"
             >
               {confirmText}
             </PrimaryButton>

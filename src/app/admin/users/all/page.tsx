@@ -160,7 +160,7 @@ export default function AllUsersPage() {
       key: "joinedDate",
       label: "Joined",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.joinedDate}</span>,
     },
   ];
@@ -219,18 +219,16 @@ export default function AllUsersPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search users by name, email, or role..."
-            pagination
-            pageSize={10}
-            title="All Registered PetNest Accounts"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search users by name, email, or role..."
+          pagination
+          pageSize={10}
+          title="All Registered PetNest Accounts"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

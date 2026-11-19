@@ -4,12 +4,17 @@ import type {
   AdminFaqsResponse,
   BookmarkResponse,
   BookmarksResponse,
+  BulkCreateFaqPayload,
+  BulkFaqsResponse,
+  BulkImportZipResponse,
   CreateCategoryPayload,
   CreateFaqPayload,
   CreateGuidePayload,
   DeleteGuideResponse,
   EditorialGuideResponse,
   EditorialStatsResponse,
+  GenerateGuideAiPayload,
+  GenerateGuideAiResponse,
   GuideDetailResponse,
   GuideQuery,
   LikeResponse,
@@ -28,8 +33,14 @@ const guidesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ==================== PUBLIC CATEGORIES ====================
 
-    findAllCategoriesPublic: builder.query<PublicCategoriesResponse, void>({
-      query: () => "/guides/categories",
+    findAllCategoriesPublic: builder.query<
+      PublicCategoriesResponse,
+      { excludeBasic?: boolean } | void
+    >({
+      query: (params) => ({
+        url: "/guides/categories",
+        params: params || {},
+      }),
       providesTags: [{ type: "GuideCategories", id: "LIST" }],
     }),
 
@@ -146,11 +157,40 @@ const guidesApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "EditorialGuides", id }],
     }),
 
+    generateGuideAi: builder.mutation<
+      GenerateGuideAiResponse,
+      GenerateGuideAiPayload
+    >({
+      query: (payload) => ({
+        url: "/guides/generate-ai",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: [
+        { type: "Guides", id: "LIST" },
+        { type: "EditorialGuides", id: "LIST" },
+        "EditorialStats",
+      ],
+    }),
+
     createGuide: builder.mutation<EditorialGuideResponse, CreateGuidePayload>({
       query: (payload) => ({
         url: "/guides",
         method: "POST",
         body: payload,
+      }),
+      invalidatesTags: [
+        { type: "Guides", id: "LIST" },
+        { type: "EditorialGuides", id: "LIST" },
+        "EditorialStats",
+      ],
+    }),
+
+    bulkImportGuidesZip: builder.mutation<BulkImportZipResponse, FormData>({
+      query: (formData) => ({
+        url: "/guides/bulk-import-zip",
+        method: "POST",
+        body: formData,
       }),
       invalidatesTags: [
         { type: "Guides", id: "LIST" },
@@ -173,6 +213,7 @@ const guidesApi = baseApi.injectEndpoints({
         { type: "Guides", id: "LIST" },
         { type: "EditorialGuides", id },
         { type: "EditorialGuides", id: "LIST" },
+        "EditorialStats",
       ],
     }),
 
@@ -275,7 +316,25 @@ const guidesApi = baseApi.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: [{ type: "GuideFaqs", id: "LIST" }],
+      invalidatesTags: (_result, _error, payload) => [
+        { type: "GuideFaqs", id: "LIST" },
+        ...(payload.guideId
+          ? [{ type: "EditorialGuides" as const, id: payload.guideId }]
+          : []),
+        { type: "EditorialGuides", id: "LIST" },
+      ],
+    }),
+
+    createFaqsBulk: builder.mutation<BulkFaqsResponse, BulkCreateFaqPayload>({
+      query: (payload) => ({
+        url: "/guides/faqs/bulk",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: [
+        { type: "GuideFaqs", id: "LIST" },
+        { type: "EditorialGuides", id: "LIST" },
+      ],
     }),
 
     updateFaq: builder.mutation<
@@ -287,9 +346,13 @@ const guidesApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: payload,
       }),
-      invalidatesTags: (_result, _error, { id }) => [
+      invalidatesTags: (_result, _error, { id, payload }) => [
         { type: "GuideFaqs", id },
         { type: "GuideFaqs", id: "LIST" },
+        ...(payload.guideId
+          ? [{ type: "EditorialGuides" as const, id: payload.guideId }]
+          : []),
+        "EditorialGuides",
       ],
     }),
 
@@ -301,7 +364,50 @@ const guidesApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, id) => [
         { type: "GuideFaqs", id },
         { type: "GuideFaqs", id: "LIST" },
+        "EditorialGuides",
       ],
+    }),
+
+    // ==================== GUIDES BY SPECIES OR BREED ====================
+
+    findGuidesBySpecies: builder.query<
+      PaginatedGuidesResponse,
+      { speciesIdOrSlug: string; query?: GuideQuery }
+    >({
+      query: ({ speciesIdOrSlug, query }) => ({
+        url: `/guides/species/${speciesIdOrSlug}`,
+        params: query || {},
+      }),
+      providesTags: (result) =>
+        result?.data?.items
+          ? [
+              ...result.data.items.map(({ id }) => ({
+                type: "Guides" as const,
+                id,
+              })),
+              { type: "Guides", id: "SPECIES_LIST" },
+            ]
+          : [{ type: "Guides", id: "SPECIES_LIST" }],
+    }),
+
+    findGuidesByBreed: builder.query<
+      PaginatedGuidesResponse,
+      { breedIdOrSlug: string; query?: GuideQuery }
+    >({
+      query: ({ breedIdOrSlug, query }) => ({
+        url: `/guides/breed/${breedIdOrSlug}`,
+        params: query || {},
+      }),
+      providesTags: (result) =>
+        result?.data?.items
+          ? [
+              ...result.data.items.map(({ id }) => ({
+                type: "Guides" as const,
+                id,
+              })),
+              { type: "Guides", id: "BREED_LIST" },
+            ]
+          : [{ type: "Guides", id: "BREED_LIST" }],
     }),
   }),
 });
@@ -313,6 +419,8 @@ export const {
   useFindAllFaqsPublicQuery,
   useFindAllPublicGuidesQuery,
   useFindOnePublicGuideBySlugQuery,
+  useFindGuidesBySpeciesQuery,
+  useFindGuidesByBreedQuery,
   // User Engagement
   useToggleLikeMutation,
   useToggleBookmarkMutation,
@@ -321,7 +429,9 @@ export const {
   useGetEditorialStatsQuery,
   useFindAllEditorialQuery,
   useFindOneEditorialQuery,
+  useGenerateGuideAiMutation,
   useCreateGuideMutation,
+  useBulkImportGuidesZipMutation,
   useUpdateGuideMutation,
   useReviewGuideMutation,
   useDeleteGuideMutation,
@@ -333,6 +443,7 @@ export const {
   // Admin FAQs
   useFindAllFaqsAdminQuery,
   useCreateFaqMutation,
+  useCreateFaqsBulkMutation,
   useUpdateFaqMutation,
   useRemoveFaqMutation,
 } = guidesApi;

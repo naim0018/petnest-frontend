@@ -25,7 +25,7 @@ export const StatsCard = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group",
+        "relative overflow-hidden p-5 rounded-lg bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group",
         align === "center"
           ? "items-center text-center justify-center"
           : "items-start text-left",
@@ -45,7 +45,7 @@ export const StatsCard = ({
           {title}
         </h3>
         {icon && align === "left" && (
-          <div className="size-9 rounded-xl bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0 shadow-2xs group-hover:scale-110 group-hover:bg-coral group-hover:text-white transition-all duration-200">
+          <div className="size-9 rounded-lg bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-coral group-hover:text-white [&_svg]:transition-colors [&_svg]:duration-200 [&_svg]:group-hover:!text-white [&_svg]:group-hover:!stroke-white transition-all duration-200">
             {icon}
           </div>
         )}

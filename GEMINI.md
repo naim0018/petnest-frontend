@@ -34,7 +34,8 @@ Think like a pragmatic senior engineer. The cleanest code is the code you never 
 ## 3. PetNest UI Design System Standards
 
 ### Layout & Containers:
-- **Wrapper**: Always wrap major layout containers in `<CommonWrapper className="...">` from `@/components/common/CommonWrapper`.
+- **Full Width Dashboard Outlet**: NEVER use artificial `max-w-*` width constraints (e.g. `max-w-4xl`, `max-w-5xl`, `max-w-xl`, `mx-auto`) on dashboard layouts, outlets, pages, or form wrappers. All dashboard pages, tables, and forms must span full width (`w-full`).
+- **Wrapper**: In public consumer pages, wrap major layout containers in `<CommonWrapper className="...">` from `@/components/common/CommonWrapper`.
 - **Responsive**: Mobile-first design (`sm:`, `md:`, `lg:`, `xl:`).
 - **Dark Mode**: Every element must support dark mode. Pair light tokens with dark equivalents (e.g. `bg-card dark:bg-card/60`, `text-ink dark:text-white`).
 

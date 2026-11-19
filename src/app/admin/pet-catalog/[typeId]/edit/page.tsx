@@ -72,6 +72,7 @@ export default function EditPetTypePage({
       <PrimaryButton
         variant="outline"
         size="sm"
+        rounded="md"
         onClick={() => router.push("/admin/pet-catalog")}
         leftIcon={<ArrowLeft className="size-4" />}
         className="font-bold cursor-pointer"

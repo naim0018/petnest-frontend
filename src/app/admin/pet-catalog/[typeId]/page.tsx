@@ -21,10 +21,10 @@ import {
 } from "@/components/admin/pet-catalog/SpeciesModals";
 import PetCatalogCard from "@/components/admin/pet-catalog/PetCatalogCard";
 import { PetCatalogGridSkeleton } from "@/components/admin/pet-catalog/PetCatalogCardSkeleton";
+import SearchField, { SearchSuggestionItem } from "@/components/common/SearchField";
 import {
   PawPrint,
   Plus,
-  Search,
   Sparkles,
   CheckCircle2,
   AlertCircle,
@@ -87,26 +87,16 @@ export default function PetTypeBreedsPage({
   // Place "Add Breed" button on the Header dynamically
   useEffect(() => {
     setHeaderAction(
-      <div className="flex items-center gap-2">
-        <PrimaryButton
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/admin/pet-catalog")}
-          leftIcon={<ArrowLeft className="size-4" />}
-          className="font-bold cursor-pointer"
-        >
-          All Types
-        </PrimaryButton>
-        <PrimaryButton
-          variant="primary"
-          size="sm"
-          onClick={() => router.push(`/admin/pet-catalog/${typeId}/new-breed`)}
-          leftIcon={<Plus className="size-4" />}
-          className="font-bold cursor-pointer"
-        >
-          Add Breed
-        </PrimaryButton>
-      </div>
+      <PrimaryButton
+        variant="primary"
+        size="sm"
+        rounded="md"
+        onClick={() => router.push(`/admin/pet-catalog/${typeId}/new-breed`)}
+        leftIcon={<Plus className="size-4" />}
+        className="font-bold cursor-pointer"
+      >
+        Add Breed
+      </PrimaryButton>
     );
 
     return () => setHeaderAction(null);
@@ -127,6 +117,20 @@ export default function PetTypeBreedsPage({
         (b.tags && b.tags.some((t) => t.toLowerCase().includes(query)))
     );
   }, [breeds, searchQuery]);
+
+  const suggestions: SearchSuggestionItem[] = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return filteredBreeds.slice(0, 6).map((b) => ({
+      id: b.id,
+      title: b.name,
+      subtitle: [b.originCountry, b.size ? formatSize(b.size) : null].filter(Boolean).join(" • "),
+      image: b.image || petSpecies?.image || "/CareGuideCard/dog-faq-mascot.png",
+      badge: b.careLevel ? formatCareLevel(b.careLevel) || undefined : undefined,
+      onClick: () => {
+        router.push(`/admin/pet-catalog/${typeId}/breed/${b.id}`);
+      },
+    }));
+  }, [filteredBreeds, searchQuery, petSpecies, router, typeId]);
 
   const handleRetry = () => {
     refetchSpecies();
@@ -164,18 +168,14 @@ export default function PetTypeBreedsPage({
           ))}
         </div>
 
-        {/* Search Filter Bar Skeleton */}
-        <div className="flex items-center justify-end">
-          <div className="w-full max-w-md h-11 bg-card border border-border-peach rounded-xl animate-pulse shadow-2xs" />
+        {/* Breeds Header Skeleton (Title & Search Filter in same row) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-pulse">
+          <div className="h-6 w-44 bg-surface-muted rounded" />
+          <div className="w-full sm:w-80 md:w-96 h-11 bg-card border border-border-peach rounded-md shadow-2xs" />
         </div>
 
         {/* Breeds Grid Skeleton */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between animate-pulse">
-            <div className="h-5 w-44 bg-surface-muted rounded" />
-            <div className="h-4 w-32 bg-surface-muted/60 rounded" />
-          </div>
-
           <PetCatalogGridSkeleton
             count={8}
             hasTags={true}
@@ -292,31 +292,25 @@ export default function PetTypeBreedsPage({
       {/* Breeds Header (Title & Search Filter in same row) + Grid */}
       <AnimatedContainer delay={0.1}>
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
-              <PawPrint className="size-4.5 text-coral" />
-              All Registered Breeds
-            </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
+                <PawPrint className="size-4.5 text-coral" />
+                All Registered Breeds
+              </h3>
+              <span className="text-xs text-ink-muted font-medium hidden sm:inline">
+                Showing {filteredBreeds.length} of {breeds.length} breeds
+              </span>
+            </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-xs text-ink-muted hover:text-coral font-semibold px-2 py-1 rounded transition-colors cursor-pointer shrink-0"
-                >
-                  Clear filter
-                </button>
-              )}
-              <div className="relative w-full sm:w-72 md:w-80">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-ink-faint pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${petSpecies.name.split(" ")[0]} breeds, traits, origin...`}
-                  className="w-full h-10 pl-10 pr-4 bg-card border border-border-peach rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all text-ink placeholder:text-ink-faint shadow-2xs"
-                />
-              </div>
+            <div className="w-full sm:w-80 md:w-96">
+              <SearchField
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={`Search ${petSpecies.name.split(" ")[0]} breeds, traits, origin...`}
+                suggestions={suggestions}
+                onSelectSuggestion={(item) => item.onClick?.()}
+              />
             </div>
           </div>
 

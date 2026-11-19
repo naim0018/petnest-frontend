@@ -25,6 +25,8 @@ export interface CareArticleCardData {
   imageAlt?: string;
   expertReviewed?: boolean;
   slug?: string;
+  order?: number;
+  displayOrder?: number;
 }
 
 export interface CareArticleCardProps {

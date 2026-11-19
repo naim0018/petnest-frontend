@@ -72,7 +72,7 @@ export default function PlatformAnalyticsPage() {
       key: "share",
       label: "Traffic Share",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-surface-muted text-ink">
           {row.share}
@@ -99,28 +99,28 @@ export default function PlatformAnalyticsPage() {
             value="193,300"
             trendText="+15.2% vs last month"
             trendType="positive"
-            icon={<Users className="size-5 text-coral" />}
+            icon={<Users className="size-5" />}
           />
           <StatsCard
             title="Total Monthly Pageviews"
             value="875,700"
             trendText="+22.8% content impressions"
             trendType="positive"
-            icon={<Eye className="size-5 text-coral" />}
+            icon={<Eye className="size-5" />}
           />
           <StatsCard
             title="Avg. Session Duration"
             value="4m 38s"
             trendText="+32s reading time"
             trendType="positive"
-            icon={<Activity className="size-5 text-coral" />}
+            icon={<Activity className="size-5" />}
           />
           <StatsCard
             title="Organic Search Traffic"
             value="74.2%"
             trendText="High search rankings"
             trendType="positive"
-            icon={<TrendingUp className="size-5 text-coral" />}
+            icon={<TrendingUp className="size-5" />}
           />
         </div>
       </AnimatedContainer>
@@ -153,16 +153,14 @@ export default function PlatformAnalyticsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.3}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={mockRegions}
-            columns={columns}
-            searchable
-            searchPlaceholder="Filter regions..."
-            title="Regional Traffic & Engagement Breakdown"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={mockRegions}
+          columns={columns}
+          searchable
+          searchPlaceholder="Filter regions..."
+          title="Regional Traffic & Engagement Breakdown"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

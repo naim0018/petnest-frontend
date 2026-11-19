@@ -128,7 +128,7 @@ export default function RolesAndPermissionsPage() {
       key: "isSystemDefault",
       label: "Status",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 className="size-3.5" /> Active
@@ -182,18 +182,16 @@ export default function RolesAndPermissionsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search roles or access tiers..."
-            pagination
-            pageSize={10}
-            title="Access Control Hierarchy"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search roles or access tiers..."
+          pagination
+          pageSize={10}
+          title="Access Control Hierarchy"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

@@ -125,7 +125,7 @@ export default function CustomerReviewsPage() {
       key: "date",
       label: "Date",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.date}</span>,
     },
   ];
@@ -168,18 +168,16 @@ export default function CustomerReviewsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search reviews, customers, or products..."
-            pagination
-            pageSize={10}
-            title="Customer Reviews & Ratings Feed"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search reviews, customers, or products..."
+          pagination
+          pageSize={10}
+          title="Customer Reviews & Ratings Feed"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

@@ -1,104 +1,147 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
-import { FolderTree, Plus, Sparkles, BookOpen, Layers } from "lucide-react";
-
-interface GuideCategoryRecord {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  guidesCount: number;
-  totalViews: string;
-  status: "Active" | "Archived";
-}
-
-const mockGuideCategories: GuideCategoryRecord[] = [
-  {
-    id: "CAT-G01",
-    name: "Puppy & Kitten Onboarding",
-    slug: "puppy-kitten-onboarding",
-    description: "First-year essentials, initial vaccinations, and crate training foundations.",
-    guidesCount: 48,
-    totalViews: "412.5k",
-    status: "Active",
-  },
-  {
-    id: "CAT-G02",
-    name: "Clinical Nutrition & Diets",
-    slug: "clinical-nutrition-diets",
-    description: "Veterinary-reviewed feeding schedules, portion calculators, and allergy diets.",
-    guidesCount: 64,
-    totalViews: "580.2k",
-    status: "Active",
-  },
-  {
-    id: "CAT-G03",
-    name: "Behavior, Training & Socialization",
-    slug: "behavior-training-socialization",
-    description: "Positive reinforcement guides, leash manners, and anxiety reduction techniques.",
-    guidesCount: 72,
-    totalViews: "620.4k",
-    status: "Active",
-  },
-  {
-    id: "CAT-G04",
-    name: "Aquatic Life & Tank Chemistry",
-    slug: "aquatic-tank-chemistry",
-    description: "Nitrogen cycles, filter equipment setup, and aquatic plant maintenance.",
-    guidesCount: 38,
-    totalViews: "190.8k",
-    status: "Active",
-  },
-  {
-    id: "CAT-G05",
-    name: "Senior Pet Wellness & Mobility",
-    slug: "senior-pet-wellness",
-    description: "Arthritis care, joint supplements, cognitive health, and comfort protocols.",
-    guidesCount: 29,
-    totalViews: "145.1k",
-    status: "Active",
-  },
-  {
-    id: "CAT-G06",
-    name: "Emergency First Aid & Triage",
-    slug: "emergency-first-aid",
-    description: "Immediate toxicity response, wound care, choking rescue, and vet finder steps.",
-    guidesCount: 22,
-    totalViews: "260.9k",
-    status: "Active",
-  },
-];
+import ConfirmModal from "@/components/reuseable/ConfirmModal";
+import { useHeaderAction } from "@/context/HeaderActionContext";
+import {
+  useFindAllCategoriesAdminQuery,
+  useRemoveCategoryMutation,
+} from "@/store/Api/Guides/guides.api";
+import type { AdminCategory } from "@/store/Api/Guides/guides.types";
+import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import {
+  Plus,
+  Sparkles,
+  BookOpen,
+  Layers,
+  Eye,
+  Pencil,
+  Trash2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "sonner";
 
 export default function GuideCategoriesPage() {
-  const [data] = useState<GuideCategoryRecord[]>(mockGuideCategories);
+  const router = useRouter();
+  const { setHeaderAction } = useHeaderAction();
 
-  const columns: Column<GuideCategoryRecord>[] = [
+  const {
+    data: categoriesResponse,
+    isLoading,
+    isError,
+    refetch,
+  } = useFindAllCategoriesAdminQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  const [removeCategory, { isLoading: isDeleting }] =
+    useRemoveCategoryMutation();
+
+  const [deleteCategory, setDeleteCategory] = useState<AdminCategory | null>(
+    null
+  );
+
+  const categories: AdminCategory[] = useMemo(
+    () => categoriesResponse?.data || [],
+    [categoriesResponse]
+  );
+
+  // Set header action button
+  useEffect(() => {
+    setHeaderAction(
+      <PrimaryButton
+        variant="primary"
+        size="sm"
+        rounded="md"
+        onClick={() => router.push("/admin/guides/categories/new")}
+        leftIcon={<Plus className="size-4" />}
+        className="font-bold cursor-pointer"
+      >
+        Add Topic Category
+      </PrimaryButton>
+    );
+
+    return () => setHeaderAction(null);
+  }, [setHeaderAction, router]);
+
+  // Derived statistics
+  const totalCategories = categories.length;
+  const totalGuides = categories.reduce(
+    (sum, c) => sum + (c.guidesCount || 0),
+    0
+  );
+  const activeCount = categories.filter((c) => c.isActive).length;
+
+  const mostReadCategory = useMemo(() => {
+    if (categories.length === 0) return null;
+    return [...categories].sort(
+      (a, b) => (b.totalViews || 0) - (a.totalViews || 0)
+    )[0];
+  }, [categories]);
+
+  const handleDelete = async () => {
+    if (!deleteCategory) return;
+    try {
+      await removeCategory(deleteCategory.id).unwrap();
+      toast.success(
+        `Category "${deleteCategory.name}" has been deleted successfully.`
+      );
+      setDeleteCategory(null);
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { data?: { message?: string } })?.data?.message ||
+        "Failed to delete category. Make sure no published guides are attached to it.";
+      toast.error(errorMsg);
+    }
+  };
+
+  const columns: Column<AdminCategory>[] = [
     {
       key: "name",
       label: "Category Name",
       sortable: true,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-lg bg-coral-light flex items-center justify-center text-coral shrink-0">
-            <FolderTree className="size-5" />
+      render: (row) => {
+        const IconComponent = getCategoryIcon(row.icon);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-md bg-coral-light flex items-center justify-center text-coral shrink-0 border border-coral/15">
+              <IconComponent className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p
+                  onClick={() =>
+                    router.push(`/admin/guides/categories/${row.slug || row.id}`)
+                  }
+                  className="font-bold text-ink leading-tight hover:text-coral transition-colors cursor-pointer truncate font-quicksand"
+                >
+                  {row.name}
+                </p>
+                {row.slug === "basic" && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-tint-rose text-coral border border-coral/20 shrink-0">
+                    Default
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-ink-muted truncate">/{row.slug}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-ink leading-tight">{row.name}</p>
-            <p className="text-xs text-ink-muted">/{row.slug}</p>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "description",
       label: "Category Scope",
       render: (row) => (
-        <span className="text-xs text-ink-muted line-clamp-1">{row.description}</span>
+        <span className="text-xs text-ink-muted line-clamp-1 max-w-md">
+          {row.description || "No topic scope description provided."}
+        </span>
       ),
     },
     {
@@ -107,8 +150,8 @@ export default function GuideCategoriesPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span className="font-semibold text-xs px-2.5 py-1 rounded-md bg-surface-muted text-ink">
-          {row.guidesCount} guides
+        <span className="font-semibold text-xs px-2.5 py-1 rounded-md bg-surface-muted text-ink border border-border-peach">
+          {row.guidesCount ?? 0} guides
         </span>
       ),
     },
@@ -118,80 +161,149 @@ export default function GuideCategoriesPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span className="text-xs font-bold text-coral">{row.totalViews}</span>
+        <span className="text-xs font-bold text-coral">
+          {(row.totalViews ?? 0).toLocaleString()}
+        </span>
       ),
     },
     {
       key: "status",
       label: "Status",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
-        <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-          {row.status}
+        <span
+          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+            row.isActive
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+              : "bg-surface-muted text-ink-muted dark:bg-surface-soft"
+          }`}
+        >
+          {row.isActive ? "Active" : "Archived"}
         </span>
       ),
     },
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">Guide Categories</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Organize veterinary content clusters, topic taxonomy, and navigation pillars.
-          </p>
-        </div>
-        <PrimaryButton
-          variant="primary"
-          size="md"
-          leftIcon={<Plus className="size-4" />}
-        >
-          Add Topic Category
-        </PrimaryButton>
-      </div>
+  const actions = [
+    {
+      label: "View Category",
+      icon: <Eye className="size-4" />,
+      onClick: (row: AdminCategory) => {
+        router.push(`/admin/guides/categories/${row.slug || row.id}`);
+      },
+    },
+    {
+      label: "Edit Category",
+      icon: <Pencil className="size-4 text-amber-500" />,
+      onClick: (row: AdminCategory) => {
+        router.push(`/admin/guides/categories/${row.id}/edit`);
+      },
+    },
+    {
+      label: "Delete Category",
+      icon: <Trash2 className="size-4" />,
+      variant: "danger" as const,
+      onClick: (row: AdminCategory) => {
+        if (row.slug === "basic") {
+          toast.info('The default "Basic" category cannot be deleted.');
+          return;
+        }
+        setDeleteCategory(row);
+      },
+    },
+  ];
 
-      <AnimatedContainer delay={0.1}>
+  return (
+    <div className="w-full space-y-6 pb-12">
+      {/* Metrics Row */}
+      <AnimatedContainer delay={0.05}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard
             title="Total Article Clusters"
-            value="18 Categories"
-            trendText="Covering all pet species"
+            value={`${totalCategories} Categories`}
+            trendText={`${totalGuides} published guides in catalog`}
             trendType="positive"
-            icon={<Layers className="size-5 text-coral" />}
+            icon={<Layers className="size-5" />}
           />
           <StatsCard
             title="Most Read Topic"
-            value="Behavior & Training"
-            trendText="620k lifetime views"
+            value={mostReadCategory?.name || "None yet"}
+            trendText={
+              mostReadCategory
+                ? `${(mostReadCategory.totalViews || 0).toLocaleString()} lifetime views`
+                : "No readership recorded"
+            }
             trendType="positive"
-            icon={<BookOpen className="size-5 text-coral" />}
+            icon={<BookOpen className="size-5" />}
           />
           <StatsCard
             title="Curated Topics"
-            value="100% Complete"
-            trendText="All pillar pages active"
+            value={
+              totalCategories > 0
+                ? `${Math.round((activeCount / totalCategories) * 100)}% Active`
+                : "100% Active"
+            }
+            trendText={`${activeCount} active pillar topics`}
             trendType="positive"
-            icon={<Sparkles className="size-5 text-coral" />}
+            icon={<Sparkles className="size-5" />}
           />
         </div>
       </AnimatedContainer>
 
-      <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
+      {/* Main Table Content */}
+      <AnimatedContainer delay={0.15}>
+        {isError ? (
+          <div className="p-12 text-center rounded-xl bg-card border border-border-peach space-y-3">
+            <AlertCircle className="size-10 text-coral mx-auto" />
+            <p className="font-bold text-ink font-quicksand">
+              Failed to load categories
+            </p>
+            <p className="text-xs text-ink-muted">
+              There was an issue fetching category records from the guides API.
+            </p>
+            <PrimaryButton
+              variant="outline"
+              size="sm"
+              rounded="md"
+              leftIcon={<RefreshCw className="size-3.5" />}
+              onClick={() => refetch()}
+            >
+              Retry
+            </PrimaryButton>
+          </div>
+        ) : (
           <DynamicTable
-            data={data}
+            data={categories}
             columns={columns}
+            actions={actions}
+            loading={isLoading}
             searchable
             searchPlaceholder="Search categories, slugs, or topics..."
             pagination
             pageSize={10}
             title="Guide Content Clusters"
+            titleIcon={<Layers className="size-5" />}
+            countBadge={`${categories.length} ${
+              categories.length === 1 ? "category" : "categories"
+            }`}
+            emptyMessage="No guide categories found. Create the first topic cluster to organize content."
             hoverable
           />
-        </div>
+        )}
       </AnimatedContainer>
+
+      {/* Delete Confirmation Modal (Reusable Modal) */}
+      <ConfirmModal
+        isOpen={Boolean(deleteCategory)}
+        onClose={() => setDeleteCategory(null)}
+        onConfirm={handleDelete}
+        title={`Delete "${deleteCategory?.name}"?`}
+        description="Are you sure you want to delete this guide category? This action cannot be undone. If articles belong to this category, they must be reassigned first."
+        confirmText="Yes, Delete Category"
+        loading={isDeleting}
+        variant="danger"
+      />
     </div>
   );
 }

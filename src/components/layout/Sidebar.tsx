@@ -1,18 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import React, { useState, useEffect, useRef, useSyncExternalStore, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { NavGroup, NavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
-import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
-import { logOut } from "@/store/features/AuthSlice/authSlice";
-import { useLogoutMutation } from "@/store/Api/Auth/auth.api";
-import { useGetMeQuery } from "@/store/Api/User/user.api";
-import { toast } from "sonner";
+import UserProfile from "@/components/common/UserProfile";
 
 interface SidebarProps {
   navGroups: NavGroup[];
@@ -20,39 +15,100 @@ interface SidebarProps {
   setIsMobileOpen: (open: boolean) => void;
 }
 
+// Extract all concrete leaf paths from navigation groups
+const getLeafPaths = (groups: NavGroup[]): string[] => {
+  const paths: string[] = [];
+  const traverse = (items: NavItem[]) => {
+    for (const item of items) {
+      if (item.children && item.children.length > 0) {
+        traverse(item.children);
+      } else if (item.path) {
+        paths.push(item.path);
+      }
+    }
+  };
+  for (const group of groups) {
+    traverse(group.items);
+  }
+  return paths;
+};
+
+const GUIDE_DETAIL_ROUTE_REGEX =
+  /^\/admin\/guides\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/|$)/i;
+
 // Check if a specific route item matches the current pathname
-const isItemActive = (item: NavItem, pathname: string): boolean => {
+const isItemActive = (
+  item: NavItem,
+  pathname: string,
+  allLeafPaths: string[] = []
+): boolean => {
   if (!item.path) return false;
+
   // If item has children, it is active if any descendant matches
   if (item.children && item.children.length > 0) {
-    return item.children.some((child) => isItemActive(child, pathname));
+    return item.children.some((child) => isItemActive(child, pathname, allLeafPaths));
   }
+
   // Exact match
   if (pathname === item.path) return true;
-  // Prefix match for nested sub-routes (avoid matching root "/" or "/admin" prefixes unintentionally)
-  if (
-    item.path !== "/" &&
-    item.path !== "/admin" &&
-    item.path !== "/user" &&
-    item.path !== "/admin/dashboard" &&
-    item.path !== "/user/dashboard"
-  ) {
-    if (pathname.startsWith(`${item.path}/`)) {
-      return true;
-    }
+
+  // Guide detail/edit/faqs routes (/admin/guides/<uuid>/...) belong under All Guides, not Overview
+  if (GUIDE_DETAIL_ROUTE_REGEX.test(pathname)) {
+    if (item.path === "/admin/guides/all") return true;
+    if (item.path === "/admin/guides") return false;
   }
+
+  // Root or base module paths should only match exact
+  if (
+    item.path === "/" ||
+    item.path === "/admin" ||
+    item.path === "/user" ||
+    item.path === "/admin/dashboard" ||
+    item.path === "/user/dashboard" ||
+    item.path === "/admin/guides"
+  ) {
+    return false;
+  }
+
+  // Prefix match for nested sub-routes (e.g. /admin/pet-catalog/dogs when only /admin/pet-catalog is in nav)
+  if (pathname.startsWith(`${item.path}/`)) {
+    // If another leaf item in the navigation tree is a more specific (longer) match for pathname,
+    // this item is an overview/parent route and must NOT be marked active.
+    const hasMoreSpecificMatch = allLeafPaths.some(
+      (otherPath) =>
+        otherPath !== item.path &&
+        otherPath.length > item.path.length &&
+        (pathname === otherPath || pathname.startsWith(`${otherPath}/`))
+    );
+    return !hasMoreSpecificMatch;
+  }
+
   return false;
 };
 
 // Check if a parent expandable item has an active descendant
-const hasActiveChild = (menuItem: NavItem, pathname: string): boolean => {
+const hasActiveChild = (
+  menuItem: NavItem,
+  pathname: string,
+  allLeafPaths: string[] = []
+): boolean => {
   if (!menuItem.children || menuItem.children.length === 0) return false;
-  return menuItem.children.some((child) => isItemActive(child, pathname));
+  return menuItem.children.some((child) => isItemActive(child, pathname, allLeafPaths));
 };
 
-const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: string; depth?: number }) => {
+const SidebarItem = ({
+  item,
+  pathname,
+  depth = 0,
+  allLeafPaths = [],
+}: {
+  item: NavItem;
+  pathname: string;
+  depth?: number;
+  allLeafPaths?: string[];
+}) => {
   const hasChildren = !!item.children?.length;
-  const isChildActive = hasActiveChild(item, pathname);
+  const isChildActive = hasActiveChild(item, pathname, allLeafPaths);
   const [isOpen, setIsOpen] = useState(() => isChildActive);
 
   // Keep parent open when navigating into its children
@@ -63,7 +119,7 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
   }, [isChildActive]);
 
   // Item is active if it matches the current path or has an active descendant
-  const isActive = isItemActive(item, pathname);
+  const isActive = isItemActive(item, pathname, allLeafPaths);
   const Icon = item.icon;
 
   return (
@@ -107,7 +163,13 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
               depth === 0 ? "ml-5 pl-2.5" : "ml-3 pl-2"
             )}>
               {item.children!.map((child) => (
-                <SidebarItem key={child.path} item={child} pathname={pathname} depth={depth + 1} />
+                <SidebarItem
+                  key={child.path}
+                  item={child}
+                  pathname={pathname}
+                  depth={depth + 1}
+                  allLeafPaths={allLeafPaths}
+                />
               ))}
             </div>
           )}
@@ -140,6 +202,7 @@ const SidebarItem = ({ item, pathname, depth = 0 }: { item: NavItem; pathname: s
 
 export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: SidebarProps) {
   const pathname = usePathname();
+  const allLeafPaths = useMemo(() => getLeafPaths(navGroups), [navGroups]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     const w = window.innerWidth;
@@ -199,60 +262,6 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
 
   const showCollapsed = isCollapsed && !isMobile;
 
-  const user = useAppSelector((state) => state.auth.user);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const [logoutMutation] = useLogoutMutation();
-
-  const isLoggedIn = Boolean(
-    user && (user.userId || user.email)
-  );
-
-  const { data: meResponse } = useGetMeQuery(undefined, {
-    skip: !isLoggedIn,
-  });
-
-  const me = meResponse?.data;
-  const displayName = me?.name || user?.name || user?.email?.split("@")[0] || "Pet Lover";
-  const userRole = (me?.role || user?.role || "USER").toUpperCase();
-  const roleDisplay =
-    userRole === "SUPERADMIN"
-      ? "Super Admin"
-      : userRole === "ADMIN"
-      ? "PetNest Admin"
-      : userRole === "VET"
-      ? "Veterinarian"
-      : userRole === "AUTHOR"
-      ? "Author"
-      : "PetNest Member";
-
-  const displayAvatar =
-    me?.profile?.avatar ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (user as any)?.avatar ||
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80";
-
-  const handleSidebarLogout = async () => {
-    try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("just_logged_out", "true");
-      }
-      await logoutMutation().unwrap();
-    } catch {
-      // ignore
-    } finally {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("just_logged_out", "true");
-        setTimeout(() => {
-          sessionStorage.removeItem("just_logged_out");
-        }, 3000);
-      }
-      dispatch(logOut());
-      toast.success("Successfully logged out. See you soon!");
-      router.replace("/");
-    }
-  };
-
   return (
     <aside
       className={cn(
@@ -304,7 +313,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
                     href={item.path}
                     className={cn(
                       "flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-200",
-                      isItemActive(item, pathname)
+                      isItemActive(item, pathname, allLeafPaths)
                         ? "bg-coral text-white shadow-xs"
                         : "text-ink-muted hover:bg-surface-muted hover:text-ink"
                     )}
@@ -314,7 +323,7 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
                       <item.icon
                         className={cn(
                           "size-5 shrink-0",
-                          isItemActive(item, pathname)
+                          isItemActive(item, pathname, allLeafPaths)
                             ? "text-white"
                             : "text-ink-muted hover:text-ink"
                         )}
@@ -322,7 +331,12 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
                     )}
                   </Link>
                 ) : (
-                  <SidebarItem key={item.path} item={item} pathname={pathname} />
+                  <SidebarItem
+                    key={item.path}
+                    item={item}
+                    pathname={pathname}
+                    allLeafPaths={allLeafPaths}
+                  />
                 )
               )}
             </div>
@@ -330,55 +344,9 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
         ))}
       </div>
 
-      {/* User Profile Card at Bottom */}
+      {/* User Profile Card & Dropdown at Bottom */}
       <div className="p-3.5 border-t border-border-peach mt-auto shrink-0 bg-surface-soft">
-        {showCollapsed ? (
-          <div className="flex flex-col items-center gap-3">
-            <Image
-              src={displayAvatar}
-              alt={displayName}
-              width={36}
-              height={36}
-              unoptimized
-              className="size-9 rounded-full border border-border-peach object-cover"
-            />
-            <button
-              onClick={handleSidebarLogout}
-              className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1 rounded-md hover:bg-surface-muted"
-              title="Sign Out"
-            >
-              <LogOut className="size-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-2.5 border border-border-peach rounded-lg bg-card">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Image
-                src={displayAvatar}
-                alt={displayName}
-                width={40}
-                height={40}
-                unoptimized
-                className="size-10 rounded-full border border-border-peach object-cover shrink-0"
-              />
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-ink leading-tight truncate font-quicksand">
-                  {displayName}
-                </span>
-                <span className="text-[11px] text-coral font-medium leading-tight mt-0.5 truncate">
-                  {roleDisplay}
-                </span>
-              </div>
-            </div>
-            <button 
-              onClick={handleSidebarLogout}
-              className="text-ink-muted hover:text-coral transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-coral-light shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="size-4" />
-            </button>
-          </div>
-        )}
+        <UserProfile variant="sidebar" collapsed={showCollapsed} />
       </div>
     </aside>
   );

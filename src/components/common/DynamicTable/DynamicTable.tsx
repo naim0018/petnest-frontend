@@ -6,17 +6,23 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
-  Search,
   Filter,
+  LayoutList,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/common/Pagination";
+import SearchField, {
+  type SearchSuggestionItem,
+} from "@/components/common/SearchField";
 
 // ============================================
 // 📦 Type Definitions
 // ============================================
 
 export type ColumnAlignment = "left" | "center" | "right";
+export type TableViewMode = "table" | "grid";
+export type GridCardVariant = "with-image" | "without-image";
 
 export interface Column<T> {
   /** Unique key for the column */
@@ -56,6 +62,16 @@ export interface DynamicTableProps<T> {
   searchable?: boolean;
   /** Search placeholder text */
   searchPlaceholder?: string;
+  /** Controlled search value (if controlled externally) */
+  searchValue?: string;
+  /** Callback when search input changes */
+  onSearchChange?: (query: string) => void;
+  /** Disable client-side filtering (e.g. when server-side filtering is active) */
+  manualFiltering?: boolean;
+  /** Optional suggestions for SearchField popover */
+  searchSuggestions?: SearchSuggestionItem[];
+  /** Search loading indicator */
+  searchLoading?: boolean;
   /** Custom search function */
   onSearch?: (query: string, data: T[]) => T[];
   /** Row actions (edit, delete, etc.) */
@@ -85,8 +101,120 @@ export interface DynamicTableProps<T> {
   /** Enable striped rows */
   striped?: boolean;
   /** Table title */
-  title?: string;
+  title?: React.ReactNode;
+  /** Optional icon displayed before the table title */
+  titleIcon?: React.ReactNode;
+  /** Optional count or badge displayed next to the title (e.g. 4 or "4 guides") */
+  countBadge?: React.ReactNode | number;
+  /** Optional custom node rendered on the right side of the title row */
+  headerRight?: React.ReactNode;
+  /** Optional separated filter bar card rendered between the title row and the table card */
+  filterContent?: React.ReactNode;
+  /** Optional custom footer (e.g. server-side Pagination) rendered inside the bottom of the table card */
+  footer?: React.ReactNode;
+  /** Show default built-in Filter By button in toolbar (default: true) */
+  showFilterButton?: boolean;
+  /** Optional click handler for the built-in Filter By button */
+  onFilterClick?: () => void;
+  /** Whether the filter panel is currently active / toggled open */
+  isFilterActive?: boolean;
+  /** Count of active filter parameters displayed as a pill */
+  activeFilterCount?: number;
+  /** Enable view mode switching between table and grid (default: true) */
+  enableViewToggle?: boolean;
+  /** Current view mode if controlled: "table" | "grid" */
+  viewMode?: TableViewMode;
+  /** Initial view mode if uncontrolled (default: "table") */
+  defaultViewMode?: TableViewMode;
+  /** Callback when view mode changes */
+  onViewModeChange?: (mode: TableViewMode) => void;
+  /** Optional function to extract image URL for card in grid view */
+  getCardImage?: (row: T) => string | undefined | null;
+  /** Optional key in data object representing the image URL */
+  cardImageKey?: keyof T | string;
+  /** Optional function to extract title for card in grid view */
+  getCardTitle?: (row: T) => React.ReactNode;
+  /** Optional function to extract subtitle/badge text for card in grid view */
+  getCardSubtitle?: (row: T) => React.ReactNode;
+  /** Optional custom grid card render function */
+  renderGridCard?: (
+    row: T,
+    index: number,
+    meta: {
+      isSelected: boolean;
+      onSelect: (checked: boolean) => void;
+      hasImage: boolean;
+    }
+  ) => React.ReactNode;
+  /** Custom className for the grid container */
+  gridClassName?: string;
 }
+
+// ============================================
+// 🏷️ TableTitle Component (Reusable)
+// ============================================
+
+export interface TableTitleProps {
+  title?: React.ReactNode;
+  icon?: React.ReactNode;
+  count?: React.ReactNode | number;
+  badge?: React.ReactNode;
+  className?: string;
+}
+
+export const TableTitle = ({
+  title,
+  icon,
+  count,
+  badge,
+  className,
+}: TableTitleProps) => {
+  if (!title && !icon && count === undefined && !badge) return null;
+
+  // If title is already a custom React element and no separate icon/count provided, render it directly
+  if (
+    typeof title === "object" &&
+    title !== null &&
+    !icon &&
+    count === undefined &&
+    !badge
+  ) {
+    return (
+      <div
+        className={cn(
+          "text-base sm:text-lg font-bold font-quicksand text-ink leading-tight",
+          className,
+        )}
+      >
+        {title}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex items-center gap-2.5", className)}>
+      {icon && (
+        <span className="text-coral shrink-0 flex items-center">
+          {icon}
+        </span>
+      )}
+      {typeof title === "string" ? (
+        <h2 className="text-base sm:text-lg font-bold font-quicksand text-ink leading-tight">
+          {title}
+        </h2>
+      ) : (
+        title
+      )}
+      {badge ? (
+        badge
+      ) : count !== undefined && count !== null ? (
+        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-muted text-ink-muted border border-border-peach shrink-0">
+          {typeof count === "number" ? `${count}` : count}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 // ============================================
 // 🎨 Component
@@ -101,6 +229,11 @@ const DynamicTable = <T extends object>({
   pageSize = 10,
   searchable = false,
   searchPlaceholder = "Search...",
+  searchValue,
+  onSearchChange,
+  manualFiltering = false,
+  searchSuggestions,
+  searchLoading = false,
   onSearch,
   actions,
   bulkActions,
@@ -111,14 +244,46 @@ const DynamicTable = <T extends object>({
   hoverable = true,
   striped = false,
   title,
+  titleIcon,
+  countBadge,
+  headerRight,
+  filterContent,
+  footer,
+  showFilterButton = false,
+  onFilterClick,
+  isFilterActive = false,
+  activeFilterCount,
+  enableViewToggle = true,
+  viewMode,
+  defaultViewMode = "table",
+  onViewModeChange,
+  getCardImage,
+  cardImageKey,
+  getCardTitle,
+  getCardSubtitle,
+  renderGridCard,
+  gridClassName,
 }: DynamicTableProps<T>) => {
   // ============================================
   // 📊 State Management
   // ============================================
+  const [internalViewMode, setInternalViewMode] =
+    useState<TableViewMode>(defaultViewMode);
+  const currentViewMode = viewMode !== undefined ? viewMode : internalViewMode;
+
+  const handleViewModeChange = (mode: TableViewMode) => {
+    if (viewMode === undefined) {
+      setInternalViewMode(mode);
+    }
+    onViewModeChange?.(mode);
+  };
   const [selectedRows, setSelectedRows] = useState<Set<string | number>>(
     new Set(),
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const effectiveSearchQuery =
+    searchValue !== undefined ? searchValue : searchQuery;
+  const isControlledSearch = searchValue !== undefined;
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
@@ -132,19 +297,20 @@ const DynamicTable = <T extends object>({
   // 🔍 Search & Filter Logic
   // ============================================
   const filteredData = useMemo(() => {
-    if (!searchQuery) return data;
+    if (manualFiltering) return data;
+    if (!effectiveSearchQuery) return data;
 
     if (onSearch) {
-      return onSearch(searchQuery, data);
+      return onSearch(effectiveSearchQuery, data);
     }
 
     // Default search: search all string values
     return data.filter((row) =>
       Object.values(row).some((value) =>
-        String(value).toLowerCase().includes(searchQuery.toLowerCase()),
+        String(value).toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
       ),
     );
-  }, [data, searchQuery, onSearch]);
+  }, [data, effectiveSearchQuery, onSearch, manualFiltering]);
 
   // ============================================
   // 🔀 Sorting Logic
@@ -310,6 +476,14 @@ const DynamicTable = <T extends object>({
     return "";
   };
 
+  const getColumnAlignment = (column: Column<T>, colIndex: number): ColumnAlignment => {
+    if (column.align) {
+      return column.align;
+    }
+    // Per requirement: first column is left-aligned, rest of the columns are center-aligned (middle)
+    return colIndex === 0 ? "left" : "center";
+  };
+
   const getAlignmentClass = (align?: ColumnAlignment) => {
     switch (align) {
       case "center":
@@ -321,40 +495,245 @@ const DynamicTable = <T extends object>({
     }
   };
 
+  const toDisplayString = (val: unknown): string => {
+    if (val === null || val === undefined) return "";
+    if (typeof val === "string") return val.trim();
+    if (typeof val === "number" || typeof val === "boolean") return String(val);
+    if (typeof val === "object") {
+      if (Array.isArray(val)) {
+        return val
+          .map((item) => toDisplayString(item))
+          .filter(Boolean)
+          .join(", ");
+      }
+      const obj = val as Record<string, unknown>;
+      const textCandidate =
+        obj.name ||
+        obj.title ||
+        obj.label ||
+        obj.displayName ||
+        obj.text ||
+        obj.value;
+      if (textCandidate && typeof textCandidate === "string") {
+        return textCandidate.trim();
+      }
+      return "";
+    }
+    return "";
+  };
+
+  const extractCardImage = (row: T): string | null => {
+    if (getCardImage) {
+      const custom = getCardImage(row);
+      if (custom && typeof custom === "string" && custom.trim().length > 0) {
+        return custom.trim();
+      }
+    }
+
+    const r = row as Record<string, unknown>;
+    if (cardImageKey && r[cardImageKey as string]) {
+      const val = r[cardImageKey as string];
+      if (typeof val === "string" && val.trim().length > 0) return val.trim();
+    }
+
+    const candidateKeys = [
+      "coverImage",
+      "image",
+      "imageUrl",
+      "thumbnail",
+      "photo",
+      "picture",
+      "banner",
+    ];
+
+    for (const k of candidateKeys) {
+      if (typeof r[k] === "string" && (r[k] as string).trim().length > 0) {
+        return (r[k] as string).trim();
+      }
+    }
+
+    if (typeof r.avatar === "string" && r.avatar.trim().length > 0) {
+      return r.avatar.trim();
+    }
+
+    return null;
+  };
+
+  const extractCardTitle = (row: T, index: number): React.ReactNode => {
+    if (getCardTitle) {
+      return getCardTitle(row);
+    }
+    const r = row as Record<string, unknown>;
+    const titleKeys = [
+      "title",
+      "name",
+      "breedName",
+      "productName",
+      "fileName",
+      "subject",
+      "label",
+    ];
+    for (const k of titleKeys) {
+      if (r[k] !== undefined && r[k] !== null) {
+        const text = toDisplayString(r[k]);
+        if (text) return text;
+      }
+    }
+    if (columns.length > 0) {
+      const firstVal = getCellValue(row, columns[0]);
+      if (firstVal !== undefined && firstVal !== null) {
+        return firstVal;
+      }
+    }
+    return `Item #${index + 1}`;
+  };
+
+  const extractCardSubtitle = (row: T): string | null => {
+    if (getCardSubtitle) {
+      const res = getCardSubtitle(row);
+      const str = toDisplayString(res);
+      return str || null;
+    }
+    const r = row as Record<string, unknown>;
+    const subtitleKeys = [
+      "category",
+      "subtitle",
+      "petType",
+      "species",
+      "breed",
+      "type",
+      "role",
+      "storeName",
+      "department",
+    ];
+    for (const k of subtitleKeys) {
+      if (r[k] !== undefined && r[k] !== null) {
+        const text = toDisplayString(r[k]);
+        if (text) return text;
+      }
+    }
+    return null;
+  };
+
   // ============================================
   // 🎨 Render
   // ============================================
   return (
-    <div className="w-full bg-primary-background rounded-xl shadow-sm border border-border overflow-hidden">
-      {/* Table Header / Toolbar */}
-      <div className="px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border">
-        {title && (
-          <h2 className="text-xl font-bold text-primary-text">{title}</h2>
-        )}
-
-        <div className="flex items-center gap-3 ml-auto">
-          {searchable && (
-            <div className="relative w-full max-w-[280px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-10 pr-4 py-2 bg-light-background border border-border rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary-brand/10 focus:bg-primary-background text-primary-text transition-all"
-              />
-            </div>
+    <div className="w-full flex flex-col gap-4">
+      {/* 1. Separated Title & Search/Controls Row */}
+      {(title ||
+        titleIcon ||
+        countBadge !== undefined ||
+        searchable ||
+        showFilterButton ||
+        enableViewToggle ||
+        headerRight) && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {(title || titleIcon || countBadge !== undefined) && (
+            <TableTitle
+              title={title}
+              icon={titleIcon}
+              count={countBadge}
+            />
           )}
 
-          <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold text-secondary-text hover:bg-light-background transition-all min-w-fit">
-            <Filter className="h-4 w-4" />
-            Filter By
-          </button>
+          {(searchable ||
+            showFilterButton ||
+            enableViewToggle ||
+            headerRight) && (
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:ml-auto w-full sm:w-auto justify-end">
+              {searchable && (
+                <SearchField
+                  value={effectiveSearchQuery}
+                  onChange={(val) => {
+                    if (isControlledSearch) {
+                      onSearchChange?.(val);
+                    } else {
+                      setSearchQuery(val);
+                      setCurrentPage(1);
+                    }
+                  }}
+                  placeholder={searchPlaceholder}
+                  suggestions={searchSuggestions}
+                  isLoading={searchLoading}
+                  className="h-10 rounded-lg"
+                  containerClassName="flex-1 sm:flex-initial sm:w-72 md:w-80"
+                />
+              )}
+
+              {showFilterButton && (
+                <button
+                  type="button"
+                  onClick={onFilterClick}
+                  className={cn(
+                    "flex items-center gap-2 h-10 px-4 bg-card border rounded-lg text-sm font-semibold shadow-2xs transition-all min-w-fit cursor-pointer shrink-0",
+                    isFilterActive
+                      ? "border-coral text-coral bg-coral/5"
+                      : "border-border-peach text-ink-muted hover:border-coral/50 hover:text-ink",
+                  )}
+                >
+                  <Filter className="size-4" />
+                  <span>Filter By</span>
+                  {typeof activeFilterCount === "number" &&
+                    activeFilterCount > 0 && (
+                      <span className="size-5 rounded-full bg-coral text-white text-[11px] font-bold flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                </button>
+              )}
+
+              {/* View Mode Toggle: Table vs Grid */}
+              {enableViewToggle && (
+                <div className="inline-flex items-center p-0.5 rounded-lg border border-border-peach bg-surface-muted shadow-2xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange("table")}
+                    title="Table View"
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
+                      currentViewMode === "table"
+                        ? "bg-coral text-white shadow-2xs"
+                        : "text-ink-muted hover:text-ink hover:bg-card/60",
+                    )}
+                    aria-label="Table View"
+                  >
+                    <LayoutList className="size-4" />
+                    <span className="hidden sm:inline">Table</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange("grid")}
+                    title="Grid View"
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
+                      currentViewMode === "grid"
+                        ? "bg-coral text-white shadow-2xs"
+                        : "text-ink-muted hover:text-ink hover:bg-card/60",
+                    )}
+                    aria-label="Grid View"
+                  >
+                    <LayoutGrid className="size-4" />
+                    <span className="hidden sm:inline">Grid</span>
+                  </button>
+                </div>
+              )}
+
+              {headerRight}
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* 2. Separated Filter Panel Card */}
+      {filterContent && (
+        <div className="w-full rounded-lg bg-card border border-border-peach p-4 sm:p-5 shadow-xs">
+          {filterContent}
+        </div>
+      )}
+
+      {/* 3. Separated Table Card */}
+      <div className="w-full bg-card rounded-lg shadow-xs border border-border-peach overflow-hidden">
 
       {/* Selected Items Toolbar */}
       {selectable && selectedRows.size > 0 && (
@@ -398,11 +777,276 @@ const DynamicTable = <T extends object>({
       )}
 
       {/* 💻 Desktop Table View */}
-      <div className="hidden md:block w-full overflow-hidden">
+      {currentViewMode === "grid" ? (
+        <div className="w-full">
+          {/* Grid Select-All Subheader */}
+          {selectable && paginatedData.length > 0 && (
+            <div className="px-4 sm:px-6 py-2.5 bg-surface-soft border-b border-border-peach flex items-center justify-between text-xs font-bold text-ink-muted font-quicksand">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={
+                    paginatedData.length > 0 &&
+                    selectedRows.size === paginatedData.length
+                  }
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="size-4 rounded border-border-peach text-coral focus:ring-coral/20 transition-all cursor-pointer accent-coral"
+                />
+                <span>Select All ({paginatedData.length} items)</span>
+              </label>
+              <span>{selectedRows.size} Selected</span>
+            </div>
+          )}
+
+          {loading ? (
+            <div
+              className={cn(
+                "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 sm:p-5",
+                gridClassName,
+              )}
+            >
+              {Array.from({ length: pageSize || 8 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-border-peach bg-card p-5 animate-pulse shadow-xs flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="h-5 bg-surface-muted rounded-md w-3/4" />
+                    <div className="h-4 bg-surface-muted/60 rounded-md w-1/3" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-peach">
+                    <div className="h-3 bg-surface-muted/60 rounded w-1/2" />
+                    <div className="h-3 bg-surface-muted/60 rounded w-1/2" />
+                    <div className="h-4 bg-surface-muted/80 rounded w-3/4" />
+                    <div className="h-4 bg-surface-muted/80 rounded w-3/4" />
+                  </div>
+                  <div className="h-7 w-20 bg-surface-muted rounded-lg self-end" />
+                </div>
+              ))}
+            </div>
+          ) : paginatedData.length === 0 ? (
+            <div className="px-6 py-20 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm font-bold text-ink">{emptyMessage}</p>
+                <p className="text-xs text-ink-muted">
+                  Try adjusting your search or filters
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 sm:p-5",
+                gridClassName,
+              )}
+            >
+              {paginatedData.map((row, index) => {
+                const rowKey = getRowKey ? getRowKey(row, index) : index;
+                const isSelected = selectedRows.has(rowKey);
+                const imageUrl = extractCardImage(row);
+                const hasImage = Boolean(
+                  imageUrl && imageUrl.trim().length > 0,
+                );
+                const titleNode = extractCardTitle(row, index);
+                const subtitleText = extractCardSubtitle(row);
+
+                if (renderGridCard) {
+                  return (
+                    <div key={rowKey} className="w-full">
+                      {renderGridCard(row, index, {
+                        isSelected,
+                        onSelect: (checked) =>
+                          handleSelectRow(rowKey, checked),
+                        hasImage,
+                      })}
+                    </div>
+                  );
+                }
+
+                const baseCardCols = columns.filter((col) => {
+                  const k = col.key.toLowerCase();
+                  return (
+                    k !== "image" &&
+                    k !== "coverimage" &&
+                    k !== "photo" &&
+                    k !== "avatar" &&
+                    col.key !== columns[0]?.key
+                  );
+                });
+
+                const hasCategoryCol = baseCardCols.some((col) =>
+                  col.key.toLowerCase().includes("category")
+                );
+
+                const cardCols: Column<T>[] = [...baseCardCols];
+
+                if (subtitleText && !hasCategoryCol) {
+                  const categoryCol: Column<T> = {
+                    key: "category",
+                    label: "Category",
+                    render: () => (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold font-quicksand bg-coral/10 text-coral border border-coral/20">
+                        {subtitleText}
+                      </span>
+                    ),
+                  };
+
+                  const statusIdx = cardCols.findIndex((col) =>
+                    col.key.toLowerCase().includes("status")
+                  );
+
+                  if (statusIdx !== -1) {
+                    if (statusIdx % 2 === 1) {
+                      // Status is in the right column of a 2-col row.
+                      // Place Category on the left of Status, and move the displaced item after Status.
+                      const displaced = cardCols[statusIdx - 1];
+                      cardCols.splice(statusIdx - 1, 1, categoryCol);
+                      cardCols.splice(statusIdx + 1, 0, displaced);
+                    } else {
+                      cardCols.splice(statusIdx, 0, categoryCol);
+                    }
+                  } else {
+                    cardCols.unshift(categoryCol);
+                  }
+                }
+
+                return (
+                  <div
+                    key={rowKey}
+                    className={cn(
+                      "group bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden relative shadow-2xs hover:shadow-md hover:border-coral/50",
+                      isSelected
+                        ? "border-coral ring-2 ring-coral/30 bg-coral/[0.02]"
+                        : "border-border-peach",
+                      rowClassName?.(row, index),
+                    )}
+                  >
+                    {/* Top Image Section (Only rendered if item has an image) */}
+                    {hasImage && (
+                      <div className="relative h-44 sm:h-48 w-full bg-surface-muted overflow-hidden shrink-0 card-image-container">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrl!}
+                          alt={
+                            typeof titleNode === "string"
+                              ? titleNode
+                              : "Item image"
+                          }
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            const parent = (
+                              e.target as HTMLElement
+                            ).closest(".card-image-container");
+                            if (parent)
+                              (parent as HTMLElement).style.display =
+                                "none";
+                          }}
+                        />
+
+                        {selectable && (
+                          <div className="absolute top-3 left-3 z-10 bg-card/90 backdrop-blur-xs p-1.5 rounded-lg border border-border-peach shadow-2xs flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) =>
+                                handleSelectRow(rowKey, e.target.checked)
+                              }
+                              className="size-4 rounded border-border-peach text-coral focus:ring-coral/20 transition-all cursor-pointer accent-coral"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Card Content Body */}
+                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        {/* Header Checkbox (Only if item has no image and is selectable) */}
+                        {!hasImage && selectable && (
+                          <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border-peach">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) =>
+                                handleSelectRow(rowKey, e.target.checked)
+                              }
+                              className="size-4 rounded border-border-peach text-coral focus:ring-coral/20 transition-all cursor-pointer accent-coral"
+                            />
+                            <span className="text-xs font-bold font-quicksand text-ink-muted">
+                              Select Item
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Title (Consistent height for 2 lines so card layouts align) */}
+                        <div className="min-w-0">
+                          <h3 className="font-bold font-quicksand text-base sm:text-lg text-ink leading-snug line-clamp-2 tracking-tight group-hover:text-coral transition-colors h-12 sm:h-14 flex items-start">
+                            {titleNode}
+                          </h3>
+                        </div>
+
+                        {/* Columns / Fields Grid */}
+                        {cardCols.length > 0 && (
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-3.5 pt-4 mt-4 border-t border-border-peach">
+                            {cardCols.map((col) => {
+                              return (
+                                <div
+                                  key={col.key}
+                                  className="flex flex-col min-w-0"
+                                >
+                                  <span className="text-[11px] font-bold font-quicksand uppercase tracking-wider text-ink-muted mb-1">
+                                    {col.label}
+                                  </span>
+                                  <div className="text-xs font-bold text-ink flex items-center min-w-0 overflow-visible">
+                                    {getCellValue(row, col)}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      {actions && actions.length > 0 && (
+                        <div className="flex items-center justify-end gap-1.5 pt-3.5 border-t border-border-peach mt-4">
+                          {actions.map((action, idx) => (
+                            <Tooltip key={idx} content={action.label}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  action.onClick(row, index);
+                                }}
+                                className={cn(
+                                  "p-2 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs border",
+                                  action.variant === "danger"
+                                    ? "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100"
+                                    : action.variant === "primary"
+                                      ? "text-coral bg-coral/10 border-coral/20 hover:bg-coral/20"
+                                      : "text-ink bg-surface-muted border-border-peach hover:bg-border-peach hover:text-ink",
+                                )}
+                              >
+                                {action.icon}
+                              </button>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="hidden md:block w-full overflow-hidden">
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-border">
           <table className="w-full table-auto border-collapse min-w-full">
             <thead>
-              <tr className="bg-light-background border-b border-border">
+              <tr className="bg-coral text-white border-b border-coral-dark">
                 {selectable && (
                   <th className="px-6 py-4 w-12 text-left">
                     <div className="flex items-center">
@@ -413,52 +1057,62 @@ const DynamicTable = <T extends object>({
                           selectedRows.size === paginatedData.length
                         }
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary-brand focus:ring-primary-brand/20 transition-all cursor-pointer"
+                        className="size-4 rounded border-white/60 accent-white transition-all cursor-pointer"
                       />
                     </div>
                   </th>
                 )}
-                {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    className={cn(
-                      "px-6 py-4 text-[13px] font-bold text-secondary-text uppercase tracking-tight whitespace-nowrap",
-                      getAlignmentClass(column.align),
-                      column.hideOnMobile ? "hidden lg:table-cell" : "",
-                    )}
-                    style={{ width: column.width }}
-                  >
-                    {column.sortable ? (
-                      <button
-                        onClick={() => handleSort(column.key)}
-                        className="group flex items-center gap-2 hover:text-primary-text transition-colors w-full"
-                      >
-                        {column.label}
-                        <div className="flex flex-col text-gray-400 group-hover:text-primary-brand transition-colors">
-                          {sortConfig?.key === column.key ? (
-                            sortConfig.direction === "asc" ? (
-                              <ChevronUp
-                                size={14}
-                                className="text-primary-brand"
-                              />
-                            ) : (
-                              <ChevronDown
-                                size={14}
-                                className="text-primary-brand"
-                              />
-                            )
-                          ) : (
-                            <ChevronsUpDown size={14} className="opacity-50" />
+                {columns.map((column, colIndex) => {
+                  const alignment = getColumnAlignment(column, colIndex);
+                  const isSorted = sortConfig?.key === column.key;
+                  return (
+                    <th
+                      key={column.key}
+                      className={cn(
+                        "px-6 py-4 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap",
+                        getAlignmentClass(alignment),
+                        column.hideOnMobile ? "hidden lg:table-cell" : "",
+                      )}
+                      style={{ width: column.width }}
+                    >
+                      {column.sortable ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSort(column.key)}
+                          className={cn(
+                            "group inline-flex items-center gap-1.5 text-xs font-bold font-quicksand uppercase tracking-wider text-white hover:text-white/85 transition-colors cursor-pointer w-full",
+                            alignment === "left" && "justify-start text-left",
+                            alignment === "center" && "justify-center text-center",
+                            alignment === "right" && "justify-end text-right",
                           )}
-                        </div>
-                      </button>
-                    ) : (
-                      column.label
-                    )}
-                  </th>
-                ))}
+                        >
+                          <span>{column.label}</span>
+                          <span className="inline-flex items-center text-white/75 group-hover:text-white transition-colors shrink-0">
+                            {isSorted ? (
+                              sortConfig.direction === "asc" ? (
+                                <ChevronUp
+                                  size={14}
+                                  className="text-white"
+                                />
+                              ) : (
+                                <ChevronDown
+                                  size={14}
+                                  className="text-white"
+                                />
+                              )
+                            ) : (
+                              <ChevronsUpDown size={14} className="opacity-80" />
+                            )}
+                          </span>
+                        </button>
+                      ) : (
+                        <span>{column.label}</span>
+                      )}
+                    </th>
+                  );
+                })}
                 {actions && actions.length > 0 && (
-                  <th className="px-6 py-4 text-[13px] font-bold text-gray-500 uppercase tracking-tight text-center">
+                  <th className="px-6 py-4 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap text-center">
                     Action
                   </th>
                 )}
@@ -474,17 +1128,30 @@ const DynamicTable = <T extends object>({
                         <div className="size-4 rounded bg-surface-muted" />
                       </td>
                     )}
-                    {columns.map((col, colIndex) => (
-                      <td key={colIndex} className="px-4 py-3.5">
-                        <div
-                          className="h-4 bg-surface-muted rounded"
-                          style={{ width: `${55 + ((colIndex * 15) % 35)}%` }}
-                        />
-                      </td>
-                    ))}
+                    {columns.map((col, colIndex) => {
+                      const alignment = getColumnAlignment(col, colIndex);
+                      return (
+                        <td
+                          key={colIndex}
+                          className={cn(
+                            "px-4 py-3.5",
+                            getAlignmentClass(alignment)
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "h-4 bg-surface-muted rounded",
+                              alignment === "center" && "mx-auto",
+                              alignment === "right" && "ml-auto"
+                            )}
+                            style={{ width: `${55 + ((colIndex * 15) % 35)}%` }}
+                          />
+                        </td>
+                      );
+                    })}
                     {actions && (
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="h-6 w-16 bg-surface-muted rounded-full ml-auto" />
+                      <td className="px-4 py-3.5 text-center">
+                        <div className="h-6 w-16 bg-surface-muted rounded-full mx-auto" />
                       </td>
                     )}
                   </tr>
@@ -541,28 +1208,34 @@ const DynamicTable = <T extends object>({
                           />
                         </td>
                       )}
-                      {columns.map((column) => (
-                        <td
-                          key={column.key}
-                          className={cn(
-                            "px-6 py-4 text-sm font-semibold text-primary-text",
-                            getAlignmentClass(column.align),
-                            column.hideOnMobile ? "hidden lg:table-cell" : "",
-                          )}
-                        >
-                          <Tooltip content={getTooltipText(row, column)}>
-                            <div
-                              className={cn(
-                                !column.render && "truncate",
-                                "w-full",
-                              )}
-                              style={{ maxWidth: column.width || "none" }}
-                            >
-                              {getCellValue(row, column)}
-                            </div>
-                          </Tooltip>
-                        </td>
-                      ))}
+                      {columns.map((column, colIndex) => {
+                        const alignment = getColumnAlignment(column, colIndex);
+                        return (
+                          <td
+                            key={column.key}
+                            className={cn(
+                              "px-6 py-4 text-sm font-semibold text-primary-text",
+                              getAlignmentClass(alignment),
+                              column.hideOnMobile ? "hidden lg:table-cell" : "",
+                            )}
+                          >
+                            <Tooltip content={getTooltipText(row, column)}>
+                              <div
+                                className={cn(
+                                  !column.render && "truncate",
+                                  "w-full",
+                                  alignment === "left" && "text-left",
+                                  alignment === "center" && "text-center flex items-center justify-center",
+                                  alignment === "right" && "text-right flex items-center justify-end",
+                                )}
+                                style={{ maxWidth: column.width || "none" }}
+                              >
+                                {getCellValue(row, column)}
+                              </div>
+                            </Tooltip>
+                          </td>
+                        );
+                      })}
                       {actions && actions.length > 0 && (
                         <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-3">
@@ -622,7 +1295,7 @@ const DynamicTable = <T extends object>({
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="p-4 rounded-xl border border-border-peach bg-card space-y-3 animate-pulse"
+                className="p-4 rounded-lg border border-border-peach bg-card space-y-3 animate-pulse"
               >
                 <div className="flex justify-between items-center">
                   <div className="h-4 w-32 bg-surface-muted rounded" />
@@ -776,6 +1449,8 @@ const DynamicTable = <T extends object>({
           })
         )}
       </div>
+        </>
+      )}
 
       {/* Pagination Container */}
       {pagination && (
@@ -788,6 +1463,9 @@ const DynamicTable = <T extends object>({
           label="entries"
         />
       )}
+
+      {footer}
+      </div>
     </div>
   );
 };

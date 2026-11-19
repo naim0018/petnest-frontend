@@ -1,17 +1,21 @@
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import React, { use, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
+import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/context/HeaderActionContext";
 import {
   useFindOneSpeciesQuery,
   useFindBreedsBySpeciesQuery,
 } from "@/store/Api/Pets/pets.api";
+import { useFindGuidesBySpeciesQuery } from "@/store/Api/Guides/guides.api";
+import type { GuideSummary } from "@/store/Api/Guides/guides.types";
 import { SpeciesDeleteModal } from "@/components/admin/pet-catalog/SpeciesModals";
 import type { PetSpecies } from "@/store/Api/Pets/pets.types";
 import {
@@ -70,7 +74,143 @@ export default function SpeciesDetailsPage({
     petSpecies?._count?.breeds ??
     breeds.length;
 
+  // Fetch connected care guides for this species
+  const {
+    data: guidesResponse,
+    isLoading: isLoadingGuides,
+  } = useFindGuidesBySpeciesQuery(
+    { speciesIdOrSlug: typeId, query: { limit: 6 } },
+    { skip: !typeId }
+  );
+  const guidesPayload = (guidesResponse?.data as any)?.items
+    ? (guidesResponse?.data as any)
+    : (guidesResponse?.data as any)?.data;
+  const connectedGuides: GuideSummary[] = guidesPayload?.items || [];
+  const totalGuides =
+    guidesPayload?.meta?.total ?? connectedGuides.length;
+
   const speciesDisplayName = petSpecies?.name || "Pet Classification";
+
+  const guideColumns: Column<GuideSummary>[] = useMemo(
+    () => [
+      {
+        key: "title",
+        label: "Guide",
+        align: "left",
+        sortable: true,
+        render: (guide) => (
+          <div className="flex items-center gap-3 py-1">
+            {guide.coverImage ? (
+              <div className="relative size-12 rounded-lg bg-surface-muted overflow-hidden shrink-0 border border-border-peach">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={guide.coverImage}
+                  alt={guide.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="size-12 rounded-lg bg-coral/10 text-coral flex items-center justify-center shrink-0 border border-coral/20">
+                <BookOpen className="size-5" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/admin/guides/${guide.id}`}
+                className="font-bold text-sm text-ink hover:text-coral transition-colors line-clamp-1 font-quicksand"
+              >
+                {guide.title}
+              </Link>
+              {guide.excerpt && (
+                <p className="text-xs text-ink-muted line-clamp-1 mt-0.5">
+                  {guide.excerpt}
+                </p>
+              )}
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "category",
+        label: "Category",
+        align: "center",
+        sortable: true,
+        render: (guide) =>
+          guide.category?.name ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-quicksand bg-coral/10 text-coral border border-coral/20">
+              {guide.category.name}
+            </span>
+          ) : (
+            <span className="text-xs text-ink-muted">—</span>
+          ),
+      },
+      {
+        key: "author",
+        label: "Author",
+        align: "center",
+        render: (guide) => (
+          <span className="text-xs font-semibold text-ink">
+            {guide.author?.name || "PetNest Team"}
+          </span>
+        ),
+      },
+      {
+        key: "readTimeMinutes",
+        label: "Read Time",
+        align: "center",
+        sortable: true,
+        render: (guide) => (
+          <span className="text-xs font-medium text-ink-muted flex items-center justify-center gap-1">
+            <Clock className="size-3.5 text-coral/70" />
+            {guide.readTimeMinutes || 5} min read
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        label: "Status",
+        align: "center",
+        sortable: true,
+        render: (guide) => {
+          const status = guide.status || "PUBLISHED";
+          const isPub = status === "PUBLISHED";
+          return (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold font-quicksand border",
+                isPub
+                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+              )}
+            >
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  isPub ? "bg-emerald-500" : "bg-amber-500"
+                )}
+              />
+              {status}
+            </span>
+          );
+        },
+      },
+      {
+        key: "actions",
+        label: "Action",
+        align: "center",
+        render: (guide) => (
+          <Link
+            href={`/admin/guides/${guide.id}`}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-coral hover:bg-coral/10 border border-coral/20 transition-all font-quicksand"
+          >
+            Read
+            <ExternalLink className="size-3" />
+          </Link>
+        ),
+      },
+    ],
+    []
+  );
 
   // Dynamic header action buttons
   useEffect(() => {
@@ -79,6 +219,7 @@ export default function SpeciesDetailsPage({
         <PrimaryButton
           variant="outline"
           size="sm"
+          rounded="md"
           onClick={() => router.push(`/admin/pet-catalog/${typeId}`)}
           leftIcon={<Layers className="size-4 text-coral" />}
           className="font-bold cursor-pointer"
@@ -88,12 +229,22 @@ export default function SpeciesDetailsPage({
         <PrimaryButton
           variant="primary"
           size="sm"
+          rounded="md"
           onClick={() => router.push(`/admin/pet-catalog/${typeId}/edit`)}
           leftIcon={<Pencil className="size-4" />}
           className="font-bold cursor-pointer"
         >
           Edit Classification
         </PrimaryButton>
+        <button
+          type="button"
+          onClick={() => setIsDeleteModalOpen(true)}
+          title="Delete Classification"
+          aria-label="Delete Classification"
+          className="size-9 rounded-md border border-red-200 hover:border-destructive bg-card hover:bg-rose-50 dark:hover:bg-rose-950/30 text-destructive flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
+        >
+          <Trash2 className="size-4" />
+        </button>
       </div>
     );
 
@@ -162,53 +313,8 @@ export default function SpeciesDetailsPage({
 
   return (
     <div className="space-y-6">
-      {/* Top Breadcrumb & Quick Actions Bar */}
-      <AnimatedContainer delay={0.05}>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <button
-            onClick={() => router.push("/admin/pet-catalog")}
-            className="inline-flex items-center gap-2 text-xs font-bold text-ink-muted hover:text-coral transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="size-4" />
-            <span>Back to All Pet Types</span>
-          </button>
-
-          <div className="flex items-center gap-2.5">
-            <PrimaryButton
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/admin/pet-catalog/${typeId}`)}
-              leftIcon={<PawPrint className="size-3.5 text-coral" />}
-              className="text-xs font-bold"
-            >
-              Browse Breeds ({totalBreedsCount})
-            </PrimaryButton>
-
-            <PrimaryButton
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/admin/pet-catalog/${typeId}/edit`)}
-              leftIcon={<Pencil className="size-3.5 text-coral" />}
-              className="text-xs font-bold"
-            >
-              Edit Classification
-            </PrimaryButton>
-
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              title="Delete Species"
-              aria-label="Delete Species"
-              className="size-9 rounded-full border border-red-200 hover:border-destructive bg-card hover:bg-rose-50 dark:hover:bg-rose-950/30 text-destructive flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </div>
-        </div>
-      </AnimatedContainer>
-
       {/* Hero Classification Banner Card */}
-      <AnimatedContainer delay={0.1}>
+      <AnimatedContainer delay={0.05}>
         <div className="bg-card border border-border-peach rounded-2xl overflow-hidden shadow-xs relative">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             {/* Visual Mascot Area */}
@@ -458,51 +564,79 @@ export default function SpeciesDetailsPage({
         </div>
       </AnimatedContainer>
 
-      {/* Connected Care Guides Section (Future-Ready Slot) */}
+      {/* Connected Care Guides Section */}
       <AnimatedContainer delay={0.25}>
-        <div className="p-6 rounded-2xl bg-card border border-border-peach space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="size-9 rounded-xl bg-coral/10 text-coral flex items-center justify-center">
-                <BookOpen className="size-5" />
+        <DynamicTable
+          title="Connected Care Guides"
+          countBadge={totalGuides}
+          data={connectedGuides}
+          columns={guideColumns}
+          loading={isLoadingGuides}
+          enableViewToggle
+          defaultViewMode="grid"
+          searchable
+          searchPlaceholder="Search connected care guides..."
+          pagination
+          pageSize={6}
+          showFilterButton={false}
+          gridClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          renderGridCard={(guide) => (
+            <div
+              key={guide.id}
+              className="group bg-card rounded-2xl border border-border-peach overflow-hidden shadow-2xs hover:shadow-md hover:border-coral/50 transition-all duration-200 flex flex-col justify-between h-full"
+            >
+              {guide.coverImage && (
+                <div className="relative h-44 w-full bg-surface-muted overflow-hidden shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={guide.coverImage}
+                    alt={guide.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
+              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    {guide.category?.name ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold font-quicksand bg-coral/10 text-coral border border-coral/20">
+                        {guide.category.name}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <span className="text-[11px] font-semibold text-ink-muted">
+                      {guide.readTimeMinutes || 5} min read
+                    </span>
+                  </div>
+                  <Link
+                    href={`/admin/guides/${guide.id}`}
+                    className="font-bold text-sm sm:text-base text-ink line-clamp-2 hover:text-coral transition-colors font-quicksand leading-snug"
+                  >
+                    {guide.title}
+                  </Link>
+                  {guide.excerpt && (
+                    <p className="text-xs text-ink-muted line-clamp-2 leading-relaxed">
+                      {guide.excerpt}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-border-peach text-xs">
+                  <span className="text-ink-muted truncate font-medium">
+                    By {guide.author?.name || "PetNest Team"}
+                  </span>
+                  <Link
+                    href={`/admin/guides/${guide.id}`}
+                    className="text-coral hover:underline font-bold text-xs inline-flex items-center gap-1 group-hover:underline"
+                  >
+                    View Guide <ArrowRight className="size-3" />
+                  </Link>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-ink text-base font-quicksand">
-                  Connected Care Guides
-                </h3>
-                <p className="text-xs text-ink-muted">
-                  Veterinary healthcare guides, nutrition regimens, and training modules.
-                </p>
-              </div>
             </div>
-
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-              Guide Integration Coming Soon
-            </span>
-          </div>
-
-          <div className="p-8 text-center rounded-xl bg-surface-soft/60 border border-dashed border-border-peach space-y-3">
-            <BookOpen className="size-10 text-ink-faint mx-auto opacity-50" />
-            <div className="space-y-1">
-              <p className="font-bold text-sm text-ink font-quicksand">
-                No Guides Linked to {speciesDisplayName} Yet
-              </p>
-              <p className="text-xs text-ink-muted max-w-md mx-auto">
-                Comprehensive health, nutrition, and care guides for this species will appear here once connected.
-              </p>
-            </div>
-            <div className="pt-2">
-              <PrimaryButton
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/admin/guides")}
-                leftIcon={<ExternalLink className="size-3.5" />}
-              >
-                Browse Care Guides
-              </PrimaryButton>
-            </div>
-          </div>
-        </div>
+          )}
+          emptyMessage={`No guides linked to ${speciesDisplayName} yet.`}
+        />
       </AnimatedContainer>
 
       {/* Delete Confirmation Modal */}

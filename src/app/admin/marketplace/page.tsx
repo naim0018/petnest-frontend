@@ -132,7 +132,7 @@ export default function MarketplaceOverviewPage() {
       key: "createdAt",
       label: "Listed",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.createdAt}</span>,
     },
   ];
@@ -233,18 +233,16 @@ export default function MarketplaceOverviewPage() {
 
       {/* Recent Listings */}
       <AnimatedContainer delay={0.3}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={mockRecentListings}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search marketplace listings, sellers, or categories..."
-            pagination
-            pageSize={5}
-            title="Recent Marketplace Listings"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={mockRecentListings}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search marketplace listings, sellers, or categories..."
+          pagination
+          pageSize={5}
+          title="Recent Marketplace Listings"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

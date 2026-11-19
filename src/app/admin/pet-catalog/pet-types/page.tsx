@@ -138,7 +138,7 @@ export default function PetTypesPage() {
       key: "updatedAt",
       label: "Last Modified",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => <span className="text-xs text-ink-muted">{row.updatedAt}</span>,
     },
   ];
@@ -200,18 +200,16 @@ export default function PetTypesPage() {
 
       {/* Main Table */}
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search pet types or scientific name..."
-            pagination
-            pageSize={10}
-            title="All Pet Classifications"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search pet types or scientific name..."
+          pagination
+          pageSize={10}
+          title="All Pet Classifications"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

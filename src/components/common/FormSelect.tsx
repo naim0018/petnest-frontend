@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,17 @@ export default function FormSelect({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus search input without causing browser scroll-jump
+  useEffect(() => {
+    if (open && searchable) {
+      const raf = requestAnimationFrame(() => {
+        searchInputRef.current?.focus({ preventScroll: true });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [open, searchable]);
 
   const normalizedOptions: FormSelectOption[] = useMemo(
     () =>
@@ -120,11 +131,12 @@ export default function FormSelect({
         <label
           htmlFor={id}
           className={cn(
-            "block text-xs font-bold uppercase tracking-wider text-ink select-none mb-1.5",
+            "block text-xs leading-4 font-bold uppercase tracking-wider text-ink select-none mb-1.5",
             labelClassName
           )}
         >
-          {label} {required && <span className="text-coral">*</span>}
+          {label}
+          {required && <span className="text-coral ml-0.5">*</span>}
         </label>
       )}
 
@@ -163,11 +175,6 @@ export default function FormSelect({
                     {leftIcon}
                   </span>
                 )}
-                {selectedOption?.icon && !multiple && (
-                  <span className="shrink-0 flex items-center justify-center">
-                    {selectedOption.icon}
-                  </span>
-                )}
 
                 {multiple ? (
                   selectedValues.length === 0 ? (
@@ -192,14 +199,21 @@ export default function FormSelect({
                     </div>
                   )
                 ) : (
-                  <span
-                    className={cn(
-                      "text-xs sm:text-sm truncate select-none leading-none",
-                      selectedOption ? "text-ink font-medium" : "text-ink-faint"
+                  <div className="flex items-center gap-2 truncate min-w-0">
+                    {selectedOption?.icon && (
+                      <span className="shrink-0 flex items-center justify-center">
+                        {selectedOption.icon}
+                      </span>
                     )}
-                  >
-                    {selectedOption ? selectedOption.label : placeholder}
-                  </span>
+                    <span
+                      className={cn(
+                        "text-xs sm:text-sm truncate select-none leading-normal",
+                        selectedOption ? "text-ink font-medium" : "text-ink-faint"
+                      )}
+                    >
+                      {selectedOption ? selectedOption.label : placeholder}
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -218,12 +232,15 @@ export default function FormSelect({
         <PopoverContent
           align="start"
           sideOffset={6}
+          initialFocus={false}
+          finalFocus={false}
           className="w-[var(--anchor-width)] min-w-[200px] p-1.5 bg-card border border-border-peach rounded-md shadow-xl z-50 overflow-hidden flex flex-col"
         >
           {searchable && (
             <div className="flex items-center px-2 py-1.5 mb-1 border-b border-border-peach text-ink-muted">
               <Search className="size-3.5 shrink-0 mr-1.5 opacity-60" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => {
@@ -231,7 +248,6 @@ export default function FormSelect({
                   setPage(1);
                 }}
                 placeholder="Search..."
-                autoFocus
                 className="w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-faint"
               />
               {searchQuery && (
@@ -288,7 +304,11 @@ export default function FormSelect({
                     )}
                   >
                     <div className="flex items-center gap-2 truncate min-w-0">
-                      {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                      {opt.icon && (
+                        <span className="shrink-0 flex items-center justify-center">
+                          {opt.icon}
+                        </span>
+                      )}
                       <span className="truncate">{opt.label}</span>
                     </div>
 

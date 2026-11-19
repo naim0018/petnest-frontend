@@ -1,143 +1,457 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
+import FormSelect from "@/components/common/FormSelect";
+import SearchField, {
+  type SearchSuggestionItem,
+} from "@/components/common/SearchField";
+import Pagination from "@/components/common/Pagination";
 import { StatsCard } from "@/components/common/StatsCard";
-import { BookOpen, Plus, Filter, Eye, ThumbsUp, BookmarkCheck } from "lucide-react";
-import Link from "next/link";
+import ConfirmModal from "@/components/reuseable/ConfirmModal";
+import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import { useHeaderAction } from "@/context/HeaderActionContext";
+import {
+  useFindAllEditorialQuery,
+  useGetEditorialStatsQuery,
+  useFindAllCategoriesPublicQuery,
+  useDeleteGuideMutation,
+} from "@/store/Api/Guides/guides.api";
+import type {
+  GuideStatus,
+  GuideSummary,
+} from "@/store/Api/Guides/guides.types";
+import {
+  useAllSpeciesDropdown,
+  useBreedsBySpeciesDropdown,
+} from "@/hooks/usePetQueries";
+import {
+  BookOpen,
+  Plus,
+  Filter,
+  Eye,
+  Pencil,
+  ThumbsUp,
+  HelpCircle,
+  Trash2,
+  RotateCcw,
+  Bookmark,
+  FileArchive,
+} from "lucide-react";
+import { toast } from "sonner";
+import BulkGuideImportModal from "@/components/admin/guides/BulkGuideImportModal";
+import GuideStatusDropdown from "@/components/admin/guides/GuideStatusDropdown";
+import GuideCategoryDropdown from "@/components/admin/guides/GuideCategoryDropdown";
 
-interface GuideRecord {
-  id: string;
-  title: string;
-  category: string;
-  author: string;
-  readTime: string;
-  views: number;
-  likes: number;
-  status: "Published" | "In Review" | "Draft";
-  updatedAt: string;
-}
+const PAGE_SIZE = 10;
 
-const mockGuides: GuideRecord[] = [
-  {
-    id: "GD-001",
-    title: "Complete Puppy Vaccination & Preventive Wellness Checklist",
-    category: "Dog Care",
-    author: "Dr. Sarah Jenkins",
-    readTime: "7 min read",
-    views: 18450,
-    likes: 842,
-    status: "Published",
-    updatedAt: "2026-10-02",
-  },
-  {
-    id: "GD-002",
-    title: "Raw vs Kibble Diet for Cats: Complete Clinical Breakdown",
-    category: "Cat Nutrition",
-    author: "Elena Rostova",
-    readTime: "10 min read",
-    views: 14210,
-    likes: 620,
-    status: "Published",
-    updatedAt: "2026-09-29",
-  },
-  {
-    id: "GD-003",
-    title: "Safe Socialization Protocols for Shelter & Rescue Dogs",
-    category: "Behavior & Training",
-    author: "Amara Williams",
-    readTime: "6 min read",
-    views: 9340,
-    likes: 512,
-    status: "Published",
-    updatedAt: "2026-09-27",
-  },
-  {
-    id: "GD-004",
-    title: "Optimal Water Parameters for Freshwater Planted Aquariums",
-    category: "Aquatics",
-    author: "Marcus Chen",
-    readTime: "12 min read",
-    views: 6890,
-    likes: 384,
-    status: "Published",
-    updatedAt: "2026-09-20",
-  },
-  {
-    id: "GD-005",
-    title: "Signs of Respiratory Illness in Parrots and Small Birds",
-    category: "Avian Health",
-    author: "Dr. Sarah Jenkins",
-    readTime: "5 min read",
-    views: 4120,
-    likes: 295,
-    status: "Published",
-    updatedAt: "2026-09-18",
-  },
-  {
-    id: "GD-006",
-    title: "Dental Hygiene Routine for Aging Dogs (7+ Years)",
-    category: "Senior Pet Care",
-    author: "Michael Vance",
-    readTime: "8 min read",
-    views: 2840,
-    likes: 198,
-    status: "In Review",
-    updatedAt: "2026-10-04",
-  },
+const STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "IN_REVIEW", label: "In Review" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "NEEDS_REVISION", label: "Needs Revision" },
+  { value: "ARCHIVED", label: "Archived" },
 ];
 
-export default function AllGuidesPage() {
-  const [data] = useState<GuideRecord[]>(mockGuides);
+const SORT_OPTIONS = [
+  { value: "updatedAt:desc", label: "Recently Updated" },
+  { value: "displayOrder:asc", label: "Display Order (1st First)" },
+  { value: "createdAt:desc", label: "Newest Created" },
+  { value: "viewCount:desc", label: "Most Viewed" },
+  { value: "likeCount:desc", label: "Most Liked" },
+  { value: "title:asc", label: "Title (A–Z)" },
+];
 
-  const columns: Column<GuideRecord>[] = [
+const STATUS_BADGE_MAP: Record<
+  GuideStatus,
+  { label: string; className: string }
+> = {
+  PUBLISHED: {
+    label: "Published",
+    className: "bg-tint-mint text-success border border-success/30",
+  },
+  IN_REVIEW: {
+    label: "In Review",
+    className: "bg-tint-sky text-info border border-info/30",
+  },
+  DRAFT: {
+    label: "Draft",
+    className: "bg-surface-muted text-ink-muted border border-border-peach",
+  },
+  NEEDS_REVISION: {
+    label: "Needs Revision",
+    className: "bg-tint-cream text-warning border border-warning/30",
+  },
+  ARCHIVED: {
+    label: "Archived",
+    className: "bg-surface-muted text-ink-faint border border-border-peach",
+  },
+};
+
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default function AllGuidesPage() {
+  const router = useRouter();
+  const { setHeaderAction } = useHeaderAction();
+
+  // Filter & pagination state
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [speciesFilter, setSpeciesFilter] = useState("");
+  const [breedFilter, setBreedFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortValue, setSortValue] = useState("updatedAt:desc");
+  const [page, setPage] = useState(1);
+
+  // Delete confirmation modal state
+  const [guideToDelete, setGuideToDelete] = useState<GuideSummary | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const [sortBy, sortOrder] = useMemo(() => {
+    const [field, order] = sortValue.split(":");
+    return [field || "updatedAt", (order === "asc" ? "asc" : "desc") as "asc" | "desc"];
+  }, [sortValue]);
+
+  // Real API queries
+  const {
+    data: guidesResponse,
+    isLoading: isLoadingGuides,
+    isFetching: isFetchingGuides,
+  } = useFindAllEditorialQuery({
+    page,
+    limit: PAGE_SIZE,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(categoryFilter ? { category: categoryFilter } : {}),
+    ...(speciesFilter ? { species: speciesFilter } : {}),
+    ...(breedFilter ? { breed: breedFilter } : {}),
+    ...(statusFilter ? { status: statusFilter as GuideStatus } : {}),
+    sortBy,
+    sortOrder,
+  });
+
+  const { data: statsResponse, isLoading: isLoadingStats } =
+    useGetEditorialStatsQuery();
+  const { data: categoriesResponse, isLoading: isLoadingCategories } =
+    useFindAllCategoriesPublicQuery();
+  const { data: speciesList = [], isLoading: isLoadingSpecies } =
+    useAllSpeciesDropdown();
+  const { data: breedList = [], isLoading: isLoadingBreeds } =
+    useBreedsBySpeciesDropdown(speciesFilter);
+
+  const [deleteGuide, { isLoading: isDeleting }] = useDeleteGuideMutation();
+
+  const guides = useMemo(
+    () => guidesResponse?.data?.items || [],
+    [guidesResponse]
+  );
+  const meta = guidesResponse?.data?.meta;
+  const stats = statsResponse?.data;
+  const categories = useMemo(
+    () => categoriesResponse?.data || [],
+    [categoriesResponse]
+  );
+
+  // Dropdown options
+  const categoryOptions = useMemo(
+    () => [
+      { value: "", label: "All Categories" },
+      ...categories.map((cat) => ({
+        value: cat.id,
+        label: cat.name,
+      })),
+    ],
+    [categories]
+  );
+
+  const speciesOptions = useMemo(
+    () => [
+      { value: "", label: "All Species" },
+      ...speciesList.map((sp) => ({
+        value: sp.id,
+        label: sp.name,
+        icon: sp.image ? (
+          <span className="relative size-5 rounded-full overflow-hidden border border-border-peach bg-surface-muted shrink-0 inline-block">
+            <Image
+              src={sp.image}
+              alt={sp.name}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </span>
+        ) : (
+          <span className="size-5 rounded-full bg-coral/10 text-coral font-bold text-xs flex items-center justify-center shrink-0">
+            {sp.name.charAt(0)}
+          </span>
+        ),
+      })),
+    ],
+    [speciesList]
+  );
+
+  const breedOptions = useMemo(
+    () => [
+      { value: "", label: "All Breeds" },
+      ...breedList.map((b) => ({
+        value: b.id,
+        label: b.name,
+        icon: b.image ? (
+          <span className="relative size-5 rounded-full overflow-hidden border border-border-peach bg-surface-muted shrink-0 inline-block">
+            <Image
+              src={b.image}
+              alt={b.name}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </span>
+        ) : (
+          <span className="size-5 rounded-full bg-coral/10 text-coral font-bold text-xs flex items-center justify-center shrink-0">
+            {b.name.charAt(0)}
+          </span>
+        ),
+      })),
+    ],
+    [breedList]
+  );
+
+  // Live search suggestions for SearchField popover
+  const searchSuggestions: SearchSuggestionItem[] = useMemo(() => {
+    if (!searchInput.trim()) return [];
+    return guides.slice(0, 6).map((g) => ({
+      id: g.id,
+      title: g.title,
+      subtitle: `${g.category?.name || "General"} • ${g.readTimeMinutes || 1} min read`,
+      image: g.coverImage || undefined,
+      badge: STATUS_BADGE_MAP[g.status]?.label || g.status,
+      onClick: () => router.push(`/admin/guides/${g.id}`),
+    }));
+  }, [guides, searchInput, router]);
+
+  const activeFilterCount = [
+    categoryFilter,
+    speciesFilter,
+    breedFilter,
+    statusFilter,
+    debouncedSearch,
+  ].filter(Boolean).length;
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setDebouncedSearch("");
+    setCategoryFilter("");
+    setSpeciesFilter("");
+    setBreedFilter("");
+    setStatusFilter("");
+    setSortValue("updatedAt:desc");
+    setPage(1);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!guideToDelete) return;
+    try {
+      await deleteGuide(guideToDelete.id).unwrap();
+      toast.success(`Guide "${guideToDelete.title}" deleted successfully.`);
+      setGuideToDelete(null);
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { data?: { message?: string } })?.data?.message ||
+        "Failed to delete guide. Please try again.";
+      toast.error(errorMsg);
+    }
+  };
+
+  // Header actions
+  useEffect(() => {
+    setHeaderAction(
+      <div className="flex items-center gap-2">
+        <PrimaryButton
+          variant="outline"
+          size="sm"
+          rounded="md"
+          leftIcon={<FileArchive className="size-4 text-coral" />}
+          onClick={() => setIsBulkImportOpen(true)}
+          className="font-bold cursor-pointer"
+        >
+          Bulk Import (.zip)
+        </PrimaryButton>
+        <Link href="/admin/guides/create">
+          <PrimaryButton
+            variant="primary"
+            size="sm"
+            rounded="md"
+            leftIcon={<Plus className="size-4" />}
+            className="font-bold cursor-pointer"
+          >
+            Write New Guide
+          </PrimaryButton>
+        </Link>
+      </div>
+    );
+
+    return () => setHeaderAction(null);
+  }, [setHeaderAction]);
+
+  // Derived real stats
+  const totalGuidesCount = stats
+    ? stats.publishedCount +
+      stats.inReviewCount +
+      stats.draftCount +
+      stats.needsRevisionCount
+    : meta?.total ?? 0;
+
+  // Table columns
+  const columns: Column<GuideSummary>[] = [
     {
       key: "title",
       label: "Title & Topic",
       sortable: true,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-lg bg-coral-light flex items-center justify-center text-coral shrink-0">
-            <BookOpen className="size-5" />
-          </div>
-          <div>
-            <p className="font-bold text-ink leading-tight line-clamp-1">{row.title}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-coral font-medium">{row.category}</span>
-              <span className="text-[11px] text-ink-muted">• {row.readTime}</span>
+      render: (row) => {
+        const CategoryIcon = getCategoryIcon(row.category?.icon);
+        return (
+          <div className="flex items-center gap-3 min-w-0">
+            {row.coverImage ? (
+              <div className="relative size-10 rounded-lg overflow-hidden border border-border-peach bg-surface-muted shrink-0">
+                <Image
+                  src={row.coverImage}
+                  alt={row.title}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="size-10 rounded-lg bg-tint-rose border border-coral/20 flex items-center justify-center text-coral shrink-0">
+                <CategoryIcon className="size-5" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <Link
+                href={`/admin/guides/${row.id}`}
+                className="font-bold text-ink hover:text-coral transition-colors leading-tight line-clamp-1"
+              >
+                {row.title}
+              </Link>
+              <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-xs">
+                {row.species?.name && (
+                  <>
+                    <span className="text-ink-muted font-medium">
+                      {row.species.name}
+                      {row.breeds && row.breeds.length > 0
+                        ? ` (${row.breeds[0].name}${
+                            row.breeds.length > 1
+                              ? ` +${row.breeds.length - 1}`
+                              : ""
+                          })`
+                        : ""}
+                    </span>
+                    <span className="text-ink-faint">•</span>
+                  </>
+                )}
+                <span className="text-ink-muted">
+                  {row.readTimeMinutes || 1} min read
+                </span>
+                {row.displayOrder > 0 && (
+                  <>
+                    <span className="text-ink-faint">•</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-tint-mint text-success border border-success/30">
+                      Order #{row.displayOrder}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        );
+      },
+    },
+    {
+      key: "category",
+      label: "Category",
+      sortable: true,
+      align: "center",
+      render: (row) => (
+        <GuideCategoryDropdown
+          guideId={row.id}
+          currentCategoryId={row.category?.id}
+          currentCategoryName={row.category?.name}
+          currentCategoryIcon={row.category?.icon}
+          guideTitle={row.title}
+        />
       ),
     },
     {
       key: "author",
       label: "Author",
-      sortable: true,
-      render: (row) => <span className="text-xs font-semibold text-ink">{row.author}</span>,
+      render: (row) => {
+        const isSuper = row.author?.role?.toUpperCase() === "SUPERADMIN";
+        const displayName = isSuper
+          ? "Super Admin"
+          : row.author?.name || "Unknown";
+        return (
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-ink">
+              {displayName}
+            </span>
+            <span className="text-xs text-ink-faint uppercase">
+              {isSuper ? "Superadmin" : row.author?.role || "Author"}
+            </span>
+          </div>
+        );
+      },
     },
     {
-      key: "views",
+      key: "viewCount",
       label: "Views",
       sortable: true,
       align: "center",
       render: (row) => (
         <span className="font-semibold text-xs text-ink">
-          {row.views.toLocaleString()}
+          {(row.viewCount ?? 0).toLocaleString()}
         </span>
       ),
     },
     {
-      key: "likes",
+      key: "likeCount",
       label: "Reactions",
       sortable: true,
       align: "center",
       render: (row) => (
-        <span className="text-xs font-medium text-ink-muted">
-          {row.likes.toLocaleString()}
-        </span>
+        <div className="inline-flex items-center gap-2.5 text-xs text-ink-muted">
+          <span className="inline-flex items-center gap-1" title="Likes">
+            <ThumbsUp className="size-3.5 text-coral" />
+            {(row.likeCount ?? 0).toLocaleString()}
+          </span>
+          <span className="inline-flex items-center gap-1" title="Bookmarks">
+            <Bookmark className="size-3.5 text-ink-faint" />
+            {(row.bookmarkCount ?? 0).toLocaleString()}
+          </span>
+        </div>
       ),
     },
     {
@@ -146,95 +460,264 @@ export default function AllGuidesPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-            row.status === "Published"
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-          }`}
-        >
-          {row.status}
-        </span>
+        <GuideStatusDropdown
+          guideId={row.id}
+          currentStatus={row.status}
+          guideTitle={row.title}
+        />
       ),
     },
     {
       key: "updatedAt",
       label: "Last Updated",
       sortable: true,
-      align: "right",
-      render: (row) => <span className="text-xs text-ink-muted">{row.updatedAt}</span>,
+      align: "center",
+      render: (row) => (
+        <span className="text-xs text-ink-muted whitespace-nowrap">
+          {formatDate(row.updatedAt || row.createdAt)}
+        </span>
+      ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">All Care Guides</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Browse, search, edit, and organize all published and draft articles across PetNest.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <PrimaryButton
-            variant="outline"
-            size="md"
-            leftIcon={<Filter className="size-4" />}
-          >
-            Filter by Topic
-          </PrimaryButton>
-          <Link href="/admin/guides/create">
-            <PrimaryButton
-              variant="primary"
-              size="md"
-              leftIcon={<Plus className="size-4" />}
-            >
-              Write New Guide
-            </PrimaryButton>
-          </Link>
-        </div>
-      </div>
+    <div className="w-full space-y-6 pb-12">
+      {/* Real Editorial Stats Cards */}
+      <AnimatedContainer delay={0.05}>
+        {isLoadingStats ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-28 rounded-xl bg-card border border-border-peach p-5 animate-pulse space-y-3"
+              >
+                <div className="h-3.5 w-28 bg-surface-muted rounded" />
+                <div className="h-7 w-36 bg-surface-muted rounded" />
+                <div className="h-3 w-44 bg-surface-muted rounded" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard
+              title="Total Guides"
+              value={`${totalGuidesCount.toLocaleString()} ${
+                totalGuidesCount === 1 ? "Article" : "Articles"
+              }`}
+              trendText={`${stats?.publishedCount ?? 0} published • ${
+                stats?.draftCount ?? 0
+              } drafts`}
+              trendType="positive"
+              icon={<BookOpen className="size-5" />}
+            />
+            <StatsCard
+              title="Lifetime Reader Views"
+              value={(stats?.totalViews ?? 0).toLocaleString()}
+              trendText={`${(
+                stats?.totalBookmarks ?? 0
+              ).toLocaleString()} reader bookmarks`}
+              trendType="positive"
+              icon={<Eye className="size-5" />}
+            />
+            <StatsCard
+              title="Reader Reactions"
+              value={(stats?.totalLikes ?? 0).toLocaleString()}
+              trendText={`${stats?.inReviewCount ?? 0} awaiting review`}
+              trendType="positive"
+              icon={<ThumbsUp className="size-5" />}
+            />
+            <StatsCard
+              title="Guide FAQs"
+              value="0"
+              trendText="Pending API integration"
+              trendType="neutral"
+              icon={<HelpCircle className="size-5" />}
+            />
+          </div>
+        )}
+      </AnimatedContainer>
 
+      {/* Master Guides Directory: Reusable DynamicTable with unified Search & Filter By toolbar */}
       <AnimatedContainer delay={0.1}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatsCard
-            title="Total Guides"
-            value="412 Articles"
-            trendText="Across 18 pet categories"
-            trendType="positive"
-            icon={<BookOpen className="size-5 text-coral" />}
-          />
-          <StatsCard
-            title="Lifetime Reader Views"
-            value="1.82M"
-            trendText="+92.4k this month"
-            trendType="positive"
-            icon={<Eye className="size-5 text-coral" />}
-          />
-          <StatsCard
-            title="Helpful Rating"
-            value="98.2%"
-            trendText="Based on 14.2k reader votes"
-            trendType="positive"
-            icon={<ThumbsUp className="size-5 text-coral" />}
-          />
-        </div>
+        <DynamicTable
+          data={guides}
+          columns={columns}
+          loading={isLoadingGuides}
+          searchable
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchSuggestions={searchSuggestions}
+          searchLoading={isFetchingGuides}
+          searchPlaceholder="Search guides by title, excerpt, or tag..."
+          manualFiltering
+          getRowKey={(row) => row.id}
+          title="Master Guides Directory"
+          titleIcon={<BookOpen className="size-5" />}
+          countBadge={
+            meta
+              ? `${meta.total} ${meta.total === 1 ? "guide" : "guides"}`
+              : undefined
+          }
+          filterContent={
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                  <FormSelect
+                    label="Category"
+                    placeholder={
+                      isLoadingCategories ? "Loading..." : "All Categories"
+                    }
+                    options={categoryOptions}
+                    value={categoryFilter}
+                    onChange={(val) => {
+                      setCategoryFilter(val);
+                      setPage(1);
+                    }}
+                    searchable
+                    disabled={isLoadingCategories}
+                  />
+
+                  <FormSelect
+                    label="Species"
+                    placeholder={isLoadingSpecies ? "Loading..." : "All Species"}
+                    options={speciesOptions}
+                    value={speciesFilter}
+                    onChange={(val) => {
+                      setSpeciesFilter(val);
+                      setBreedFilter("");
+                      setPage(1);
+                    }}
+                    searchable
+                    disabled={isLoadingSpecies}
+                  />
+
+                  <FormSelect
+                    label="Breed"
+                    placeholder={
+                      !speciesFilter
+                        ? "Select species first"
+                        : isLoadingBreeds
+                        ? "Loading..."
+                        : "All Breeds"
+                    }
+                    options={breedOptions}
+                    value={breedFilter}
+                    onChange={(val) => {
+                      setBreedFilter(val);
+                      setPage(1);
+                    }}
+                    searchable
+                    disabled={!speciesFilter || isLoadingBreeds}
+                  />
+
+                  <FormSelect
+                    label="Status"
+                    placeholder="All Statuses"
+                    options={STATUS_OPTIONS}
+                    value={statusFilter}
+                    onChange={(val) => {
+                      setStatusFilter(val);
+                      setPage(1);
+                    }}
+                  />
+
+                  <FormSelect
+                    label="Sort By"
+                    placeholder="Recently Updated"
+                    options={SORT_OPTIONS}
+                    value={sortValue}
+                    onChange={(val) => {
+                      setSortValue(val || "updatedAt:desc");
+                      setPage(1);
+                    }}
+                  />
+                </div>
+
+                {activeFilterCount > 0 && (
+                  <div className="flex items-center justify-between pt-2 border-t border-border-peach/70 text-xs">
+                    <span className="text-ink-muted">
+                      Showing filtered results ({meta?.total ?? guides.length}{" "}
+                      matched)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="inline-flex items-center gap-1.5 font-bold text-coral hover:underline cursor-pointer"
+                    >
+                      <RotateCcw className="size-3.5" />
+                      Reset Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+          }
+          emptyMessage={
+            activeFilterCount > 0
+              ? "No guides match the selected filters. Try adjusting or resetting filters."
+              : "No guides found yet. Click 'Write New Guide' to publish your first guide."
+          }
+          hoverable
+          actions={[
+            {
+              label: "View",
+              icon: <Eye className="size-4" />,
+              variant: "secondary",
+              onClick: (row) => router.push(`/admin/guides/${row.id}`),
+            },
+            {
+              label: "Edit",
+              icon: <Pencil className="size-4" />,
+              variant: "primary",
+              onClick: (row) => router.push(`/admin/guides/${row.id}/edit`),
+            },
+            {
+              label: "FAQs",
+              icon: <HelpCircle className="size-4" />,
+              variant: "secondary",
+              onClick: (row) => router.push(`/admin/guides/${row.id}/faqs`),
+            },
+            {
+              label: "Delete",
+              icon: <Trash2 className="size-4" />,
+              variant: "danger",
+              onClick: (row) => setGuideToDelete(row),
+            },
+          ]}
+          footer={
+            meta && meta.totalPages > 1 ? (
+              <Pagination
+                currentPage={meta.page}
+                totalPages={meta.totalPages}
+                itemsPerPage={meta.limit}
+                totalItems={meta.total}
+                onPageChange={(nextPage) => setPage(nextPage)}
+                label="guides"
+              />
+            ) : undefined
+          }
+        />
       </AnimatedContainer>
 
-      <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search all guides, authors, or categories..."
-            pagination
-            pageSize={10}
-            title="Master Guides Directory"
-            hoverable
-          />
-        </div>
-      </AnimatedContainer>
+      {/* Reusable Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(guideToDelete)}
+        onClose={() => !isDeleting && setGuideToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        loading={isDeleting}
+        variant="danger"
+        title={
+          guideToDelete
+            ? `Delete "${guideToDelete.title}"?`
+            : "Delete Guide?"
+        }
+        description="Are you sure you want to delete this guide? It will be removed from the editorial directory and public catalog."
+        confirmText="Yes, Delete Guide"
+        cancelText="Cancel"
+      />
+
+      <BulkGuideImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+      />
     </div>
   );
 }

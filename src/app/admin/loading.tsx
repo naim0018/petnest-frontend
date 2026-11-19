@@ -19,17 +19,14 @@ export default function AdminLoading() {
         ))}
       </div>
 
-      {/* Search Filter Bar Skeleton */}
-      <div className="flex items-center justify-end">
-        <div className="w-full max-w-md h-11 bg-card border border-border-peach rounded-xl shadow-2xs" />
+      {/* Section Header Skeleton (Title & Search Field in same row) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="h-6 w-44 bg-surface-muted rounded" />
+        <div className="w-full sm:w-80 md:w-96 h-11 bg-card border border-border-peach rounded-md shadow-2xs" />
       </div>
 
       {/* Content Grid Skeleton */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="h-5 w-44 bg-surface-muted rounded" />
-          <div className="h-4 w-32 bg-surface-muted/60 rounded" />
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <div

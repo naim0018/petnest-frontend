@@ -78,7 +78,7 @@ export default function GuideAnalyticsPage() {
       key: "rating",
       label: "Helpful Score",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
           {row.rating}
@@ -105,28 +105,28 @@ export default function GuideAnalyticsPage() {
             value="138,500"
             trendText="+19.4% this month"
             trendType="positive"
-            icon={<BookOpen className="size-5 text-coral" />}
+            icon={<BookOpen className="size-5" />}
           />
           <StatsCard
             title="Avg. Read Completion"
             value="79.4%"
             trendText="High content engagement"
             trendType="positive"
-            icon={<TrendingUp className="size-5 text-coral" />}
+            icon={<TrendingUp className="size-5" />}
           />
           <StatsCard
             title="Total Bookmarks"
             value="14,890"
             trendText="+1,420 saved to pet profiles"
             trendType="positive"
-            icon={<BookmarkCheck className="size-5 text-coral" />}
+            icon={<BookmarkCheck className="size-5" />}
           />
           <StatsCard
             title="Helpfulness Score"
             value="98.6%"
             trendText="Based on reader feedback"
             trendType="positive"
-            icon={<ThumbsUp className="size-5 text-coral" />}
+            icon={<ThumbsUp className="size-5" />}
           />
         </div>
       </AnimatedContainer>
@@ -159,16 +159,14 @@ export default function GuideAnalyticsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.3}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={mockTopArticles}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search articles..."
-            title="Top Performing Care Articles"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={mockTopArticles}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search articles..."
+          title="Top Performing Care Articles"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

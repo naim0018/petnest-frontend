@@ -70,7 +70,7 @@ export default function MarketplaceAnalyticsPage() {
       key: "commissionEarned",
       label: "Platform Revenue",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
           {row.commissionEarned}
@@ -97,28 +97,28 @@ export default function MarketplaceAnalyticsPage() {
             value="$207,000"
             trendText="+18.4% vs last month"
             trendType="positive"
-            icon={<DollarSign className="size-5 text-coral" />}
+            icon={<DollarSign className="size-5" />}
           />
           <StatsCard
             title="Orders Processed"
             value="2,670"
             trendText="+340 orders"
             trendType="positive"
-            icon={<ShoppingBag className="size-5 text-coral" />}
+            icon={<ShoppingBag className="size-5" />}
           />
           <StatsCard
             title="Average Order Value"
             value="$77.50"
             trendText="+8.2% basket size"
             trendType="positive"
-            icon={<CreditCard className="size-5 text-coral" />}
+            icon={<CreditCard className="size-5" />}
           />
           <StatsCard
             title="Net Platform Take"
             value="$20,292"
             trendText="8-12% commission"
             trendType="positive"
-            icon={<TrendingUp className="size-5 text-coral" />}
+            icon={<TrendingUp className="size-5" />}
           />
         </div>
       </AnimatedContainer>
@@ -151,16 +151,14 @@ export default function MarketplaceAnalyticsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.3}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={mockCategoryRevenues}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search categories..."
-            title="Category Revenue & Commission Breakdown"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={mockCategoryRevenues}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search categories..."
+          title="Category Revenue & Commission Breakdown"
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );

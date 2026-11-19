@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
 import Avatar from "@/components/common/Avatar";
+import { useHeaderAction } from "@/context/HeaderActionContext";
 import { Users, Award, Plus, CheckCircle2, ShieldCheck, Mail } from "lucide-react";
 
 interface AuthorRecord {
@@ -79,7 +80,24 @@ const mockAuthors: AuthorRecord[] = [
 ];
 
 export default function AuthorsPage() {
+  const { setHeaderAction } = useHeaderAction();
   const [data] = useState<AuthorRecord[]>(mockAuthors);
+
+  useEffect(() => {
+    setHeaderAction(
+      <PrimaryButton
+        variant="primary"
+        size="sm"
+        rounded="md"
+        leftIcon={<Plus className="size-4" />}
+        className="font-bold cursor-pointer"
+      >
+        Invite Author
+      </PrimaryButton>
+    );
+
+    return () => setHeaderAction(null);
+  }, [setHeaderAction]);
 
   const columns: Column<AuthorRecord>[] = [
     {
@@ -139,7 +157,7 @@ export default function AuthorsPage() {
       key: "status",
       label: "Status",
       sortable: true,
-      align: "right",
+      align: "center",
       render: (row) => (
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 className="size-3.5" />
@@ -151,23 +169,7 @@ export default function AuthorsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">Authors & Contributors</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Manage verified veterinarians, animal behaviorists, and pet care editorial staff.
-          </p>
-        </div>
-        <PrimaryButton
-          variant="primary"
-          size="md"
-          leftIcon={<Plus className="size-4" />}
-        >
-          Invite Author
-        </PrimaryButton>
-      </div>
-
-      <AnimatedContainer delay={0.1}>
+      <AnimatedContainer delay={0.05}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard
             title="Registered Authors"
@@ -194,18 +196,18 @@ export default function AuthorsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="rounded-xl border border-border-peach bg-card p-5 shadow-xs">
-          <DynamicTable
-            data={data}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search authors, credentials, or specialties..."
-            pagination
-            pageSize={10}
-            title="Pet Care Editorial Board"
-            hoverable
-          />
-        </div>
+        <DynamicTable
+          data={data}
+          columns={columns}
+          searchable
+          searchPlaceholder="Search authors, credentials, or specialties..."
+          pagination
+          pageSize={10}
+          title="Pet Care Editorial Board"
+          titleIcon={<Users className="size-5" />}
+          countBadge={`${data.length} ${data.length === 1 ? "author" : "authors"}`}
+          hoverable
+        />
       </AnimatedContainer>
     </div>
   );
