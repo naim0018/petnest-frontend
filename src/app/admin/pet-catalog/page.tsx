@@ -86,7 +86,6 @@ export default function PetCatalogPage() {
       },
     }));
   }, [filteredPetTypes, searchQuery, router]);
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -172,7 +171,6 @@ export default function PetCatalogPage() {
               <Layers className="size-4.5 text-coral" />
               All Pet Types
             </h3>
-
             <div className="w-full sm:w-80 md:w-96">
               <SearchField
                 value={searchQuery}

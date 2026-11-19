@@ -1295,7 +1295,7 @@ const DynamicTable = <T extends object>({
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="p-4 rounded-lg border border-border-peach bg-card space-y-3 animate-pulse"
+                className="p-4 rounded-xl border border-border-peach bg-card space-y-3 animate-pulse"
               >
                 <div className="flex justify-between items-center">
                   <div className="h-4 w-32 bg-surface-muted rounded" />

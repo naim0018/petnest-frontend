@@ -219,7 +219,6 @@ export default function SpeciesDetailsPage({
         <PrimaryButton
           variant="outline"
           size="sm"
-          rounded="md"
           onClick={() => router.push(`/admin/pet-catalog/${typeId}`)}
           leftIcon={<Layers className="size-4 text-coral" />}
           className="font-bold cursor-pointer"
@@ -229,7 +228,6 @@ export default function SpeciesDetailsPage({
         <PrimaryButton
           variant="primary"
           size="sm"
-          rounded="md"
           onClick={() => router.push(`/admin/pet-catalog/${typeId}/edit`)}
           leftIcon={<Pencil className="size-4" />}
           className="font-bold cursor-pointer"
@@ -241,7 +239,7 @@ export default function SpeciesDetailsPage({
           onClick={() => setIsDeleteModalOpen(true)}
           title="Delete Classification"
           aria-label="Delete Classification"
-          className="size-9 rounded-md border border-red-200 hover:border-destructive bg-card hover:bg-rose-50 dark:hover:bg-rose-950/30 text-destructive flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
+          className="size-9 rounded-full border border-red-200 hover:border-destructive bg-card hover:bg-rose-50 dark:hover:bg-rose-950/30 text-destructive flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
         >
           <Trash2 className="size-4" />
         </button>
