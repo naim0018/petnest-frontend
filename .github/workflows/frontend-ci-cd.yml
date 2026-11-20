@@ -127,7 +127,7 @@ jobs:
           port: ${{ secrets.HOSTINGER_SSH_PORT || 22 }}
           script_stop: true
           script: |
-            cd /opt/petnest
+            cd /root/petnest
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f
