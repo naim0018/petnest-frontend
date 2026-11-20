@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   ChevronDown,
@@ -12,14 +12,18 @@ import {
   Cat,
   Rabbit,
   Fish,
+  Turtle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   PET_CATEGORIES_WITH_BREEDS,
+  PetCategoryItem,
+  BreedItem,
 } from "@/lib/data/petCategoriesData";
 import { Tooltip } from "@/components/common/Tooltip";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { setPetFilter, resetPetFilter } from "@/store/features/PetFilterSlice/petFilterSlice";
+import { useFindAllSpeciesQuery } from "@/store/Api/Pets/pets.api";
 
 export interface SelectedPetFilter {
   typeId: string;
@@ -46,6 +50,8 @@ function CategoryIcon({ catId, className }: { catId: string; className?: string 
       return <Rabbit className={className} />;
     case "aquatic":
       return <Fish className={className} />;
+    case "reptiles":
+      return <Turtle className={className} />;
     default:
       return <PawPrint className={className} />;
   }
@@ -59,6 +65,52 @@ export default function PetSelectorPopover({
 
   const dispatch = useAppDispatch();
   const reduxFilter = useAppSelector((state) => state.petFilter);
+
+  // Fetch real species and child breeds from backend API
+  const { data: speciesResponse } = useFindAllSpeciesQuery({
+    limit: 100,
+  });
+
+  const categories = useMemo<PetCategoryItem[]>(() => {
+    if (!speciesResponse?.data?.items?.length) {
+      return PET_CATEGORIES_WITH_BREEDS;
+    }
+
+    const shortLabels: Record<string, string> = {
+      dogs: "Dogs",
+      cats: "Cats",
+      birds: "Birds",
+      aquatic: "Fish & Aquatic",
+      "small-pets": "Small Pets",
+      reptiles: "Reptiles",
+    };
+
+    return speciesResponse.data.items.map((s) => {
+      const cleanLabel =
+        shortLabels[s.slug] || s.name.replace(/\s*\([^)]*\)/g, "").trim() || s.name;
+      const catImage = s.categoryIcon || s.image || "/CareGuide/categories/dog.png";
+
+      const breeds: BreedItem[] = [
+        {
+          id: "all",
+          label: `All ${cleanLabel}`,
+          image: catImage,
+        },
+        ...(s.breeds || []).map((b) => ({
+          id: b.slug,
+          label: b.name,
+          image: b.image || catImage,
+        })),
+      ];
+
+      return {
+        id: s.slug,
+        label: cleanLabel,
+        image: catImage,
+        breeds,
+      };
+    });
+  }, [speciesResponse]);
 
   const selectedType = reduxFilter?.selectedType ?? "birds";
   const selectedBreed = reduxFilter?.selectedBreed ?? "all";
@@ -82,7 +134,7 @@ export default function PetSelectorPopover({
     };
   }, [isOpen]);
 
-  const currentCategory = PET_CATEGORIES_WITH_BREEDS.find(
+  const currentCategory = categories.find(
     (c) => c.id === selectedType
   );
 
@@ -92,7 +144,7 @@ export default function PetSelectorPopover({
       : null;
 
   const notifyChange = (typeId: string, breedId: string) => {
-    const cat = PET_CATEGORIES_WITH_BREEDS.find((c) => c.id === typeId);
+    const cat = categories.find((c) => c.id === typeId);
     const breed = cat?.breeds.find((b) => b.id === breedId);
 
     const typeLabel = typeId === "all" ? "All Pets" : cat?.label || typeId;
@@ -299,7 +351,7 @@ export default function PetSelectorPopover({
               </button>
 
               {/* Pet Categories */}
-              {PET_CATEGORIES_WITH_BREEDS.map((cat) => {
+              {categories.map((cat) => {
                 const isSelected = selectedType === cat.id;
 
                 return (
