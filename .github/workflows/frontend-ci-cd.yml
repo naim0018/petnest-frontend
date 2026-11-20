@@ -101,7 +101,7 @@ jobs:
           context: .
           file: ./Dockerfile
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'http://200.141.12.188:5001' }}
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
             ghcr.io/${{ github.repository }}:latest
