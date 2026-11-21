@@ -3,8 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { request, gql } from "graphql-request";
 
-const GRAPHQL_ENDPOINT =
-  (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000") + "/graphql";
+const GRAPHQL_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/graphql`;
 
 // ==================== 1. GRAPHQL DOCUMENTS ====================
 
@@ -137,7 +136,7 @@ export function useAllSpeciesDropdown() {
 
       // REST fallback requesting species list and picking only id, name, image
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/pets/species?limit=100`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pets/species?limit=100`
       );
       const json = await res.json();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -174,7 +173,7 @@ export function useBreedsBySpeciesDropdown(speciesIdOrSlug: string) {
 
       // REST fallback requesting breeds and picking only id, name, image
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/pets/species/${speciesIdOrSlug}/breeds?limit=100`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pets/species/${speciesIdOrSlug}/breeds?limit=100`
       );
       const json = await res.json();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

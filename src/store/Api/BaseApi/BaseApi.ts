@@ -36,7 +36,7 @@ function getOrCreateVisitorId(): string {
 }
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000",
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   credentials: "include", // REQUIRED so browser sends & stores httpOnly cookies
   prepareHeaders: (headers) => {
     headers.set("x-visitor-id", getOrCreateVisitorId());

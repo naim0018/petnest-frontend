@@ -94,9 +94,9 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "naim0018@gmail.com",
-      password: "naim@@18",
-      rememberMe: true,
+      email: "",
+      password: "",
+      rememberMe: false,
     },
   });
 
@@ -154,6 +154,7 @@ export default function LoginPage() {
       const response = await loginMutation({
         email: data.email,
         password: data.password,
+        rememberMe: data.rememberMe,
       }).unwrap();
 
       const user = response?.data;
@@ -270,7 +271,7 @@ export default function LoginPage() {
       {/* 🐾 TOP BAR: Brand Logo & Theme Switcher via CommonWrapper*/}
       {/* ======================================================== */}
       <header className="w-full relative z-10">
-        <CommonWrapper className="max-w-[1600px] py-4 sm:py-6 flex items-center justify-between">
+        <CommonWrapper className="max-w-[1600px] px-4 sm:px-6 md:px-8 xl:px-0 py-4 sm:py-6 flex items-center justify-between">
           <Link
             href="/"
             className="transition-transform hover:scale-105 active:scale-95 inline-block"
@@ -288,7 +289,7 @@ export default function LoginPage() {
       {/* 🌟 MAIN UNIFIED LAYOUT CONTAINER via CommonWrapper       */}
       {/* ======================================================== */}
       <main className="w-full flex-1 flex items-start justify-center relative z-10 overflow-y-auto lg:overflow-visible">
-        <CommonWrapper className="max-w-[1600px] pt-1 sm:pt-4 lg:pt-6 pb-6 flex-1 flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-12">
+        <CommonWrapper className="max-w-[1600px] px-4 sm:px-6 md:px-8 xl:px-0 pt-1 sm:pt-4 lg:pt-6 pb-6 flex-1 flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-12">
           {/* Left Side: Headline, Subtitle & Badges matching mockup */}
           <motion.div
             initial={{ opacity: 0, x: -25 }}
@@ -349,7 +350,7 @@ export default function LoginPage() {
           {/* ======================================================== */}
           <div
             style={{ perspective: 1400 }}
-            className="w-full max-w-md shrink-0 relative self-start"
+            className="w-full max-w-md shrink-0 relative self-center lg:self-start mx-auto lg:mx-0"
           >
             <AnimatePresence mode="wait" initial={false}>
               {!isSignUp ? (
@@ -859,7 +860,7 @@ export default function LoginPage() {
 
       {/* Spacer footer via CommonWrapper */}
       <footer className="w-full relative z-10">
-        <CommonWrapper className="max-w-[1600px] py-3 text-center text-xs text-white/60">
+        <CommonWrapper className="max-w-[1600px] px-4 sm:px-6 md:px-8 xl:px-0 py-3 text-center text-xs text-white/60">
           © {new Date().getFullYear()} PetNest Inc. All rights reserved.
         </CommonWrapper>
       </footer>

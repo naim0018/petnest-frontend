@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PrimaryButton from "@/components/common/PrimaryButton";
 
@@ -56,30 +56,41 @@ export function ItemsTable({
       {/* Rows */}
       <div className="divide-y divide-border-peach">
         {rows.map((row) => (
-          <div
-            key={row.id}
-            className="grid grid-cols-12 items-center px-4 py-3 hover:bg-surface-muted/60 transition-colors rounded-md my-0.5"
-          >
-            <div className="col-span-8 flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 overflow-hidden border border-border-peach">
-                <Image
-                  src={row.image}
-                  alt={row.name}
-                  width={36}
-                  height={36}
-                  className="object-contain w-7 h-7"
-                />
-              </div>
-              <span className="text-sm font-semibold text-ink truncate font-quicksand">
-                {row.name}
-              </span>
-            </div>
-            <span className="col-span-4 text-sm font-bold text-coral text-center">
-              {row.qty}
-            </span>
-          </div>
+          <ItemRow key={row.id} row={row} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function ItemRow({ row }: { row: ItemsTableRow }) {
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <div className="grid grid-cols-12 items-center px-4 py-3 hover:bg-surface-muted/60 transition-colors rounded-md my-0.5">
+      <div className="col-span-8 flex items-center gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 overflow-hidden border border-border-peach">
+          {!hasError && row.image ? (
+            <Image
+              src={row.image}
+              alt={row.name}
+              width={36}
+              height={36}
+              unoptimized
+              onError={() => setHasError(true)}
+              className="object-contain w-7 h-7"
+            />
+          ) : (
+            <Package className="size-4.5 text-coral" />
+          )}
+        </div>
+        <span className="text-sm font-semibold text-ink truncate font-quicksand">
+          {row.name}
+        </span>
+      </div>
+      <span className="col-span-4 text-sm font-bold text-coral text-center">
+        {row.qty}
+      </span>
     </div>
   );
 }
