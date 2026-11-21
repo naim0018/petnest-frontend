@@ -11,7 +11,7 @@ import {
   useUpdateGuideMutation,
   useFindAllCategoriesPublicQuery,
 } from "@/store/Api/Guides/guides.api";
-import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import { CategoryIconDisplay } from "@/components/admin/guides/CategoryIcons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -61,8 +61,6 @@ export default function GuideCategoryDropdown({
           name: currentCategoryName || "Uncategorized",
           icon: currentCategoryIcon || null,
         });
-
-  const CategoryIcon = getCategoryIcon(activeCat.icon);
 
   const handleSelectCategory = async (cat: {
     id: string;
@@ -121,7 +119,7 @@ export default function GuideCategoryDropdown({
               {isUpdating ? (
                 <Loader2 className="size-3 animate-spin shrink-0 text-coral" />
               ) : (
-                <CategoryIcon className="size-3.5 text-coral shrink-0" />
+                <CategoryIconDisplay icon={activeCat.icon} className="size-3.5 text-coral shrink-0" />
               )}
               <span className="truncate">{activeCat.name || "Uncategorized"}</span>
             </span>
@@ -169,7 +167,6 @@ export default function GuideCategoryDropdown({
           ) : (
             categories.map((cat) => {
               const isCurrent = cat.id === activeId;
-              const IconComp = getCategoryIcon(cat.icon);
 
               return (
                 <button
@@ -191,7 +188,7 @@ export default function GuideCategoryDropdown({
                   )}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <IconComp className="size-3.5 text-coral shrink-0" />
+                    <CategoryIconDisplay icon={cat.icon} className="size-3.5 text-coral shrink-0" />
                     <span className="text-xs truncate">{cat.name}</span>
                   </div>
                   {isCurrent && (

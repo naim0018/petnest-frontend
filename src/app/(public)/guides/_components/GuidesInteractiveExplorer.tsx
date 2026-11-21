@@ -225,13 +225,13 @@ export default function GuidesInteractiveExplorer() {
     <div className="space-y-8">
       {/* Top Row: Care Guide Card takes 2-card width on the left + 2 individual cards on the right */}
       {isLoadingGuides ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch animate-pulse">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch animate-pulse">
           <div className="md:col-span-2 lg:col-span-2 h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
           <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
           <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
         </section>
       ) : (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
           {/* Left: Care Guide Card spanning 2 card spaces */}
           <div className="md:col-span-2 lg:col-span-2 flex flex-col">
             <PetCareGuideCard guide={currentGuide} className="h-full" />
@@ -256,13 +256,13 @@ export default function GuidesInteractiveExplorer() {
 
         {/* 4 columns on large screens, 2 on tablet, 1 on mobile */}
         {remainingArticles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {remainingArticles.map((article) => (
               <CareArticleCard key={article.id} article={article} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 px-4 rounded-2xl bg-surface-muted/50 border border-border-peach dark:border-slate-800">
+          <div className="text-center py-12 px-4 rounded-lg bg-surface-muted/50 border border-border-peach dark:border-slate-800">
             <p className="text-ink-muted font-quicksand font-bold text-sm sm:text-base">
               No guides found for this topic in {activeCategoryTitle}.
             </p>

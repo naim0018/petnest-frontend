@@ -10,7 +10,7 @@ import { FeedPostCard, FeedPostCardSkeleton } from "./FeedPostCard";
 import { FeedPost } from "@/lib/data/petnest-data";
 import { useFeedFilter } from "@/context/FeedFilterContext";
 import { PET_TYPES_DATA } from "@/lib/data/pet-types";
-import { X, Sparkles } from "lucide-react";
+import { X, PawPrint } from "lucide-react";
 import PrimaryButton from "@/components/common/PrimaryButton";
 
 interface FeedMainSectionProps {
@@ -116,7 +116,7 @@ export function FeedMainSection({ posts }: FeedMainSectionProps) {
           ) : (
             <div className="text-center py-12 px-4 bg-card border border-border-peach rounded-2xl space-y-3">
               <div className="size-12 rounded-full bg-coral-light flex items-center justify-center mx-auto text-coral">
-                <Sparkles className="size-6" />
+                <PawPrint className="size-6" />
               </div>
               <h3 className="font-bold text-base text-ink font-quicksand">
                 No posts found for {petSubtypeLabel || petTypeCategoryObj?.label || "selected filter"}

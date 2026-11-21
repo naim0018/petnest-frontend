@@ -31,7 +31,6 @@ import {
   BookOpen,
   Eye,
   EyeOff,
-  Sparkles,
   Check,
   Image as ImageIcon,
   Save,
@@ -305,13 +304,13 @@ export default function GuideFaqsManagementPage({
   if (isLoading) {
     return (
       <div className="w-full space-y-6 pb-12">
-        <div className="h-24 rounded-xl bg-card border border-border-peach p-5 animate-pulse space-y-3">
+        <div className="h-24 rounded-lg bg-card border border-border-peach p-5 animate-pulse space-y-3">
           <div className="h-5 w-64 bg-surface-muted rounded" />
           <div className="h-3.5 w-96 bg-surface-muted rounded" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5 h-96 rounded-xl bg-card border border-border-peach animate-pulse" />
-          <div className="lg:col-span-7 h-96 rounded-xl bg-card border border-border-peach animate-pulse" />
+          <div className="lg:col-span-5 h-96 rounded-lg bg-card border border-border-peach animate-pulse" />
+          <div className="lg:col-span-7 h-96 rounded-lg bg-card border border-border-peach animate-pulse" />
         </div>
       </div>
     );
@@ -319,7 +318,7 @@ export default function GuideFaqsManagementPage({
 
   if (isError || !guide) {
     return (
-      <div className="w-full p-12 text-center rounded-xl bg-card border border-border-peach space-y-4">
+      <div className="w-full p-12 text-center rounded-lg bg-card border border-border-peach space-y-4">
         <AlertCircle className="size-12 text-coral mx-auto" />
         <h3 className="text-lg font-bold font-quicksand text-ink">
           Guide Not Found
@@ -355,9 +354,9 @@ export default function GuideFaqsManagementPage({
     <div className="w-full space-y-6 pb-12">
       {/* Guide Context Summary Banner */}
       <AnimatedContainer delay={0.05}>
-        <div className="w-full rounded-xl bg-card border border-border-peach p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="w-full rounded-lg bg-card border border-border-peach p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3.5 min-w-0">
-            <div className="size-11 rounded-xl bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0">
+            <div className="size-11 rounded-lg bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0">
               <HelpCircle className="size-5.5" />
             </div>
             <div className="min-w-0">
@@ -402,7 +401,7 @@ export default function GuideFaqsManagementPage({
         <div className="lg:col-span-5 space-y-6">
           {/* Card 1: Single Left-Side FAQ Section Image */}
           <AnimatedContainer delay={0.08}>
-            <div className="rounded-xl bg-card border border-border-peach p-5 shadow-xs space-y-4">
+            <div className="rounded-lg bg-card border border-border-peach p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-border-peach pb-3">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="size-4 text-coral" />
@@ -444,11 +443,11 @@ export default function GuideFaqsManagementPage({
           <AnimatedContainer delay={0.12}>
             <form
               onSubmit={handleSubmit}
-              className="rounded-xl bg-card border border-border-peach p-5 sm:p-6 shadow-xs space-y-5"
+              className="rounded-lg bg-card border border-border-peach p-5 sm:p-6 shadow-xs space-y-5"
             >
               <div className="flex items-center justify-between border-b border-border-peach pb-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-coral" />
+                  <HelpCircle className="size-4 text-coral" />
                   <h2 className="text-sm font-bold font-quicksand text-ink">
                     {editingFaq ? "Edit Guide FAQ" : "Add New Guide FAQ"}
                   </h2>
@@ -555,7 +554,7 @@ export default function GuideFaqsManagementPage({
         {/* Right Column: Sticky Live Reader "Common Questions" Preview + Management */}
         <div className="lg:col-span-7 lg:sticky lg:top-20 space-y-5">
           <AnimatedContainer delay={0.15}>
-            <div className="rounded-xl bg-card border border-border-peach shadow-xs overflow-hidden">
+            <div className="rounded-lg bg-card border border-border-peach shadow-xs overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-peach bg-surface-muted/40">
                 <div className="flex items-center gap-2">
                   <Eye className="size-4 text-coral" />
@@ -571,7 +570,7 @@ export default function GuideFaqsManagementPage({
 
               {/* Exact "Common Questions" Reader Section Layout */}
               <div className="p-5">
-                <div className="rounded-2xl bg-tint-mint/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 p-5 sm:p-7">
+                <div className="rounded-lg bg-tint-mint/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 p-5 sm:p-7">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     {/* Left Side: Heading + Single Circular Image */}
                     <div className="md:col-span-4 flex flex-col items-start space-y-4">
@@ -608,7 +607,7 @@ export default function GuideFaqsManagementPage({
                     <div className="md:col-span-8 space-y-2.5">
                       {/* Live Draft Row while typing a new FAQ */}
                       {!editingFaq && (question.trim() || answer.trim()) && (
-                        <div className="rounded-xl border-2 border-dashed border-coral/40 bg-card/90 p-4 space-y-1.5">
+                        <div className="rounded-lg border-2 border-dashed border-coral/40 bg-card/90 p-4 space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-coral">
                               Live Draft Preview
@@ -627,7 +626,7 @@ export default function GuideFaqsManagementPage({
                       )}
 
                       {faqs.length === 0 ? (
-                        <div className="py-10 px-5 text-center rounded-xl border border-dashed border-border-peach bg-card/80 space-y-2">
+                        <div className="py-10 px-5 text-center rounded-lg border border-dashed border-border-peach bg-card/80 space-y-2">
                           <HelpCircle className="size-8 text-ink-faint mx-auto opacity-60" />
                           <p className="text-sm font-bold font-quicksand text-ink">
                             No FAQs Attached Yet
@@ -644,7 +643,7 @@ export default function GuideFaqsManagementPage({
                             <div
                               key={faq.id}
                               className={cn(
-                                "rounded-xl bg-card border transition-all overflow-hidden",
+                                "rounded-lg bg-card border transition-all overflow-hidden",
                                 isBeingEdited
                                   ? "border-coral ring-2 ring-coral/15"
                                   : "border-border-peach/80 hover:border-coral/40"

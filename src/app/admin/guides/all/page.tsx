@@ -14,8 +14,12 @@ import SearchField, {
 import Pagination from "@/components/common/Pagination";
 import { StatsCard } from "@/components/common/StatsCard";
 import ConfirmModal from "@/components/reuseable/ConfirmModal";
-import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import {
+  getCategoryIcon,
+  CategoryIconDisplay,
+} from "@/components/admin/guides/CategoryIcons";
 import { useHeaderAction } from "@/context/HeaderActionContext";
+import { usePersistedPageSize } from "@/hooks/usePersistedPageSize";
 import {
   useFindAllEditorialQuery,
   useGetEditorialStatsQuery,
@@ -121,7 +125,7 @@ export default function AllGuidesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sortValue, setSortValue] = useState("updatedAt:desc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number | "all">(10);
+  const [pageSize, setPageSize] = usePersistedPageSize("admin-guides-all", 10);
 
   // Delete confirmation modal state
   const [guideToDelete, setGuideToDelete] = useState<GuideSummary | null>(null);
@@ -335,7 +339,6 @@ export default function AllGuidesPage() {
       label: "Title & Topic",
       sortable: true,
       render: (row) => {
-        const CategoryIcon = getCategoryIcon(row.category?.icon);
         return (
           <div className="flex items-center gap-2.5 min-w-[220px]">
             {row.coverImage ? (
@@ -349,8 +352,8 @@ export default function AllGuidesPage() {
                 />
               </div>
             ) : (
-              <div className="size-10 rounded-lg bg-tint-rose border border-coral/20 flex items-center justify-center text-coral shrink-0">
-                <CategoryIcon className="size-5" />
+              <div className="size-10 rounded-lg bg-tint-rose border border-coral/20 flex items-center justify-center text-coral shrink-0 overflow-hidden p-1.5">
+                <CategoryIconDisplay icon={row.category?.icon} className="size-5 object-contain" />
               </div>
             )}
             <div className="min-w-0">
@@ -384,6 +387,8 @@ export default function AllGuidesPage() {
       sortable: true,
       align: "center",
       width: "170px",
+      cardSide: "right",
+      cardAlign: "right",
       render: (row) => (
         <GuideCategoryDropdown
           guideId={row.id}
@@ -400,6 +405,8 @@ export default function AllGuidesPage() {
       sortable: true,
       align: "center",
       width: "170px",
+      cardSide: "right",
+      cardAlign: "right",
       render: (row) => (
         <GuideSpeciesDropdown
           guideId={row.id}
@@ -415,6 +422,8 @@ export default function AllGuidesPage() {
       sortable: false,
       align: "center",
       width: "170px",
+      cardSide: "right",
+      cardAlign: "right",
       render: (row) => (
         <GuideBreedDropdown
           guideId={row.id}
@@ -429,13 +438,15 @@ export default function AllGuidesPage() {
     {
       key: "author",
       label: "Author",
+      cardSide: "left",
+      cardAlign: "left",
       render: (row) => {
         const isSuper = row.author?.role?.toUpperCase() === "SUPERADMIN";
         const displayName = isSuper
           ? "Super Admin"
           : row.author?.name || "Unknown";
         return (
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <span className="text-xs font-semibold text-ink">
               {displayName}
             </span>
@@ -451,6 +462,8 @@ export default function AllGuidesPage() {
       label: "Views",
       sortable: true,
       align: "center",
+      cardSide: "left",
+      cardAlign: "left",
       render: (row) => (
         <span className="font-semibold text-xs text-ink">
           {(row.viewCount ?? 0).toLocaleString()}
@@ -462,6 +475,8 @@ export default function AllGuidesPage() {
       label: "Reactions",
       sortable: true,
       align: "center",
+      cardSide: "left",
+      cardAlign: "left",
       render: (row) => (
         <div className="inline-flex items-center gap-2.5 text-xs text-ink-muted">
           <span className="inline-flex items-center gap-1" title="Likes">
@@ -481,6 +496,8 @@ export default function AllGuidesPage() {
       sortable: true,
       align: "center",
       width: "170px",
+      cardSide: "right",
+      cardAlign: "right",
       render: (row) => (
         <GuideStatusDropdown
           guideId={row.id}
@@ -494,6 +511,8 @@ export default function AllGuidesPage() {
       label: "Last Updated",
       sortable: true,
       align: "center",
+      cardSide: "left",
+      cardAlign: "left",
       render: (row) => (
         <span className="text-xs text-ink-muted whitespace-nowrap">
           {formatDate(row.updatedAt || row.createdAt)}
@@ -511,7 +530,7 @@ export default function AllGuidesPage() {
             {[0, 1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-28 rounded-xl bg-card border border-border-peach p-5 animate-pulse space-y-3"
+                className="h-28 rounded-lg bg-card border border-border-peach p-5 animate-pulse space-y-3"
               >
                 <div className="h-3.5 w-28 bg-surface-muted rounded" />
                 <div className="h-7 w-36 bg-surface-muted rounded" />
@@ -584,7 +603,7 @@ export default function AllGuidesPage() {
           }
           filterContent={
             <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   <FormSelect
                     label="Category"
                     placeholder={
@@ -716,6 +735,7 @@ export default function AllGuidesPage() {
                 onPageChange={(nextPage) => setPage(nextPage)}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 20, 30, 40, 50, 100, "all"]}
+                storageKey="admin-guides-all"
                 onPageSizeChange={(newSize) => {
                   setPageSize(newSize);
                   setPage(1);

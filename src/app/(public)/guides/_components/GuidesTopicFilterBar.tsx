@@ -4,12 +4,17 @@ import React, { useMemo } from "react";
 import { Compass, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFindAllCategoriesPublicQuery } from "@/store/Api/Guides/guides.api";
-import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import {
+  getCategoryIcon,
+  CategoryIconDisplay,
+  isCategoryIconUrl,
+} from "@/components/admin/guides/CategoryIcons";
 
 export interface GuidesTopicFilterItem {
   id: string;
   label: string;
-  icon: LucideIcon | React.ComponentType<{ className?: string }>;
+  icon?: LucideIcon | React.ComponentType<{ className?: string }>;
+  iconRaw?: string | null;
   lightBg: string;
   darkBg: string;
   color: string;
@@ -142,7 +147,7 @@ export const GUIDE_TOPIC_FILTERS: GuidesTopicFilterItem[] = [
   {
     id: "training-skills",
     label: "Training & Skills",
-    icon: getCategoryIcon("Sparkles"),
+    icon: getCategoryIcon("GraduationCap"),
     ...CATEGORY_COLOR_SCHEMES["training-skills"],
   },
 ];
@@ -188,6 +193,7 @@ export default function GuidesTopicFilterBar({
           id: cat.slug,
           label: cat.name,
           icon: getCategoryIcon(cat.icon),
+          iconRaw: cat.icon,
           lightBg: scheme.lightBg,
           darkBg: scheme.darkBg,
           color: scheme.color,
@@ -213,6 +219,7 @@ export default function GuidesTopicFilterBar({
       {dynamicItems.map((filter) => {
         const isSelected = selectedTopic === filter.id;
         const Icon = filter.icon;
+        const hasCustomIconImage = filter.iconRaw && isCategoryIconUrl(filter.iconRaw);
 
         return (
           <button
@@ -234,12 +241,22 @@ export default function GuidesTopicFilterBar({
                   )
             )}
           >
-            <Icon
-              className={cn(
-                "w-4 h-4 shrink-0 transition-transform group-hover:scale-110",
-                isSelected ? "text-white" : ""
-              )}
-            />
+            {hasCustomIconImage ? (
+              <CategoryIconDisplay
+                icon={filter.iconRaw}
+                className={cn(
+                  "size-4 shrink-0 object-contain transition-transform group-hover:scale-110",
+                  isSelected ? "brightness-0 invert" : ""
+                )}
+              />
+            ) : Icon ? (
+              <Icon
+                className={cn(
+                  "w-4 h-4 shrink-0 transition-transform group-hover:scale-110",
+                  isSelected ? "text-white" : ""
+                )}
+              />
+            ) : null}
             <span
               className={cn(
                 "whitespace-nowrap",

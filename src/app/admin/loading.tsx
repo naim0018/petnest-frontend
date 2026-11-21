@@ -27,11 +27,11 @@ export default function AdminLoading() {
 
       {/* Content Grid Skeleton */}
       <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl bg-card border border-border-peach overflow-hidden shadow-2xs flex flex-col min-h-[280px]"
+              className="rounded-lg bg-card border border-border-peach overflow-hidden shadow-2xs flex flex-col min-h-[280px]"
             >
               <div className="w-full h-44 bg-surface-muted" />
               <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">

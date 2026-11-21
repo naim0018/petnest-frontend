@@ -20,7 +20,6 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   Layers,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import BulkGuideImportModal from "@/components/admin/guides/BulkGuideImportModal";
@@ -309,9 +308,9 @@ export default function GuidesOverviewPage() {
 
       {/* 3 Real Guide Analytics Charts */}
       <AnimatedContainer delay={0.15}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
           {/* Chart 1: Area Chart (Monthly Publishing & Readership Trend) */}
-          <div className="p-5 rounded-2xl border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
+          <div className="p-5 rounded-lg border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
             <div className="flex items-center justify-between mb-4 gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -377,7 +376,7 @@ export default function GuidesOverviewPage() {
           </div>
 
           {/* Chart 2: Bar Chart (Guides by Pet Category) */}
-          <div className="p-5 rounded-2xl border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
+          <div className="p-5 rounded-lg border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
             <div className="flex items-center justify-between mb-4 gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -433,7 +432,7 @@ export default function GuidesOverviewPage() {
           </div>
 
           {/* Chart 3: Donut / Pie Chart (Guide Status Breakdown) */}
-          <div className="p-5 rounded-2xl border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
+          <div className="p-5 rounded-lg border border-border-peach bg-card shadow-xs flex flex-col justify-between min-w-0">
             <div className="flex items-center justify-between mb-4 gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

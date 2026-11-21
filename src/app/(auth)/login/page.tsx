@@ -19,7 +19,6 @@ import {
   Users,
   ShoppingCart,
   Check,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -730,7 +729,7 @@ export default function LoginPage() {
                         onChange={(val) =>
                           setSignupValue("breed", val, { shouldValidate: true })
                         }
-                        leftIcon={<Sparkles className="size-4" />}
+                        leftIcon={<PawPrint className="size-4" />}
                         searchable
                         error={signupErrors.breed?.message}
                       />

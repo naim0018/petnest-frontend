@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable, { Column, TableBadge } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
-import { PawPrint, Plus, CheckCircle2, ShieldAlert, Sparkles, Filter } from "lucide-react";
+import { PawPrint, Plus, CheckCircle2, ShieldAlert, Filter } from "lucide-react";
 
 interface PetTypeRecord {
   id: string;
@@ -118,20 +118,13 @@ export default function PetTypesPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-            row.status === "Active"
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-          }`}
+        <TableBadge
+          variant={row.status === "Active" ? "success" : "warning"}
+          dot
+          width="w-28"
         >
-          {row.status === "Active" ? (
-            <CheckCircle2 className="size-3.5" />
-          ) : (
-            <ShieldAlert className="size-3.5" />
-          )}
           {row.status}
-        </span>
+        </TableBadge>
       ),
     },
     {
@@ -186,7 +179,7 @@ export default function PetTypesPage() {
             value="5 Classes"
             trendText="83% fully cataloged"
             trendType="positive"
-            icon={<Sparkles className="size-5 text-coral" />}
+            icon={<CheckCircle2 className="size-5 text-coral" />}
           />
           <StatsCard
             title="Pending Review"

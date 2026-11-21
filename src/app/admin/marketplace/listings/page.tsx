@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable, { Column, TableBadge } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
 import { ShoppingBag, Plus, Filter, Tag, CheckCircle2, ShieldAlert } from "lucide-react";
@@ -153,17 +153,19 @@ export default function ListingsPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+        <TableBadge
+          variant={
             row.status === "Active"
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+              ? "success"
               : row.status === "Sold Out"
-              ? "bg-surface-muted text-ink-muted"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-          }`}
+              ? "neutral"
+              : "warning"
+          }
+          dot={row.status === "Active"}
+          width="w-28"
         >
           {row.status}
-        </span>
+        </TableBadge>
       ),
     },
     {

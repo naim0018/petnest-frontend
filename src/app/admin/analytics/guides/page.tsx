@@ -132,7 +132,7 @@ export default function GuideAnalyticsPage() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={0.2}>
-        <div className="p-6 rounded-xl border border-border-peach bg-card shadow-xs">
+        <div className="p-6 rounded-lg border border-border-peach bg-card shadow-xs">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
               <h3 className="text-lg font-bold text-ink">Readership Volume Progression</h3>

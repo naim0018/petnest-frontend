@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import CommonSelect from "@/components/common/CommonSelect";
+import { getStorageKey } from "@/hooks/usePersistedPageSize";
 
 export const DEFAULT_PAGE_SIZE_OPTIONS: (number | "all")[] = [
   10, 20, 30, 40, 50, 100, "all",
@@ -18,6 +20,10 @@ export interface PaginationProps {
   pageSize?: number | "all";
   pageSizeOptions?: (number | "all")[];
   onPageSizeChange?: (pageSize: number | "all") => void;
+  /** Optional key/name to automatically persist the page size to localStorage */
+  storageKey?: string;
+  /** Alias for storageKey */
+  tableName?: string;
 }
 
 const Pagination = ({
@@ -30,7 +36,28 @@ const Pagination = ({
   pageSize,
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   onPageSizeChange,
+  storageKey,
+  tableName,
 }: PaginationProps) => {
+  const effectiveKey = storageKey || tableName;
+
+  // Restore persisted page size on mount if provided
+  useEffect(() => {
+    if (!effectiveKey || !onPageSizeChange || typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(getStorageKey(effectiveKey));
+      if (saved !== null) {
+        const nextVal = saved === "all" ? "all" : Number(saved);
+        if (nextVal === "all" || (!isNaN(nextVal) && nextVal > 0)) {
+          if (nextVal !== pageSize) {
+            onPageSizeChange(nextVal);
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }, [effectiveKey]);
   const getPageButtons = () => {
     const buttons: (number | string)[] = [];
 
@@ -89,6 +116,13 @@ const Pagination = ({
               )}
               onChange={(val) => {
                 const nextVal = val === "all" ? "all" : Number(val);
+                if (effectiveKey && typeof window !== "undefined") {
+                  try {
+                    localStorage.setItem(getStorageKey(effectiveKey), String(nextVal));
+                  } catch {
+                    // Ignore
+                  }
+                }
                 onPageSizeChange(nextVal);
               }}
               size="sm"

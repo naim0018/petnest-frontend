@@ -7,7 +7,7 @@ import { StatsCard } from "@/components/common/StatsCard";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import ReusableChart, { ChartType } from "@/components/common/ReusableChart";
 import { FilterSelect } from "@/components/common/FilterSelect";
-import { Store, ShoppingBag, DollarSign, Clock, Plus, Star, Sparkles, TrendingUp } from "lucide-react";
+import { Store, ShoppingBag, DollarSign, Clock, Plus, Star, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 interface RecentListingRecord {
@@ -205,7 +205,7 @@ export default function MarketplaceOverviewPage() {
 
       {/* Sales Growth Chart */}
       <AnimatedContainer delay={0.2}>
-        <div className="p-6 rounded-xl border border-border-peach bg-card shadow-xs">
+        <div className="p-6 rounded-lg border border-border-peach bg-card shadow-xs">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
               <h3 className="text-lg font-bold text-ink">Gross Marketplace Volume (GMV)</h3>

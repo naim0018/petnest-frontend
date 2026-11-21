@@ -7,6 +7,8 @@ interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  containerClassName?: string;
+  fullWidth?: boolean;
   position?: "top" | "bottom" | "left" | "right";
 }
 
@@ -14,6 +16,8 @@ export const Tooltip = ({
   content, 
   children, 
   className,
+  containerClassName,
+  fullWidth = false,
   position = "top" 
 }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -34,7 +38,11 @@ export const Tooltip = ({
 
   return (
     <div 
-      className="relative flex items-center group w-full"
+      className={cn(
+        "relative items-center group",
+        fullWidth ? "flex w-full" : "inline-flex",
+        containerClassName
+      )}
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >

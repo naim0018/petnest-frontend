@@ -5,6 +5,7 @@ import StoreProvider from "@/store/StoreProvider";
 import ThemeProvider from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
 import QueryProvider from "@/providers/QueryProviders";
+import GoogleTranslateScript from "@/components/common/GoogleTranslateScript";
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",
@@ -53,7 +54,8 @@ export default function RootLayout({
           <QueryProvider>
           <ThemeProvider>
             {children}
-            <Toaster position="bottom-right" richColors />
+            <Toaster position="bottom-right" richColors closeButton />
+            <GoogleTranslateScript />
           </ThemeProvider>
           </QueryProvider>
         </StoreProvider>

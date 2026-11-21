@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ProcessingStep {
@@ -108,7 +108,7 @@ export default function ProcessingModal({
           <div className="relative flex items-center justify-center">
             <div className="size-16 rounded-full bg-tint-rose border-2 border-coral/25 flex items-center justify-center text-coral relative">
               <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-coral animate-spin" />
-              {icon ?? <Sparkles className="size-7 text-coral" />}
+              {icon ?? <Loader2 className="size-7 text-coral animate-spin" />}
             </div>
           </div>
 

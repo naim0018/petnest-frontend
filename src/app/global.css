@@ -411,3 +411,52 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   Google Translate Widget Overrides & Stealth Integration
+   ========================================================================== */
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+#google_translate_element,
+.skiptranslate:not(.goog-te-gadget) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-menu-frame,
+.goog-tooltip,
+.goog-tooltip:hover,
+.VIpgJd-ZVi9od-ORHb-Oxf5Fd,
+.VIpgJd-ZVi9od-l4eHX-hSRLGd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-yAWneB-L7t0Ce {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+font[style] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Sonner Toast Close Button
+   ========================================================================== */
+[data-sonner-toast] [data-close-button] {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  border-radius: 9999px !important;
+  transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  transform: scale(1.1) !important;
+}
+

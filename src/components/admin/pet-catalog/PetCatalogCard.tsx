@@ -93,6 +93,9 @@ export interface PetCatalogCardProps {
   /** Accessibility label and tooltip for the delete action button. Defaults to "Delete". */
   deleteTooltip?: string;
 
+  /** Optional class overrides for the title. */
+  titleClassName?: string;
+
   /** Optional outer container class overrides. */
   className?: string;
 }
@@ -135,6 +138,7 @@ export default function PetCatalogCard({
   onEdit,
   onDelete,
   deleteTooltip = "Delete",
+  titleClassName,
   className,
 }: PetCatalogCardProps) {
   // Detect whether image is an illustration/mascot to apply object-contain vs object-cover
@@ -229,7 +233,7 @@ export default function PetCatalogCard({
           )}
         >
           <div className="min-w-0 flex-1">
-            <h4 className="text-lg font-bold font-quicksand text-ink tracking-tight truncate group-hover/card:text-coral transition-colors">
+            <h4 className={cn("text-[18px] font-bold font-quicksand text-ink tracking-tight truncate group-hover/card:text-coral transition-colors", titleClassName)}>
               {linkHref ? <Link href={linkHref}>{name}</Link> : name}
             </h4>
             {subtitle && (

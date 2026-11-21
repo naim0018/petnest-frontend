@@ -10,7 +10,7 @@ import {
   Lock,
   Camera,
   Loader2,
-  Sparkles,
+  Wand2,
   Heart,
   Save,
   KeyRound,
@@ -580,7 +580,7 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
                   onClick={handleGenerateAvatar}
                   className="w-full h-9 rounded-lg border border-border-peach hover:border-coral bg-surface-muted hover:bg-coral-light/20 text-xs font-semibold text-ink transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Sparkles className="size-3.5 text-amber-500" />
+                  <Wand2 className="size-3.5 text-amber-500" />
                   <span>Generate Avatar</span>
                 </button>
               </div>

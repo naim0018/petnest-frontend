@@ -6,27 +6,33 @@ import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { FormInput } from "@/components/common/FormInput";
 import { FormTextarea } from "@/components/common/FormTextarea";
+import { ImageUpload } from "@/components/common/ImageUpload";
 import { useHeaderAction } from "@/context/HeaderActionContext";
 import {
   useFindOneCategoryQuery,
   useFindAllCategoriesAdminQuery,
   useUpdateCategoryMutation,
 } from "@/store/Api/Guides/guides.api";
+import { useUploadMediaMutation } from "@/store/Api/Media/media.api";
 import {
   CATEGORY_ICON_PRESETS,
-  getCategoryIcon,
+  CategoryIconDisplay,
+  isCategoryIconUrl,
+  type CategoryIconPreset,
 } from "@/components/admin/guides/CategoryIcons";
 import {
   FolderTree,
   CheckCircle2,
-  Sparkles,
+  Layers,
   AlertCircle,
   Eye,
   BookOpen,
   Compass,
   Hash,
+  UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 function generateSlug(text: string): string {
   return text
@@ -56,6 +62,7 @@ export default function EditGuideCategoryPage({
 
   const [updateCategory, { isLoading: isUpdating }] =
     useUpdateCategoryMutation();
+  const [uploadMedia, { isLoading: isUploading }] = useUploadMediaMutation();
   const { data: existingCategoriesRes } = useFindAllCategoriesAdminQuery();
 
   const existingCategories = useMemo(
@@ -83,9 +90,14 @@ export default function EditGuideCategoryPage({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [iconMode, setIconMode] = useState<"preset" | "upload">("preset");
+  const [customIconUrl, setCustomIconUrl] = useState("");
+  const [selectedIconFile, setSelectedIconFile] = useState<File | null>(null);
   const [selectedIcon, setSelectedIcon] = useState("FolderTree");
   const [displayOrder, setDisplayOrder] = useState<number>(0);
   const [isActive, setIsActive] = useState(true);
+
+  const isSubmitting = isUpdating || isUploading;
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -99,7 +111,15 @@ export default function EditGuideCategoryPage({
       setName(category.name || "");
       setSlug(category.slug || "");
       setDescription(category.description || "");
-      setSelectedIcon(category.icon || "FolderTree");
+      const existingIcon = category.icon || "FolderTree";
+      setSelectedIcon(existingIcon);
+      if (isCategoryIconUrl(existingIcon)) {
+        setIconMode("upload");
+        setCustomIconUrl(existingIcon);
+      } else {
+        setIconMode("preset");
+        setCustomIconUrl("");
+      }
       setDisplayOrder(category.displayOrder ?? 0);
       setIsActive(category.isActive ?? true);
     }
@@ -135,13 +155,34 @@ export default function EditGuideCategoryPage({
     setErrors({});
 
     try {
+      let finalIcon = selectedIcon;
+
+      if (iconMode === "upload") {
+        if (selectedIconFile) {
+          const formData = new FormData();
+          formData.append("file", selectedIconFile);
+          formData.append("folder", "categories");
+          const uploadRes = await uploadMedia(formData).unwrap();
+          if (uploadRes?.data?.url) {
+            finalIcon = uploadRes.data.url;
+          } else {
+            toast.error("Failed to upload category icon. Please try again.");
+            return;
+          }
+        } else if (customIconUrl.trim()) {
+          finalIcon = customIconUrl.trim();
+        } else {
+          finalIcon = "FolderTree";
+        }
+      }
+
       await updateCategory({
         id: categoryId,
         payload: {
           name: trimmedName,
           slug: finalSlug || undefined,
           description: description.trim() || undefined,
-          icon: selectedIcon,
+          icon: finalIcon,
           displayOrder: Number(displayOrder) || 0,
           isActive,
         },
@@ -157,7 +198,6 @@ export default function EditGuideCategoryPage({
     }
   };
 
-  const SelectedIconComponent = getCategoryIcon(selectedIcon);
   const displaySlug = slug.trim() || (name.trim() ? generateSlug(name) : "category-slug");
   const { setHeaderAction } = useHeaderAction();
 
@@ -180,7 +220,7 @@ export default function EditGuideCategoryPage({
           variant="primary"
           size="sm"
           rounded="md"
-          isLoading={isUpdating}
+          isLoading={isSubmitting}
           leftIcon={<CheckCircle2 className="size-4" />}
           className="font-bold cursor-pointer"
         >
@@ -189,7 +229,7 @@ export default function EditGuideCategoryPage({
       </div>
     );
     return () => setHeaderAction(null);
-  }, [setHeaderAction, router, isUpdating]);
+  }, [setHeaderAction, router, isSubmitting]);
 
   if (isLoadingCategory) {
     return (
@@ -242,7 +282,7 @@ export default function EditGuideCategoryPage({
           <form id="edit-category-form" onSubmit={handleSubmit} className="space-y-6">
             {/* Card 1: Core Identification */}
             <AnimatedContainer delay={0.1}>
-              <div className="p-6 rounded-xl bg-card border border-border-peach shadow-xs space-y-5">
+              <div className="p-6 rounded-lg bg-card border border-border-peach shadow-xs space-y-5">
                 <div className="flex items-center gap-2 border-b border-border-peach pb-3">
                   <FolderTree className="size-4.5 text-coral" />
                   <h3 className="font-bold text-ink text-sm font-quicksand">
@@ -250,7 +290,7 @@ export default function EditGuideCategoryPage({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormInput
                     label="Category Name"
                     required
@@ -300,73 +340,156 @@ export default function EditGuideCategoryPage({
 
             {/* Card 2: Visual Icon & Display Order */}
             <AnimatedContainer delay={0.15}>
-              <div className="p-6 rounded-xl bg-card border border-border-peach shadow-xs space-y-5">
+              <div className="p-6 rounded-lg bg-card border border-border-peach shadow-xs space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-peach pb-3">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="size-4.5 text-coral" />
+                    <Layers className="size-4.5 text-coral" />
                     <h3 className="font-bold text-ink text-sm font-quicksand">
                       Visual Icon & Taxonomy Sorting
                     </h3>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-ink-muted">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="size-2.5 rounded-full bg-success" />
-                      Added ({addedPresetNames.size})
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="size-2.5 rounded-full bg-coral" />
-                      Selected
-                    </span>
-                  </div>
+                  {iconMode === "preset" && (
+                    <div className="flex items-center gap-3 text-xs text-ink-muted">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2.5 rounded-full bg-success" />
+                        Added ({addedPresetNames.size})
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2.5 rounded-full bg-coral" />
+                        Selected
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Icon Presets Grid */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-                    Choose Topic Icon
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                    {CATEGORY_ICON_PRESETS.map((preset) => {
-                      const Icon = preset.icon;
-                      const isSelected = selectedIcon === preset.name;
-                      const isAdded = addedPresetNames.has(preset.name);
-                      return (
+                {/* Mode Switcher: Preset Library vs Custom Upload */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIconMode("preset");
+                      if (isCategoryIconUrl(selectedIcon)) {
+                        setSelectedIcon("FolderTree");
+                      }
+                    }}
+                    className={cn(
+                      "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border",
+                      iconMode === "preset"
+                        ? "bg-coral text-white border-coral shadow-2xs"
+                        : "bg-surface-soft/80 text-ink-muted border-border-peach hover:text-ink hover:bg-surface-muted"
+                    )}
+                  >
+                    <Layers className="size-3.5" />
+                    Choose Preset Icon
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIconMode("upload");
+                      if (customIconUrl) {
+                        setSelectedIcon(customIconUrl);
+                      }
+                    }}
+                    className={cn(
+                      "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border",
+                      iconMode === "upload"
+                        ? "bg-coral text-white border-coral shadow-2xs"
+                        : "bg-surface-soft/80 text-ink-muted border-border-peach hover:text-ink hover:bg-surface-muted"
+                    )}
+                  >
+                    <UploadCloud className="size-3.5" />
+                    Upload Custom Icon / Image
+                  </button>
+                </div>
+
+                {/* Tab 1: Preset Icons Grid */}
+                {iconMode === "preset" && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink">
+                      Choose Topic Icon
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                      {CATEGORY_ICON_PRESETS.map((preset) => {
+                        const Icon = preset.icon;
+                        const isSelected = selectedIcon === preset.name;
+                        const isAdded = addedPresetNames.has(preset.name);
+                        return (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => {
+                              setSelectedIcon(preset.name);
+                              setName(preset.label);
+                              setSlug(preset.slug);
+                              setDescription(preset.description);
+                            }}
+                            className={`relative p-3 rounded-lg border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                              isSelected
+                                ? "bg-tint-rose border-coral text-coral ring-2 ring-coral/20 font-bold"
+                                : isAdded
+                                ? "bg-tint-mint border-success/50 text-success hover:border-success font-semibold"
+                                : "bg-surface-soft/60 border-border-peach hover:border-coral/50 text-ink-muted hover:text-ink"
+                            }`}
+                          >
+                            {isAdded && (
+                              <span
+                                className="absolute top-1.5 right-1.5 inline-flex items-center justify-center text-success"
+                                aria-label="Already added"
+                              >
+                                <CheckCircle2 className="size-3.5" />
+                              </span>
+                            )}
+                            <Icon className="size-5 shrink-0" />
+                            <span className="text-xs truncate max-w-full font-medium leading-tight">
+                              {preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Custom Icon / Image Upload */}
+                {iconMode === "upload" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-ink">
+                        Custom Category Icon / Image
+                      </label>
+                      {customIconUrl && (
                         <button
-                          key={preset.name}
                           type="button"
                           onClick={() => {
-                            setSelectedIcon(preset.name);
-                            setName(preset.label);
-                            setSlug(preset.slug);
-                            setDescription(preset.description);
+                            setCustomIconUrl("");
+                            setSelectedIconFile(null);
+                            setSelectedIcon("FolderTree");
                           }}
-                          className={`relative p-3 rounded-lg border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
-                            isSelected
-                              ? "bg-tint-rose border-coral text-coral ring-2 ring-coral/20 font-bold"
-                              : isAdded
-                              ? "bg-tint-mint border-success/50 text-success hover:border-success font-semibold"
-                              : "bg-surface-soft/60 border-border-peach hover:border-coral/50 text-ink-muted hover:text-ink"
-                          }`}
+                          className="text-xs text-coral hover:underline font-semibold cursor-pointer"
                         >
-                          {isAdded && (
-                            <span
-                              className="absolute top-1.5 right-1.5 inline-flex items-center justify-center text-success"
-                              aria-label="Already added"
-                            >
-                              <CheckCircle2 className="size-3.5" />
-                            </span>
-                          )}
-                          <Icon className="size-5 shrink-0" />
-                          <span className="text-xs truncate max-w-full font-medium leading-tight">
-                            {preset.label}
-                          </span>
+                          Clear Custom Icon
                         </button>
-                      );
-                    })}
+                      )}
+                    </div>
+                    <ImageUpload
+                      value={customIconUrl}
+                      onChange={(url) => {
+                        setCustomIconUrl(url);
+                        setSelectedIcon(url || "FolderTree");
+                      }}
+                      onFileSelect={(file) => {
+                        setSelectedIconFile(file);
+                      }}
+                      height="h-[200px]"
+                      imageFit="contain"
+                      placeholder="Drop an icon/image (SVG, PNG, WebP), paste (Ctrl+V), or enter image URL"
+                      helperText="Recommended: 1:1 square icon or badge (PNG, SVG, WEBP, up to 5MB)"
+                      allowManualInput={true}
+                    />
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <FormInput
                     label="Display Priority Order"
                     type="number"
@@ -418,7 +541,7 @@ export default function EditGuideCategoryPage({
                   variant="primary"
                   size="sm"
                   rounded="md"
-                  isLoading={isUpdating}
+                  isLoading={isSubmitting}
                   leftIcon={<CheckCircle2 className="size-4" />}
                   className="font-bold cursor-pointer"
                 >
@@ -432,7 +555,7 @@ export default function EditGuideCategoryPage({
         {/* Right Column: Live Interactive Preview */}
         <div className="lg:col-span-5 xl:col-span-5 sticky top-20 space-y-5">
           <AnimatedContainer delay={0.15}>
-            <div className="rounded-xl bg-card border border-border-peach shadow-xs p-5 space-y-5">
+            <div className="rounded-lg bg-card border border-border-peach shadow-xs p-5 space-y-5">
               {/* Preview Header */}
               <div className="flex items-center justify-between pb-3 border-b border-border-peach">
                 <div className="flex items-center gap-2">
@@ -452,10 +575,10 @@ export default function EditGuideCategoryPage({
                 <span className="text-xs font-bold text-ink-muted uppercase tracking-wider">
                   Public Topic Card
                 </span>
-                <div className="p-4 rounded-xl border border-border-peach bg-surface-soft/40 space-y-3 transition-all">
+                <div className="p-4 rounded-lg border border-border-peach bg-surface-soft/40 space-y-3 transition-all">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="size-11 rounded-xl bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shadow-2xs shrink-0">
-                      <SelectedIconComponent className="size-5.5" />
+                    <div className="size-11 rounded-lg bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shadow-2xs shrink-0 overflow-hidden p-1.5">
+                      <CategoryIconDisplay icon={selectedIcon} className="size-6 object-contain" />
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span
@@ -502,8 +625,8 @@ export default function EditGuideCategoryPage({
                 </span>
                 <div className="p-3 rounded-lg border border-border-peach bg-card text-xs space-y-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="size-8 rounded-lg bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0">
-                      <SelectedIconComponent className="size-4" />
+                    <div className="size-8 rounded-lg bg-coral/10 border border-coral/20 flex items-center justify-center text-coral shrink-0 overflow-hidden p-1">
+                      <CategoryIconDisplay icon={selectedIcon} className="size-4.5 object-contain" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-ink truncate leading-tight">
@@ -540,10 +663,10 @@ export default function EditGuideCategoryPage({
                 </div>
                 <div className="flex items-center justify-between text-ink-muted">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="size-3 text-coral" /> Icon Preset
+                    <Layers className="size-3 text-coral" /> Icon
                   </span>
-                  <span className="font-mono text-ink text-xs">
-                    {selectedIcon}
+                  <span className="font-mono text-ink text-xs truncate max-w-36">
+                    {isCategoryIconUrl(selectedIcon) ? "Custom Image Upload" : selectedIcon}
                   </span>
                 </div>
               </div>

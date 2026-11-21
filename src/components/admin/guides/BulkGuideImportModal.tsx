@@ -17,7 +17,6 @@ import {
   ChevronUp,
   Image as ImageIcon,
   BookOpen,
-  Sparkles,
   Loader2,
 } from "lucide-react";
 import PrimaryButton from "@/components/common/PrimaryButton";
@@ -196,11 +195,11 @@ export default function BulkGuideImportModal({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-3xl bg-card border border-border-peach rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-3xl bg-card border border-border-peach rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-peach bg-surface-muted/40 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-coral/10 text-coral flex items-center justify-center">
+            <div className="size-10 rounded-lg bg-coral/10 text-coral flex items-center justify-center">
               <FileArchive className="size-5" />
             </div>
             <div>
@@ -225,7 +224,7 @@ export default function BulkGuideImportModal({
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1 min-h-0">
           {/* Quick Actions & Instructions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-soft border border-border-peach/80">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-lg bg-surface-soft border border-border-peach/80">
             <div className="flex items-center gap-2">
               <HelpCircle className="size-4 text-coral shrink-0" />
               <span className="text-xs text-ink font-medium">
@@ -259,7 +258,7 @@ export default function BulkGuideImportModal({
 
           {/* Collapsible Format & Schema Guide */}
           {showFormatGuide && (
-            <div className="rounded-xl border border-border-peach bg-card p-4 space-y-3 animate-in fade-in duration-200">
+            <div className="rounded-lg border border-border-peach bg-card p-4 space-y-3 animate-in fade-in duration-200">
               <div className="flex items-center gap-2 text-xs font-bold font-quicksand text-ink border-b border-border-peach pb-2">
                 <FileCode className="size-4 text-coral" />
                 <span>Complete Specification & Supported Attributes</span>
@@ -298,7 +297,7 @@ export default function BulkGuideImportModal({
               onDragLeave={() => setIsDragging(false)}
               onClick={() => fileInputRef.current?.click()}
               className={cn(
-                "border-2 border-dashed rounded-xl p-8 sm:p-10 flex flex-col items-center justify-center text-center transition-all cursor-pointer group",
+                "border-2 border-dashed rounded-lg p-8 sm:p-10 flex flex-col items-center justify-center text-center transition-all cursor-pointer group",
                 isDragging
                   ? "border-coral bg-coral-light/20 scale-[1.01]"
                   : "border-border-peach bg-surface-soft/60 hover:border-coral/60 hover:bg-coral-light/10"
@@ -316,7 +315,7 @@ export default function BulkGuideImportModal({
                 className="hidden"
               />
 
-              <div className="size-14 rounded-2xl bg-card border border-border-peach shadow-2xs flex items-center justify-center text-coral mb-3 group-hover:scale-105 transition-transform">
+              <div className="size-14 rounded-lg bg-card border border-border-peach shadow-2xs flex items-center justify-center text-coral mb-3 group-hover:scale-105 transition-transform">
                 <Upload className="size-6" />
               </div>
 
@@ -354,7 +353,7 @@ export default function BulkGuideImportModal({
 
           {/* Loading / Progress State */}
           {isLoading && (
-            <div className="p-8 rounded-xl bg-surface-soft border border-border-peach text-center space-y-4">
+            <div className="p-8 rounded-lg bg-surface-soft border border-border-peach text-center space-y-4">
               <Loader2 className="size-8 text-coral animate-spin mx-auto" />
               <div className="space-y-1">
                 <p className="text-sm font-bold font-quicksand text-ink">
@@ -372,7 +371,7 @@ export default function BulkGuideImportModal({
             <div className="space-y-4 animate-in fade-in duration-200">
               {/* Header metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-tint-mint border border-success/30 flex items-center gap-3">
+                <div className="p-3.5 rounded-lg bg-tint-mint border border-success/30 flex items-center gap-3">
                   <CheckCircle2 className="size-6 text-success shrink-0" />
                   <div>
                     <span className="text-lg font-bold font-quicksand text-ink block leading-none">
@@ -384,7 +383,7 @@ export default function BulkGuideImportModal({
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-surface-soft border border-border-peach flex items-center gap-3">
+                <div className="p-3.5 rounded-lg bg-surface-soft border border-border-peach flex items-center gap-3">
                   <ImageIcon className="size-6 text-coral shrink-0" />
                   <div>
                     <span className="text-lg font-bold font-quicksand text-ink block leading-none">
@@ -398,7 +397,7 @@ export default function BulkGuideImportModal({
 
                 <div
                   className={cn(
-                    "p-3.5 rounded-xl border flex items-center gap-3",
+                    "p-3.5 rounded-lg border flex items-center gap-3",
                     importResults.failureCount > 0
                       ? "bg-tint-rose border-rose-300"
                       : "bg-surface-soft border-border-peach"
@@ -424,7 +423,7 @@ export default function BulkGuideImportModal({
               </div>
 
               {/* Individual guide rows */}
-              <div className="rounded-xl border border-border-peach overflow-hidden divide-y divide-border-peach">
+              <div className="rounded-lg border border-border-peach overflow-hidden divide-y divide-border-peach">
                 {importResults.results.map((res) => (
                   <div
                     key={res.index}

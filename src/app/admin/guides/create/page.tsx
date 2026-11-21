@@ -25,13 +25,15 @@ import guidesApi, {
   useGenerateGuideAiMutation,
   useCreateFaqsBulkMutation,
 } from "@/store/Api/Guides/guides.api";
+import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 import {
   useAllSpeciesDropdown,
   useBreedsBySpeciesDropdown,
 } from "@/hooks/usePetQueries";
 import { useUploadMediaMutation } from "@/store/Api/Media/media.api";
 import {
-  Sparkles,
+  Cpu,
+  BookOpen,
   Image as ImageIcon,
   Save,
   Send,
@@ -66,6 +68,11 @@ export default function CreateGuidePage() {
   const [breedId, setBreedId] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
+  // Localized Bangla Variant State (Optional)
+  const [activeLanguageTab, setActiveLanguageTab] = useState<"en" | "bn">("en");
+  const [banglaTitle, setBanglaTitle] = useState("");
+  const [banglaExcerpt, setBanglaExcerpt] = useState("");
+  const [banglaContent, setBanglaContent] = useState("");
   const [displayOrder, setDisplayOrder] = useState<number>(0);
   const [tags, setTags] = useState<string[]>([]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -460,6 +467,17 @@ export default function CreateGuidePage() {
       let newGuideId = savedGuideId;
       let newGuideTitle = title.trim();
 
+      const translationsPayload: GuideTranslationsMap | undefined =
+        banglaTitle.trim() || banglaExcerpt.trim() || banglaContent.trim()
+          ? {
+              bn: {
+                title: banglaTitle.trim(),
+                excerpt: banglaExcerpt.trim(),
+                content: banglaContent.trim(),
+              },
+            }
+          : undefined;
+
       if (savedGuideId) {
         const updateRes = await updateGuide({
           id: savedGuideId,
@@ -474,6 +492,7 @@ export default function CreateGuidePage() {
             displayOrder,
             tags,
             status,
+            translations: translationsPayload,
           },
         }).unwrap();
         newGuideId = updateRes?.data?.id || savedGuideId;
@@ -490,6 +509,7 @@ export default function CreateGuidePage() {
           displayOrder,
           tags,
           status,
+          translations: translationsPayload,
         }).unwrap();
 
         newGuideId = createdRes?.data?.id;
@@ -638,17 +658,31 @@ export default function CreateGuidePage() {
   ]);
 
   // Shared live preview content used in both side-by-side split pane and full preview
-  const renderGuidePreviewBody = (isFullWidth: boolean) => (
-    <div className={cn("space-y-6", isFullWidth && "space-y-8")}>
-      {/* Guide Title */}
-      <h1
-        className={cn(
-          "font-bold font-quicksand text-ink leading-tight break-words",
-          isFullWidth ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
-        )}
-      >
-        {title || "Untitled Editorial Guide"}
-      </h1>
+  const renderGuidePreviewBody = (isFullWidth: boolean) => {
+    const previewTitle =
+      activeLanguageTab === "bn" && banglaTitle.trim()
+        ? banglaTitle
+        : title || "Untitled Editorial Guide";
+    const previewSummary =
+      activeLanguageTab === "bn" && banglaExcerpt.trim()
+        ? banglaExcerpt
+        : summary;
+    const previewContent =
+      activeLanguageTab === "bn" && banglaContent.trim()
+        ? banglaContent
+        : content;
+
+    return (
+      <div className={cn("space-y-6", isFullWidth && "space-y-8")}>
+        {/* Guide Title */}
+        <h1
+          className={cn(
+            "font-bold font-quicksand text-ink leading-tight break-words",
+            isFullWidth ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
+          )}
+        >
+          {previewTitle}
+        </h1>
 
       {/* Metadata Bar */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-ink-muted border-y border-border-peach/80 py-3">
@@ -707,13 +741,13 @@ export default function CreateGuidePage() {
       </div>
 
       {/* Executive Summary Callout */}
-      {summary ? (
-        <div className="p-4 rounded-xl bg-surface-muted/60 border-l-4 border-coral">
+      {previewSummary ? (
+        <div className="p-4 rounded-xl bg-surface-muted/60 border border-border-peach/70">
           <p className="text-xs font-bold uppercase tracking-wider text-coral font-quicksand mb-1">
             Executive Summary
           </p>
           <p className="text-sm text-ink font-medium leading-relaxed italic">
-            &ldquo;{summary}&rdquo;
+            &ldquo;{previewSummary}&rdquo;
           </p>
         </div>
       ) : (
@@ -724,17 +758,17 @@ export default function CreateGuidePage() {
 
       {/* Hero Cover Photo */}
       {coverPreviewUrl ? (
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border-peach bg-surface-muted shadow-xs">
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border-peach bg-surface-muted shadow-xs">
           <Image
             src={coverPreviewUrl}
-            alt={title || "Cover photo"}
+            alt={previewTitle || "Cover photo"}
             fill
             unoptimized
             className="object-cover"
           />
         </div>
       ) : (
-        <div className="w-full h-40 rounded-2xl border-2 border-dashed border-border-peach bg-surface-muted/30 flex flex-col items-center justify-center gap-1.5 text-ink-faint text-xs">
+        <div className="w-full h-40 rounded-lg border-2 border-dashed border-border-peach bg-surface-muted/30 flex flex-col items-center justify-center gap-1.5 text-ink-faint text-xs">
           <ImageIcon className="size-6 opacity-50" />
           <span>No featured cover photo selected</span>
         </div>
@@ -742,7 +776,7 @@ export default function CreateGuidePage() {
 
       {/* Formatted Article Body */}
       <div className="pt-1">
-        <ArticleContentRenderer content={content} />
+        <ArticleContentRenderer content={previewContent} />
       </div>
 
       {/* Attached FAQs Accordion Preview in Live Reader Preview */}
@@ -804,7 +838,8 @@ export default function CreateGuidePage() {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   return (
     <div className="w-full space-y-6 pb-12">
@@ -825,7 +860,7 @@ export default function CreateGuidePage() {
         /* 👁️ FULL-WIDTH LIVE GUIDE PREVIEW                         */
         /* ======================================================== */
         <AnimatedContainer delay={0.05}>
-          <div className="w-full bg-card border border-border-peach rounded-2xl p-6 sm:p-10 shadow-sm">
+          <div className="w-full bg-card border border-border-peach rounded-lg p-6 sm:p-10 shadow-sm">
             {renderGuidePreviewBody(true)}
           </div>
         </AnimatedContainer>
@@ -838,7 +873,7 @@ export default function CreateGuidePage() {
             {/* Left Column: Editor + Metadata Controls */}
             <div className="lg:col-span-6 space-y-6 min-w-0">
               {/* Card 0: AI Guide Generator (Gemini Flash) */}
-              <div className="rounded-xl border border-coral/30 bg-gradient-to-r from-tint-rose/40 via-card to-card p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="rounded-lg border border-coral/30 bg-gradient-to-r from-tint-rose/40 via-card to-card p-5 sm:p-6 shadow-xs space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <div className="size-9 rounded-lg bg-coral text-white flex items-center justify-center shadow-xs">
@@ -908,7 +943,7 @@ export default function CreateGuidePage() {
                       rounded="lg"
                       isLoading={isGeneratingAi}
                       disabled={!aiTopic.trim() || isGeneratingAi}
-                      leftIcon={<Sparkles className="size-4" />}
+                      leftIcon={<Cpu className="size-4" />}
                       onClick={handleGenerateAi}
                       className="w-full font-bold cursor-pointer h-10"
                     >
@@ -918,61 +953,175 @@ export default function CreateGuidePage() {
                 </div>
               </div>
 
-              {/* Card 1: Core Article Authoring */}
-              <div className="rounded-xl border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-5">
-                {/* Article Title */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
-                    Article Title <span className="text-coral">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Essential Puppy Socialization Milestones (Weeks 8 to 16)"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all"
-                    required
-                  />
-                </div>
-
-                {/* Executive Summary */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
-                    Executive Summary / Meta Excerpt <span className="text-coral">*</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="A clear 2-3 sentence overview of this guide for search cards and social previews..."
-                    value={summary}
-                    onChange={(e) => setSummary(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all resize-none"
-                    required
-                  />
-                </div>
-
-                {/* Article Body Rich Text Editor */}
-                <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink font-quicksand">
-                      Article Body <span className="text-coral">*</span>
-                    </label>
-                    <span className="text-xs text-ink-muted">
-                      Changes sync live to preview
-                    </span>
+              {/* Card 1: Article Content & Language Variants */}
+              <div className="rounded-lg border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-5">
+                {/* Language Switcher Tabs */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-peach pb-4">
+                  <div className="flex items-center gap-1.5 p-1 bg-surface-muted rounded-lg border border-border-peach">
+                    <button
+                      type="button"
+                      onClick={() => setActiveLanguageTab("en")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all font-quicksand cursor-pointer",
+                        activeLanguageTab === "en"
+                          ? "bg-card text-ink shadow-2xs border border-border-peach/60"
+                          : "text-ink-muted hover:text-ink"
+                      )}
+                    >
+                      <span>🇺🇸 English (Primary)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveLanguageTab("bn")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all font-quicksand cursor-pointer",
+                        activeLanguageTab === "bn"
+                          ? "bg-coral text-white shadow-2xs"
+                          : "text-ink-muted hover:text-ink"
+                      )}
+                    >
+                      <span>🇧🇩 বাংলা সংস্করণ (Bangla)</span>
+                      {banglaTitle.trim() || banglaContent.trim() ? (
+                        <span
+                          className={cn(
+                            "size-2 rounded-full",
+                            activeLanguageTab === "bn"
+                              ? "bg-white"
+                              : "bg-emerald-500"
+                          )}
+                        />
+                      ) : (
+                        <span className="text-[10px] opacity-75 font-normal">
+                          Optional
+                        </span>
+                      )}
+                    </button>
                   </div>
-                  <RichTextEditor
-                    value={content}
-                    onChange={setContent}
-                    placeholder="Write complete article chapters, veterinary references, and step-by-step guidance here..."
-                    onRegisterPendingImage={handleRegisterPendingImage}
-                  />
+
+                  {activeLanguageTab === "bn" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!banglaTitle && title) setBanglaTitle(title);
+                        if (!banglaExcerpt && summary) setBanglaExcerpt(summary);
+                        if (!banglaContent && content) setBanglaContent(content);
+                        toast.info("Copied English content as translation base draft");
+                      }}
+                      className="text-xs font-bold text-coral hover:underline font-quicksand cursor-pointer"
+                    >
+                      Copy English text as draft
+                    </button>
+                  )}
                 </div>
+
+                {activeLanguageTab === "en" ? (
+                  <>
+                    {/* Article Title */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
+                        Article Title <span className="text-coral">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Essential Puppy Socialization Milestones (Weeks 8 to 16)"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all font-quicksand"
+                        required
+                      />
+                    </div>
+
+                    {/* Executive Summary */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
+                        Executive Summary / Meta Excerpt <span className="text-coral">*</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="A clear 2-3 sentence overview of this guide for search cards and social previews..."
+                        value={summary}
+                        onChange={(e) => setSummary(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all resize-none font-quicksand"
+                        required
+                      />
+                    </div>
+
+                    {/* Article Body Rich Text Editor */}
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-ink font-quicksand">
+                          Article Body <span className="text-coral">*</span>
+                        </label>
+                        <span className="text-xs text-ink-muted">
+                          Changes sync live to preview
+                        </span>
+                      </div>
+                      <RichTextEditor
+                        value={content}
+                        onChange={setContent}
+                        placeholder="Write complete article chapters, veterinary references, and step-by-step guidance here..."
+                        onRegisterPendingImage={handleRegisterPendingImage}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-5 animate-in fade-in duration-150">
+                    <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 font-medium font-quicksand leading-relaxed">
+                      💡 <strong>বাংলা সংস্করণ (Native Bangla):</strong> যখন কোনো ভিজিটর ওয়েবসাইটে বাংলা ভাষা নির্বাচন করবেন, তখন গুগল ট্রান্সলেটরের পরিবর্তে এই অনুমোদিত বাংলা টেক্সটটি দেখানো হবে।
+                    </div>
+
+                    {/* Bangla Title */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
+                        Bangla Title (বাংলা শিরোনাম)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="যেমন: বাজেট পাখির সম্পূর্ণ যত্ন ও স্বাস্থ্য সহায়িকা..."
+                        value={banglaTitle}
+                        onChange={(e) => setBanglaTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all font-quicksand"
+                      />
+                    </div>
+
+                    {/* Bangla Summary */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2 font-quicksand">
+                        Bangla Summary / Excerpt (বাংলা সংক্ষিপ্ত বিবরণ)
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="যেমন: খাঁচায় পোষা বাজেট পাখির সুষম খাবার, যত্ন ও সাধারণ রোগবালাই নিয়ে বিস্তারিত বাংলা গাইড..."
+                        value={banglaExcerpt}
+                        onChange={(e) => setBanglaExcerpt(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-border-peach bg-surface-muted text-ink text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all resize-none font-quicksand"
+                      />
+                    </div>
+
+                    {/* Bangla Body */}
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-ink font-quicksand">
+                          Bangla Article Body (বাংলা সম্পূর্ণ কনটেন্ট)
+                        </label>
+                        <span className="text-xs text-ink-muted">
+                          Rich text or markdown supported
+                        </span>
+                      </div>
+                      <RichTextEditor
+                        value={banglaContent}
+                        onChange={setBanglaContent}
+                        placeholder="বাংলায় সম্পূর্ণ নির্দেশিকা লিখুন..."
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Card 2: Guide Metadata & Cover Photo */}
-              <div className="rounded-xl border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-5">
+              <div className="rounded-lg border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-5">
                 <h3 className="text-sm font-bold text-ink flex items-center gap-2 font-quicksand border-b border-border-peach pb-3">
-                  <Sparkles className="size-4 text-coral" /> Guide Metadata & Cover Media
+                  <BookOpen className="size-4 text-coral" /> Guide Metadata & Cover Media
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1098,7 +1247,7 @@ export default function CreateGuidePage() {
               </div>
 
               {/* Card 3: Attached Guide FAQs Accordion */}
-              <div className="rounded-xl border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="rounded-lg border border-border-peach bg-card p-5 sm:p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-border-peach pb-3">
                   <div className="flex items-center gap-2">
                     <HelpCircle className="size-4 text-coral" />
@@ -1248,7 +1397,7 @@ export default function CreateGuidePage() {
 
             {/* Right Column: Sticky Side-by-Side Live Preview */}
             <div className="lg:col-span-6 lg:sticky lg:top-20 min-w-0">
-              <div className="rounded-xl border border-border-peach bg-card shadow-xs overflow-hidden flex flex-col lg:max-h-[calc(100vh-6.5rem)]">
+              <div className="rounded-lg border border-border-peach bg-card shadow-xs overflow-hidden flex flex-col lg:max-h-[calc(100vh-6.5rem)]">
                 {/* Preview Panel Header */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-peach bg-surface-muted/40 shrink-0">
                   <div className="flex items-center gap-2">

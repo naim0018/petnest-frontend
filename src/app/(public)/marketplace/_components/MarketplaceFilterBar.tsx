@@ -7,7 +7,6 @@ import {
   Search,
   Check,
   MapPin,
-  Sparkles,
   Tag,
   Layers,
 } from "lucide-react";
@@ -498,7 +497,7 @@ export default function MarketplaceFilterBar({
             )}
           >
             <div className="flex items-center gap-1.5 min-w-0">
-              <Sparkles className="w-3.5 h-3.5 text-coral shrink-0" />
+              <Tag className="w-3.5 h-3.5 text-coral shrink-0" />
               <span className="truncate">{filters.condition}</span>
             </div>
             <ChevronDown

@@ -14,13 +14,15 @@ import {
   useFindAllEditorialQuery,
   useRemoveCategoryMutation,
 } from "@/store/Api/Guides/guides.api";
-import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import {
+  getCategoryIcon,
+  CategoryIconDisplay,
+} from "@/components/admin/guides/CategoryIcons";
 import {
   ArrowLeft,
   Pencil,
   Trash2,
   BookOpen,
-  Sparkles,
   Layers,
   CheckCircle2,
   Clock,
@@ -138,10 +140,10 @@ export default function GuideCategoryDetailsPage({
     return (
       <div className="space-y-6">
         <div className="h-8 w-44 bg-surface-muted rounded animate-pulse" />
-        <div className="h-72 bg-card border border-border-peach rounded-2xl animate-pulse" />
+        <div className="h-72 bg-card border border-border-peach rounded-lg animate-pulse" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-card border border-border-peach rounded-xl" />
+            <div key={i} className="h-28 bg-card border border-border-peach rounded-lg" />
           ))}
         </div>
       </div>
@@ -150,7 +152,7 @@ export default function GuideCategoryDetailsPage({
 
   if (isError || !category) {
     return (
-      <div className="w-full p-12 text-center rounded-xl bg-card border border-border-peach space-y-4">
+      <div className="w-full p-12 text-center rounded-lg bg-card border border-border-peach space-y-4">
         <AlertCircle className="size-12 text-coral mx-auto" />
         <h3 className="text-lg font-bold font-quicksand text-ink">
           Category Not Found
@@ -184,12 +186,12 @@ export default function GuideCategoryDetailsPage({
     <div className="w-full space-y-6 pb-12">
       {/* Hero Category Banner Card */}
       <AnimatedContainer delay={0.05}>
-        <div className="bg-card border border-border-peach rounded-2xl overflow-hidden shadow-xs relative">
+        <div className="bg-card border border-border-peach rounded-lg overflow-hidden shadow-xs relative">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             {/* Visual Icon Badge Banner */}
             <div className="lg:col-span-4 relative h-64 lg:h-auto min-h-60 bg-gradient-to-br from-rose-50/80 via-orange-50/40 to-tint-rose/50 dark:from-tint-rose/20 dark:via-surface-soft dark:to-surface-muted overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-              <div className="size-24 rounded-2xl bg-white/95 dark:bg-card/95 border border-coral/25 text-coral flex items-center justify-center shadow-md mb-3">
-                <IconComponent className="size-12 stroke-[1.75]" />
+              <div className="size-24 rounded-lg bg-white/95 dark:bg-card/95 border border-coral/25 text-coral flex items-center justify-center shadow-md mb-3 p-3 overflow-hidden">
+                <CategoryIconDisplay icon={category.icon} className="size-14 object-contain" />
               </div>
               <span className="text-xs font-bold font-mono text-ink-muted bg-white/80 dark:bg-card/80 px-2.5 py-0.5 rounded-full border border-border-peach">
                 /{category.slug}
@@ -243,7 +245,7 @@ export default function GuideCategoryDetailsPage({
 
                 {/* Technical Meta Bar */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="p-3 rounded-xl bg-surface-soft/60 border border-border-peach/60 space-y-0.5">
+                  <div className="p-3 rounded-lg bg-surface-soft/60 border border-border-peach/60 space-y-0.5">
                     <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">
                       Display Priority
                     </span>
@@ -251,7 +253,7 @@ export default function GuideCategoryDetailsPage({
                       Order: {category.displayOrder ?? 0}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-surface-soft/60 border border-border-peach/60 space-y-0.5">
+                  <div className="p-3 rounded-lg bg-surface-soft/60 border border-border-peach/60 space-y-0.5">
                     <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">
                       Created Date
                     </span>
@@ -259,7 +261,7 @@ export default function GuideCategoryDetailsPage({
                       {formattedDate(category.createdAt)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-surface-soft/60 border border-border-peach/60 space-y-0.5 col-span-2 sm:col-span-1">
+                  <div className="p-3 rounded-lg bg-surface-soft/60 border border-border-peach/60 space-y-0.5 col-span-2 sm:col-span-1">
                     <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">
                       Category ID
                     </span>
@@ -271,9 +273,9 @@ export default function GuideCategoryDetailsPage({
               </div>
 
               {/* Action Banner */}
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-coral/10 via-surface-soft to-tint-rose/40 border border-coral/20 flex flex-wrap items-center justify-between gap-3">
+              <div className="p-3.5 rounded-lg bg-gradient-to-r from-coral/10 via-surface-soft to-tint-rose/40 border border-coral/20 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="size-5 text-coral shrink-0" />
+                  <BookOpen className="size-5 text-coral shrink-0" />
                   <div>
                     <p className="text-xs font-bold text-ink">
                       Write an article in {category.name}
@@ -338,7 +340,7 @@ export default function GuideCategoryDetailsPage({
 
       {/* Attached Articles Preview Section */}
       <AnimatedContainer delay={0.2}>
-        <div className="p-6 rounded-2xl bg-card border border-border-peach space-y-4 shadow-xs">
+        <div className="p-6 rounded-lg bg-card border border-border-peach space-y-4 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
@@ -375,13 +377,13 @@ export default function GuideCategoryDetailsPage({
           </div>
 
           {isLoadingGuides ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 py-4 animate-pulse">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-4 animate-pulse">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 bg-surface-muted rounded-xl" />
+                <div key={i} className="h-32 bg-surface-muted rounded-lg" />
               ))}
             </div>
           ) : guides.length === 0 ? (
-            <div className="p-8 text-center rounded-xl bg-surface-soft/60 border border-dashed border-border-peach space-y-3">
+            <div className="p-8 text-center rounded-lg bg-surface-soft/60 border border-dashed border-border-peach space-y-3">
               <BookOpen className="size-10 text-ink-faint mx-auto opacity-50" />
               <div className="space-y-1">
                 <p className="font-bold text-sm text-ink font-quicksand">
@@ -404,13 +406,13 @@ export default function GuideCategoryDetailsPage({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {guides.map((guide) => (
                 <Link
                   key={guide.id}
                   href={`/guides/${guide.slug}`}
                   target="_blank"
-                  className="p-3.5 rounded-xl bg-surface-soft/60 hover:bg-tint-rose/40 border border-border-peach/70 hover:border-coral/50 flex flex-col justify-between transition-all duration-200 group"
+                  className="p-3.5 rounded-lg bg-surface-soft/60 hover:bg-tint-rose/40 border border-border-peach/70 hover:border-coral/50 flex flex-col justify-between transition-all duration-200 group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, Menu, Check, CheckCheck, BellOff } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import LanguageSelector from "@/components/common/LanguageSelector";
 import Breadcrumbs from "./Breadcrumbs";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/context/HeaderActionContext";
@@ -128,7 +129,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
             {/* Notification Dropdown Panel */}
             {isNotifOpen && (
-              <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-full mt-3 w-auto sm:w-80 bg-card border border-border-peach rounded-xl py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-full mt-[2px] w-auto sm:w-80 bg-card border border-border-peach rounded-xl py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border-peach mb-1">
                   <p className="text-xs text-ink font-bold uppercase tracking-wider font-quicksand">
                     Notifications
@@ -197,6 +198,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </div>
             )}
           </div>
+
+          {/* Language Selector */}
+          <LanguageSelector />
 
           {/* Theme Toggle */}
           <ThemeToggle />

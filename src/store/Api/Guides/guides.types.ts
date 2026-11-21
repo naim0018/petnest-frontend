@@ -57,12 +57,25 @@ export interface GuideFaq {
   updatedAt: string;
 }
 
+export interface GuideLocalizedVariant {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  keyTakeaways?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
+  translations?: GuideTranslationsMap;
+}
+
+export type GuideTranslationsMap = Record<string, GuideLocalizedVariant>;
+
 export interface GuideSummary {
   id: string;
   title: string;
   slug: string;
   excerpt: string;
   type: GuideType;
+  translations?: GuideTranslationsMap | null;
   coverImage?: string | null;
   coverImageAlt?: string | null;
   faqImage?: string | null;
@@ -179,6 +192,7 @@ export interface CreateGuidePayload {
   isFeatured?: boolean;
   metaTitle?: string;
   metaDescription?: string;
+  translations?: GuideTranslationsMap;
 }
 
 export interface UpdateGuidePayload extends Partial<CreateGuidePayload> {}

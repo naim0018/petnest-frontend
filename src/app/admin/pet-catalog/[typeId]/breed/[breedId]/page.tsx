@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable, { Column, TableBadge } from "@/components/common/DynamicTable";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/context/HeaderActionContext";
 import {
@@ -32,7 +32,6 @@ import {
   Pencil,
   Trash2,
   BookOpen,
-  Sparkles,
   Award,
   CheckCircle2,
   Clock,
@@ -228,11 +227,12 @@ export default function BreedDetailsPage({
         label: "Category",
         align: "center",
         sortable: true,
+        width: "180px",
         render: (guide) =>
           guide.category?.name ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-quicksand bg-coral/10 text-coral border border-coral/20">
+            <TableBadge variant="coral" width="w-40">
               {guide.category.name}
-            </span>
+            </TableBadge>
           ) : (
             <span className="text-xs text-ink-muted">—</span>
           ),
@@ -264,26 +264,18 @@ export default function BreedDetailsPage({
         label: "Status",
         align: "center",
         sortable: true,
+        width: "150px",
         render: (guide) => {
           const status = guide.status || "PUBLISHED";
           const isPub = status === "PUBLISHED";
           return (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold font-quicksand border",
-                isPub
-                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                  : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-              )}
+            <TableBadge
+              variant={isPub ? "success" : "warning"}
+              dot
+              width="w-32"
             >
-              <span
-                className={cn(
-                  "size-1.5 rounded-full",
-                  isPub ? "bg-emerald-500" : "bg-amber-500"
-                )}
-              />
               {status}
-            </span>
+            </TableBadge>
           );
         },
       },
@@ -375,10 +367,10 @@ export default function BreedDetailsPage({
             <div className="h-4 w-32 bg-surface-muted rounded animate-pulse" />
           </div>
         </div>
-        <div className="h-72 w-full bg-card border border-border-peach rounded-2xl animate-pulse" />
+        <div className="h-72 w-full bg-card border border-border-peach rounded-lg animate-pulse" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-card border border-border-peach rounded-xl" />
+            <div key={i} className="h-28 bg-card border border-border-peach rounded-lg" />
           ))}
         </div>
       </div>
@@ -387,7 +379,7 @@ export default function BreedDetailsPage({
 
   if (isBreedError || !breed) {
     return (
-      <div className="p-12 text-center rounded-xl bg-card border border-border-peach space-y-4">
+      <div className="p-12 text-center rounded-lg bg-card border border-border-peach space-y-4">
         <AlertCircle className="size-12 text-coral mx-auto" />
         <h3 className="text-lg font-bold font-quicksand text-ink">Breed Profile Not Found</h3>
         <p className="text-xs text-ink-muted max-w-md mx-auto">
@@ -414,7 +406,7 @@ export default function BreedDetailsPage({
     <div className="space-y-6">
       {/* Hero Profile Banner Card */}
       <AnimatedContainer delay={0.05}>
-        <div className="bg-card border border-border-peach rounded-2xl overflow-hidden shadow-xs relative">
+        <div className="bg-card border border-border-peach rounded-lg overflow-hidden shadow-xs relative">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             {/* Visual Photo Area */}
             <div className="lg:col-span-5 relative h-72 sm:h-80 lg:h-auto min-h-[280px] bg-gradient-to-br from-rose-50/80 via-orange-50/40 to-tint-rose/50 dark:from-tint-rose/20 dark:via-surface-soft dark:to-surface-muted overflow-hidden flex items-center justify-center">
@@ -528,7 +520,7 @@ export default function BreedDetailsPage({
               {/* Loved by Pet Lovers Strip */}
               <div className="p-3 rounded-xl bg-tint-rose/40 border border-border-peach/80 flex items-center justify-between text-xs font-medium">
                 <span className="flex items-center gap-1.5 font-bold text-ink">
-                  <Sparkles className="size-4 text-coral" />
+                  <Award className="size-4 text-coral" />
                   Verified PetNest Companion Standard
                 </span>
                 <span className="flex items-center gap-1.5 text-coral font-bold">
@@ -596,7 +588,7 @@ export default function BreedDetailsPage({
           renderGridCard={(guide) => (
             <div
               key={guide.id}
-              className="group bg-card rounded-2xl border border-border-peach overflow-hidden shadow-2xs hover:shadow-md hover:border-coral/50 transition-all duration-200 flex flex-col justify-between h-full"
+              className="group bg-card rounded-lg border border-border-peach overflow-hidden shadow-2xs hover:shadow-md hover:border-coral/50 transition-all duration-200 flex flex-col justify-between h-full"
             >
               {guide.coverImage && (
                 <div className="relative h-44 w-full bg-surface-muted overflow-hidden shrink-0">

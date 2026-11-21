@@ -16,6 +16,10 @@ import Pagination from "@/components/common/Pagination";
 import SearchField, {
   type SearchSuggestionItem,
 } from "@/components/common/SearchField";
+import {
+  TableBadge,
+  type TableBadgeVariant,
+} from "./TableComponents";
 
 // ============================================
 // 📦 Type Definitions
@@ -44,6 +48,20 @@ export interface Column<T> {
   hideOnMobile?: boolean;
   /** Disable automatic tooltip for this column */
   showTooltip?: boolean;
+  /** Uniform badge configuration for column cells */
+  badge?:
+    | boolean
+    | {
+        variant?:
+          | TableBadgeVariant
+          | ((value: unknown, row: T) => TableBadgeVariant);
+        width?: string;
+        dot?: boolean;
+      };
+  /** Preferred card placement in grid view: "left" or "right" column */
+  cardSide?: "left" | "right";
+  /** Optional alignment override in card view */
+  cardAlign?: "left" | "right" | "center";
 }
 
 export type ActionVariant =
@@ -113,6 +131,10 @@ export interface DynamicTableProps<T> {
   pageSizeOptions?: (number | "all")[];
   /** Callback when page size changes */
   onPageSizeChange?: (pageSize: number | "all") => void;
+  /** Optional key/name to persist table page size in localStorage (e.g. "admin-guides") */
+  storageKey?: string;
+  /** Alias for storageKey */
+  tableName?: string;
   /** Whether to show a sequential "No." column (default: true) */
   showRowNumber?: boolean;
   /** Optional base offset for row numbers (e.g. (page - 1) * pageSize) */
@@ -289,6 +311,8 @@ const DynamicTable = <T extends object>({
   pageSize = 10,
   pageSizeOptions,
   onPageSizeChange,
+  storageKey,
+  tableName,
   showRowNumber = true,
   rowNumberOffset,
   searchable = false,
@@ -504,15 +528,33 @@ const DynamicTable = <T extends object>({
       return column.render(row, data.indexOf(row));
     }
 
+    let val: unknown = "";
     if (typeof column.accessor === "function") {
-      return String(column.accessor(row));
+      val = column.accessor(row);
+    } else if (column.accessor) {
+      val = row[column.accessor as keyof T];
+    } else if (column.key in (row as Record<string, unknown>)) {
+      val = (row as Record<string, unknown>)[column.key];
     }
 
-    if (column.accessor) {
-      return String(row[column.accessor] ?? "");
+    if (column.badge && val !== undefined && val !== null && val !== "") {
+      const badgeConfig = typeof column.badge === "object" ? column.badge : {};
+      const variant =
+        typeof badgeConfig.variant === "function"
+          ? badgeConfig.variant(val, row)
+          : badgeConfig.variant || "coral";
+      return (
+        <TableBadge
+          variant={variant}
+          width={badgeConfig.width || "w-36"}
+          dot={badgeConfig.dot}
+        >
+          {String(val)}
+        </TableBadge>
+      );
     }
 
-    return "";
+    return String(val ?? "");
   };
 
   const getTooltipText = (row: T, column: Column<T>) => {
@@ -890,7 +932,7 @@ const DynamicTable = <T extends object>({
               {Array.from({ length: typeof pageSize === "number" ? pageSize : 8 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-border-peach bg-card p-5 animate-pulse shadow-xs flex flex-col justify-between space-y-4"
+                  className="rounded-lg border border-border-peach bg-card p-5 animate-pulse shadow-xs flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-2">
                     <div className="h-5 bg-surface-muted rounded-md w-3/4" />
@@ -960,35 +1002,65 @@ const DynamicTable = <T extends object>({
                   col.key.toLowerCase().includes("category")
                 );
 
-                const cardCols: Column<T>[] = [...baseCardCols];
+                const hasExplicitCardSide = baseCardCols.some(
+                  (col) => col.cardSide !== undefined
+                );
 
-                if (subtitleText && !hasCategoryCol) {
-                  const categoryCol: Column<T> = {
-                    key: "category",
-                    label: "Category",
-                    render: () => (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold font-quicksand bg-coral/10 text-coral border border-coral/20">
-                        {subtitleText}
-                      </span>
-                    ),
-                  };
+                let cardCols: Column<T>[] = [];
 
-                  const statusIdx = cardCols.findIndex((col) =>
-                    col.key.toLowerCase().includes("status")
+                if (hasExplicitCardSide) {
+                  const leftCols = baseCardCols.filter(
+                    (col) => col.cardSide === "left"
+                  );
+                  const rightCols = baseCardCols.filter(
+                    (col) => col.cardSide === "right"
+                  );
+                  const unassigned = baseCardCols.filter(
+                    (col) => !col.cardSide
                   );
 
-                  if (statusIdx !== -1) {
-                    if (statusIdx % 2 === 1) {
-                      // Status is in the right column of a 2-col row.
-                      // Place Category on the left of Status, and move the displaced item after Status.
-                      const displaced = cardCols[statusIdx - 1];
-                      cardCols.splice(statusIdx - 1, 1, categoryCol);
-                      cardCols.splice(statusIdx + 1, 0, displaced);
+                  unassigned.forEach((col) => {
+                    if (leftCols.length <= rightCols.length) {
+                      leftCols.push(col);
                     } else {
-                      cardCols.splice(statusIdx, 0, categoryCol);
+                      rightCols.push(col);
                     }
-                  } else {
-                    cardCols.unshift(categoryCol);
+                  });
+
+                  const maxRows = Math.max(leftCols.length, rightCols.length);
+                  for (let i = 0; i < maxRows; i++) {
+                    if (leftCols[i]) cardCols.push(leftCols[i]);
+                    if (rightCols[i]) cardCols.push(rightCols[i]);
+                  }
+                } else {
+                  cardCols = [...baseCardCols];
+
+                  if (subtitleText && !hasCategoryCol) {
+                    const categoryCol: Column<T> = {
+                      key: "category",
+                      label: "Category",
+                      render: () => (
+                        <TableBadge variant="coral" width="w-36">
+                          {subtitleText}
+                        </TableBadge>
+                      ),
+                    };
+
+                    const statusIdx = cardCols.findIndex((col) =>
+                      col.key.toLowerCase().includes("status")
+                    );
+
+                    if (statusIdx !== -1) {
+                      if (statusIdx % 2 === 1) {
+                        const displaced = cardCols[statusIdx - 1];
+                        cardCols.splice(statusIdx - 1, 1, categoryCol);
+                        cardCols.splice(statusIdx + 1, 0, displaced);
+                      } else {
+                        cardCols.splice(statusIdx, 0, categoryCol);
+                      }
+                    } else {
+                      cardCols.unshift(categoryCol);
+                    }
                   }
                 }
 
@@ -996,7 +1068,7 @@ const DynamicTable = <T extends object>({
                   <div
                     key={rowKey}
                     className={cn(
-                      "group bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden relative shadow-2xs hover:shadow-md hover:border-coral/50",
+                      "group bg-card rounded-lg border transition-all duration-200 flex flex-col justify-between overflow-hidden relative shadow-2xs hover:shadow-md hover:border-coral/50",
                       isSelected
                         ? "border-coral ring-2 ring-coral/30 bg-coral/[0.02]"
                         : "border-border-peach",
@@ -1070,16 +1142,34 @@ const DynamicTable = <T extends object>({
                         {/* Columns / Fields Grid */}
                         {cardCols.length > 0 && (
                           <div className="grid grid-cols-2 gap-x-4 gap-y-3.5 pt-4 mt-4 border-t border-border-peach">
-                            {cardCols.map((col) => {
+                            {cardCols.map((col, colIdx) => {
+                              const isRightCol = col.cardSide
+                                ? col.cardSide === "right"
+                                : colIdx % 2 === 1;
+                              const align =
+                                col.cardAlign || (isRightCol ? "right" : "left");
+
                               return (
                                 <div
                                   key={col.key}
-                                  className="flex flex-col min-w-0"
+                                  className={cn(
+                                    "flex flex-col min-w-0",
+                                    align === "right"
+                                      ? "items-end text-right"
+                                      : "items-start text-left",
+                                  )}
                                 >
                                   <span className="text-[11px] font-bold font-quicksand uppercase tracking-wider text-ink-muted mb-1">
                                     {col.label}
                                   </span>
-                                  <div className="text-xs font-bold text-ink flex items-center min-w-0 overflow-visible">
+                                  <div
+                                    className={cn(
+                                      "text-xs font-bold text-ink flex items-center min-w-0 overflow-visible",
+                                      align === "right"
+                                        ? "justify-end"
+                                        : "justify-start",
+                                    )}
+                                  >
                                     {getCellValue(row, col)}
                                   </div>
                                 </div>
@@ -1091,7 +1181,7 @@ const DynamicTable = <T extends object>({
 
                       {/* Actions */}
                       {actions && actions.length > 0 && (
-                        <div className="flex items-center justify-end gap-1.5 pt-3.5 border-t border-border-peach mt-4">
+                        <div className="flex items-center justify-end gap-2 pt-3.5 border-t border-border-peach mt-4">
                           {actions.map((action, idx) => (
                             <Tooltip key={idx} content={action.label}>
                               <button
@@ -1381,7 +1471,7 @@ const DynamicTable = <T extends object>({
                               column.hideOnMobile ? "hidden lg:table-cell" : "",
                             )}
                           >
-                            <Tooltip content={getTooltipText(row, column)}>
+                            <Tooltip content={getTooltipText(row, column)} fullWidth>
                               <div
                                 className={cn(
                                   !column.render && "truncate",
@@ -1624,6 +1714,7 @@ const DynamicTable = <T extends object>({
           onPageChange={setCurrentPage}
           pageSize={effectivePageSize}
           pageSizeOptions={pageSizeOptions}
+          storageKey={storageKey || tableName}
           onPageSizeChange={(newSize) => {
             setInternalPageSize(newSize);
             setCurrentPage(1);

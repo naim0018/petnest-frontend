@@ -13,10 +13,13 @@ import {
   useRemoveCategoryMutation,
 } from "@/store/Api/Guides/guides.api";
 import type { AdminCategory } from "@/store/Api/Guides/guides.types";
-import { getCategoryIcon } from "@/components/admin/guides/CategoryIcons";
+import {
+  getCategoryIcon,
+  CategoryIconDisplay,
+} from "@/components/admin/guides/CategoryIcons";
 import {
   Plus,
-  Sparkles,
+  CheckCircle2,
   BookOpen,
   Layers,
   Eye,
@@ -107,11 +110,10 @@ export default function GuideCategoriesPage() {
       label: "Category Name",
       sortable: true,
       render: (row) => {
-        const IconComponent = getCategoryIcon(row.icon);
         return (
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-md bg-coral-light flex items-center justify-center text-coral shrink-0 border border-coral/15">
-              <IconComponent className="size-5" />
+            <div className="size-9 rounded-md bg-coral-light flex items-center justify-center text-coral shrink-0 border border-coral/15 overflow-hidden p-1">
+              <CategoryIconDisplay icon={row.icon} className="size-5 object-contain" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -248,7 +250,7 @@ export default function GuideCategoriesPage() {
             }
             trendText={`${activeCount} active pillar topics`}
             trendType="positive"
-            icon={<Sparkles className="size-5" />}
+            icon={<CheckCircle2 className="size-5" />}
           />
         </div>
       </AnimatedContainer>
@@ -256,7 +258,7 @@ export default function GuideCategoriesPage() {
       {/* Main Table Content */}
       <AnimatedContainer delay={0.15}>
         {isError ? (
-          <div className="p-12 text-center rounded-xl bg-card border border-border-peach space-y-3">
+          <div className="p-12 text-center rounded-lg bg-card border border-border-peach space-y-3">
             <AlertCircle className="size-10 text-coral mx-auto" />
             <p className="font-bold text-ink font-quicksand">
               Failed to load categories
@@ -276,6 +278,7 @@ export default function GuideCategoriesPage() {
           </div>
         ) : (
           <DynamicTable
+            tableName="admin-guide-categories"
             data={categories}
             columns={columns}
             actions={actions}

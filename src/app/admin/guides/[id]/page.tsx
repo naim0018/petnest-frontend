@@ -100,6 +100,7 @@ export default function ViewGuideDetailPage({
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
+  const [activeLangTab, setActiveLangTab] = useState<"en" | "bn">("en");
 
   const handlePublishNow = async () => {
     if (!guide) return;
@@ -218,7 +219,7 @@ export default function ViewGuideDetailPage({
 
   if (isError || !guide) {
     return (
-      <div className="w-full p-12 text-center rounded-xl bg-card border border-border-peach space-y-4">
+      <div className="w-full p-12 text-center rounded-lg bg-card border border-border-peach space-y-4">
         <AlertCircle className="size-12 text-coral mx-auto" />
         <h3 className="text-lg font-bold font-quicksand text-ink">
           Guide Not Found
@@ -260,13 +261,91 @@ export default function ViewGuideDetailPage({
     (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
   );
 
+  const bnVariant = guide.translations?.bn;
+  const isBanglaActive = activeLangTab === "bn";
+  const hasBnContent = Boolean(bnVariant?.title?.trim());
+  const displayTitle = (isBanglaActive && hasBnContent ? bnVariant?.title : guide.title) || "";
+  const displayExcerpt = isBanglaActive && hasBnContent ? bnVariant?.excerpt : guide.excerpt;
+  const displayContent = (isBanglaActive && hasBnContent ? bnVariant?.content : guide.content) || "";
+
   return (
     <div className="w-full space-y-6 pb-12">
       <AnimatedContainer delay={0.05}>
         <div className="w-full bg-card border border-border-peach rounded-lg p-6 sm:p-10 space-y-7 shadow-xs">
+          {/* Language Switcher Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border-peach">
+            <div className="inline-flex p-1 bg-surface-muted rounded-lg border border-border-peach">
+              <button
+                type="button"
+                onClick={() => setActiveLangTab("en")}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                  activeLangTab === "en"
+                    ? "bg-card text-ink shadow-xs"
+                    : "text-ink-muted hover:text-ink"
+                )}
+              >
+                <span>🇺🇸</span>
+                <span>English (Primary)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLangTab("bn")}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                  activeLangTab === "bn"
+                    ? "bg-card text-ink shadow-xs"
+                    : "text-ink-muted hover:text-ink"
+                )}
+              >
+                <span>🇧🇩</span>
+                <span>বাংলা (Bangla)</span>
+                {hasBnContent && (
+                  <span
+                    className="size-2 rounded-full bg-emerald-500 inline-block"
+                    title="Curated translation present"
+                  />
+                )}
+              </button>
+            </div>
+
+            {isBanglaActive && hasBnContent && (
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-tint-mint text-success border border-success/30 flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5" />
+                Curated Bangla Translation (Active)
+              </span>
+            )}
+          </div>
+
+          {/* Missing Bangla Notice */}
+          {isBanglaActive && !hasBnContent && (
+            <div className="p-4 rounded-lg bg-tint-cream border border-warning/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-ink font-quicksand flex items-center gap-1.5">
+                  <AlertCircle className="size-4 text-warning shrink-0" />
+                  No Curated Bangla Translation Saved Yet
+                </p>
+                <p className="text-xs text-ink-muted">
+                  Showing default English below. Bangla visitors will see Google auto-translation until a curated Bangla version is added.
+                </p>
+              </div>
+              <Link href={`/admin/guides/${guide.id}/edit`}>
+                <PrimaryButton size="sm" variant="primary" rounded="md" className="shrink-0 font-bold">
+                  + Add Bangla Version
+                </PrimaryButton>
+              </Link>
+            </div>
+          )}
+
           {/* Title */}
-          <h1 className="text-2xl sm:text-4xl font-bold font-quicksand text-ink leading-tight break-words">
-            {guide.title}
+          <h1
+            translate={isBanglaActive && hasBnContent ? "no" : undefined}
+            className={cn(
+              "text-2xl sm:text-4xl font-bold font-quicksand text-ink leading-tight break-words",
+              isBanglaActive && hasBnContent && "notranslate"
+            )}
+          >
+            {displayTitle}
           </h1>
 
           {/* Author & Engagement Metadata Bar */}
@@ -365,20 +444,26 @@ export default function ViewGuideDetailPage({
           </div>
 
           {/* Executive Summary */}
-          {guide.excerpt && (
-            <div className="p-4 sm:p-5 rounded-xl bg-surface-muted/60 border-l-4 border-coral">
+          {displayExcerpt && (
+            <div
+              translate={isBanglaActive && hasBnContent ? "no" : undefined}
+              className={cn(
+                "p-4 sm:p-5 rounded-lg bg-surface-muted/60 border border-border-peach/70",
+                isBanglaActive && hasBnContent && "notranslate"
+              )}
+            >
               <p className="text-xs font-bold uppercase tracking-wider text-coral font-quicksand mb-1">
                 Executive Summary
               </p>
               <p className="text-sm sm:text-base text-ink font-medium leading-relaxed italic">
-                &ldquo;{guide.excerpt}&rdquo;
+                &ldquo;{displayExcerpt}&rdquo;
               </p>
             </div>
           )}
 
           {/* Hero Cover Photo */}
           {guide.coverImage && (
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border-peach bg-surface-muted shadow-xs">
+            <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border-peach bg-surface-muted shadow-xs">
               <Image
                 src={guide.coverImage}
                 alt={guide.coverImageAlt || guide.title}
@@ -390,8 +475,11 @@ export default function ViewGuideDetailPage({
           )}
 
           {/* Full Rendered Article Body */}
-          <div className="pt-2">
-            <ArticleContentRenderer content={guide.content} />
+          <div
+            translate={isBanglaActive && hasBnContent ? "no" : undefined}
+            className={cn("pt-2", isBanglaActive && hasBnContent && "notranslate")}
+          >
+            <ArticleContentRenderer content={displayContent} />
           </div>
 
           {guide.tags && guide.tags.length > 0 && (
@@ -416,7 +504,7 @@ export default function ViewGuideDetailPage({
 
       {/* Attached Guide FAQs Section */}
       <AnimatedContainer delay={0.12}>
-        <div className="w-full bg-card border border-border-peach rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
+        <div className="w-full bg-card border border-border-peach rounded-lg p-6 sm:p-8 space-y-5 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-peach pb-3.5">
             <div className="flex items-center gap-2">
               <HelpCircle className="size-5 text-coral" />
@@ -449,7 +537,7 @@ export default function ViewGuideDetailPage({
                 return (
                   <div
                     key={faq.id}
-                    className="rounded-xl border border-border-peach bg-surface-soft/50 overflow-hidden"
+                    className="rounded-lg border border-border-peach bg-surface-soft/50 overflow-hidden"
                   >
                     <button
                       type="button"

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
-import { ShoppingBag, UploadCloud, Save, Sparkles, AlertCircle } from "lucide-react";
+import { ShoppingBag, UploadCloud, Save, Sliders, AlertCircle } from "lucide-react";
 
 export default function CreateListingPage() {
   const [title, setTitle] = useState("");
@@ -71,7 +71,7 @@ export default function CreateListingPage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-xl border border-border-peach bg-card p-6 shadow-xs space-y-5">
+            <div className="rounded-lg border border-border-peach bg-card p-6 shadow-xs space-y-5">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2">
                   Listing Title <span className="text-coral">*</span>
@@ -134,9 +134,9 @@ export default function CreateListingPage() {
 
           {/* Settings Sidebar */}
           <div className="space-y-6">
-            <div className="rounded-xl border border-border-peach bg-card p-6 shadow-xs space-y-4">
+            <div className="rounded-lg border border-border-peach bg-card p-6 shadow-xs space-y-4">
               <h3 className="text-base font-bold text-ink flex items-center gap-2">
-                <Sparkles className="size-4 text-coral" /> Listing Settings
+                <Sliders className="size-4 text-coral" /> Listing Settings
               </h3>
 
               <div>

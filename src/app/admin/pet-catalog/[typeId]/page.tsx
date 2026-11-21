@@ -8,6 +8,7 @@ import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
 import { useHeaderAction } from "@/context/HeaderActionContext";
+import { usePersistedPageSize } from "@/hooks/usePersistedPageSize";
 import {
   useFindOneSpeciesQuery,
   useFindBreedsBySpeciesQuery,
@@ -22,10 +23,11 @@ import {
 import PetCatalogCard from "@/components/admin/pet-catalog/PetCatalogCard";
 import { PetCatalogGridSkeleton } from "@/components/admin/pet-catalog/PetCatalogCardSkeleton";
 import SearchField, { SearchSuggestionItem } from "@/components/common/SearchField";
+import Pagination from "@/components/common/Pagination";
 import {
   PawPrint,
   Plus,
-  Sparkles,
+  BookOpen,
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
@@ -70,19 +72,44 @@ export default function PetTypeBreedsPage({
   });
   const petSpecies = speciesResponse?.data;
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePersistedPageSize("pet-catalog-breeds", 12);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const [deleteBreed, setDeleteBreed] = useState<PetBreed | null>(null);
+  const [isSpeciesDeleteOpen, setIsSpeciesDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const numericLimit = pageSize === "all" ? 100 : pageSize;
+
   const {
     data: breedsResponse,
     isLoading: isLoadingBreeds,
     refetch: refetchBreeds,
   } = useFindBreedsBySpeciesQuery(
-    { speciesIdOrSlug: typeId, query: { limit: 10 } },
+    {
+      speciesIdOrSlug: typeId,
+      query: {
+        page: currentPage,
+        limit: numericLimit,
+        search: debouncedSearch.trim() || undefined,
+      },
+    },
     { skip: !typeId, refetchOnMountOrArgChange: true },
   );
 
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [deleteBreed, setDeleteBreed] = useState<PetBreed | null>(null);
-  const [isSpeciesDeleteOpen, setIsSpeciesDeleteOpen] = useState(false);
+  const breeds = useMemo(() => breedsResponse?.data?.items || [], [breedsResponse]);
+  const meta = breedsResponse?.data?.meta;
+  const totalBreeds = meta?.total ?? breeds.length;
+  const totalPages = meta?.totalPages ?? Math.max(1, Math.ceil(totalBreeds / numericLimit));
 
   // Place "Add Breed" button on the Header dynamically
   useEffect(() => {
@@ -101,8 +128,6 @@ export default function PetTypeBreedsPage({
 
     return () => setHeaderAction(null);
   }, [router, setHeaderAction, typeId]);
-
-  const breeds = useMemo(() => breedsResponse?.data?.items || [], [breedsResponse]);
 
   const filteredBreeds = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -143,7 +168,7 @@ export default function PetTypeBreedsPage({
         {/* Dynamic 4 Stats Row Skeleton */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
           {/* 1st Card: Pet Classification skeleton */}
-          <div className="p-4 sm:p-5 rounded-xl bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-lg bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs">
             <div className="h-3 w-28 bg-surface-muted rounded" />
             <div className="space-y-2 mt-2">
               <div className="h-6 w-36 bg-surface-muted rounded" />
@@ -154,7 +179,7 @@ export default function PetTypeBreedsPage({
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="p-4 sm:p-5 rounded-xl bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
+              className="p-4 sm:p-5 rounded-lg bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
             >
               <div className="flex justify-between items-center">
                 <div className="h-3 w-24 bg-surface-muted rounded" />
@@ -180,7 +205,7 @@ export default function PetTypeBreedsPage({
             count={8}
             hasTags={true}
             hasSubtitle={true}
-            gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
+            gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           />
         </div>
       </div>
@@ -189,7 +214,7 @@ export default function PetTypeBreedsPage({
 
   if (isError || !petSpecies) {
     return (
-      <div className="p-8 text-center rounded-xl bg-card border border-border-peach space-y-3">
+      <div className="p-8 text-center rounded-lg bg-card border border-border-peach space-y-3">
         <AlertCircle className="size-10 text-coral mx-auto" />
         <p className="font-bold text-ink text-base">Pet Classification Not Found</p>
         <p className="text-xs text-ink-muted">
@@ -215,7 +240,7 @@ export default function PetTypeBreedsPage({
           {/* 1st Card: Pet Type with Image / Mascot (links to Species Details) */}
           <div
             onClick={() => router.push(`/admin/pet-catalog/${typeId}/details`)}
-            className="relative overflow-hidden p-4 sm:p-5 rounded-xl bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group cursor-pointer"
+            className="relative overflow-hidden p-4 sm:p-5 rounded-lg bg-gradient-to-br from-card via-card to-coral-light/20 border border-border-peach/80 flex flex-col justify-between min-h-[125px] shadow-2xs transition-all duration-300 hover:shadow-md hover:border-coral/50 hover:-translate-y-0.5 group cursor-pointer"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -263,7 +288,7 @@ export default function PetTypeBreedsPage({
           {/* 2nd Card: Registered Breeds */}
           <StatsCard
             title="Registered Breeds"
-            value={`${breeds.length} Breeds`}
+            value={`${totalBreeds} Breeds`}
             trendText="Standardized profiles in catalog"
             trendType="positive"
             icon={<Award className="size-5" />}
@@ -275,7 +300,7 @@ export default function PetTypeBreedsPage({
             value="100% Verified"
             trendText="Includes temperament & size scales"
             trendType="positive"
-            icon={<Sparkles className="size-5" />}
+            icon={<BookOpen className="size-5" />}
           />
 
           {/* 4th Card: Breed Catalog Status */}
@@ -294,12 +319,12 @@ export default function PetTypeBreedsPage({
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3 shrink-0">
-              <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2">
-                <PawPrint className="size-4.5 text-coral" />
+              <h3 className="font-bold text-ink text-[18px] font-quicksand flex items-center gap-2">
+                <PawPrint className="size-5 text-coral" />
                 All Registered Breeds
               </h3>
               <span className="text-xs text-ink-muted font-medium hidden sm:inline">
-                Showing {filteredBreeds.length} of {breeds.length} breeds
+                Showing {filteredBreeds.length} of {totalBreeds} breeds
               </span>
             </div>
 
@@ -319,10 +344,10 @@ export default function PetTypeBreedsPage({
               count={8}
               hasTags={true}
               hasSubtitle={true}
-              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
+              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
             />
           ) : filteredBreeds.length === 0 ? (
-            <div className="p-12 text-center rounded-xl bg-card border border-border-peach">
+            <div className="p-12 text-center rounded-lg bg-card border border-border-peach">
               <AlertCircle className="size-10 text-ink-faint mx-auto mb-2 opacity-50" />
               <p className="font-bold text-ink font-quicksand">No Breeds Found</p>
               <p className="text-xs text-ink-muted mt-1">
@@ -342,7 +367,7 @@ export default function PetTypeBreedsPage({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {filteredBreeds.map((breed) => {
                 const formattedCare = formatCareLevel(breed.careLevel);
                 const formattedSizeText = formatSize(breed.size);
@@ -372,6 +397,30 @@ export default function PetTypeBreedsPage({
                   />
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalBreeds > 0 && (
+            <div className="rounded-lg overflow-hidden border border-border-peach shadow-2xs">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                itemsPerPage={numericLimit}
+                totalItems={totalBreeds}
+                onPageChange={(p) => {
+                  setCurrentPage(p);
+                  window.scrollTo({ top: 300, behavior: "smooth" });
+                }}
+                pageSize={pageSize}
+                pageSizeOptions={[8, 10, 12, 16, 24, "all"]}
+                storageKey="pet-catalog-breeds"
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+                label="Breeds"
+              />
             </div>
           )}
         </div>

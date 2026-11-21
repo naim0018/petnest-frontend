@@ -209,7 +209,7 @@ export default function EditPetTypePage({
   return (
     <div className="w-full space-y-6">
       <AnimatedContainer delay={0.05}>
-        <div className="bg-card border border-border-peach rounded-xl p-6 sm:p-8 shadow-xs">
+        <div className="bg-card border border-border-peach rounded-lg p-6 sm:p-8 shadow-xs">
           <div className="border-b border-border-peach pb-4 mb-6">
             <h2 className="text-xl font-bold font-quicksand text-ink flex items-center gap-2">
               <PawPrint className="size-5 text-coral" />

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable, { Column, TableBadge } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
 import Avatar from "@/components/common/Avatar";
@@ -128,15 +128,12 @@ export default function AllUsersPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-            row.isVerified
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-surface-muted text-ink-muted"
-          }`}
+        <TableBadge
+          variant={row.isVerified ? "success" : "neutral"}
+          width="w-28"
         >
           {row.isVerified ? "Verified" : "Unverified"}
-        </span>
+        </TableBadge>
       ),
     },
     {
@@ -145,15 +142,13 @@ export default function AllUsersPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-            row.status === "Active"
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-          }`}
+        <TableBadge
+          variant={row.status === "Active" ? "success" : "warning"}
+          dot
+          width="w-28"
         >
           {row.status}
-        </span>
+        </TableBadge>
       ),
     },
     {

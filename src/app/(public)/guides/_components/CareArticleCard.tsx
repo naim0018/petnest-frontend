@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Clock, ShieldCheck, Bookmark, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrentLanguage } from "@/hooks/useCurrentLanguage";
+import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 export type GuideCategoryPill =
   | "Nutrition"
@@ -31,6 +33,7 @@ export interface CareArticleCardData {
   slug?: string;
   order?: number;
   displayOrder?: number;
+  translations?: GuideTranslationsMap | null;
 }
 
 export interface CareArticleCardProps {
@@ -142,6 +145,13 @@ export default function CareArticleCard({
     slug = id,
   } = article;
 
+  const currentLang = useCurrentLanguage();
+  const isBangla = currentLang === "bn";
+  const nativeBn = isBangla ? article.translations?.bn : null;
+  const displayTitle = nativeBn?.title?.trim() || title;
+  const displayExcerpt = nativeBn?.excerpt?.trim() || excerpt;
+  const isNative = Boolean(isBangla && (nativeBn?.title || nativeBn?.excerpt));
+
   const categoryStyle =
     CATEGORY_COLOR_STYLES[category] || CATEGORY_COLOR_STYLES["General Care"];
 
@@ -189,12 +199,18 @@ export default function CareArticleCard({
         </div>
 
         {/* Card Body */}
-        <div className="p-4 sm:p-5 flex flex-col flex-1">
-          <h3 className="text-base sm:text-[17px] font-bold text-ink leading-snug line-clamp-2 h-11 sm:h-12 font-quicksand group-hover:text-coral transition-colors">
-            <Link href={`/guides/${slug}`}>{title}</Link>
+        <div
+          className={cn(
+            "p-4 sm:p-5 flex flex-col flex-1",
+            isNative && "notranslate"
+          )}
+          translate={isNative ? "no" : undefined}
+        >
+          <h3 className="text-base sm:text-[17px] font-bold text-ink leading-snug line-clamp-2 min-h-[2.75rem] sm:min-h-[3rem] font-quicksand group-hover:text-coral transition-colors">
+            <Link href={`/guides/${slug}`}>{displayTitle}</Link>
           </h3>
-          <p className="mt-2 text-sm text-ink-muted leading-relaxed line-clamp-3 h-[4.25rem] sm:h-[4.5rem] font-normal">
-            {excerpt}
+          <p className="mt-2 text-sm text-ink-muted leading-relaxed line-clamp-3 font-normal">
+            {displayExcerpt}
           </p>
 
           {/* Read More Link pushed to the end */}

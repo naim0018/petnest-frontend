@@ -1,7 +1,9 @@
+import React from "react";
+import { cn } from "@/lib/utils";
 import {
   FolderTree,
   UtensilsCrossed,
-  Sparkles,
+  GraduationCap,
   Heart,
   Stethoscope,
   ShieldAlert,
@@ -56,12 +58,12 @@ export const CATEGORY_ICON_PRESETS: CategoryIconPreset[] = [
     icon: UtensilsCrossed,
   },
   {
-    name: "Sparkles",
+    name: "GraduationCap",
     label: "Training & Skills",
     slug: "training-skills",
     description:
       "Positive reinforcement training, obedience cues, housebreaking, and skill-building guides.",
-    icon: Sparkles,
+    icon: GraduationCap,
   },
   {
     name: "Heart",
@@ -267,8 +269,47 @@ export const CATEGORY_ICON_PRESETS: CategoryIconPreset[] = [
 
 export const getCategoryIcon = (iconName?: string | null): LucideIcon => {
   if (!iconName) return FolderTree;
+  if (iconName.toLowerCase() === "sparkles") return GraduationCap;
   const match = CATEGORY_ICON_PRESETS.find(
     (p) => p.name.toLowerCase() === iconName.toLowerCase()
   );
   return match ? match.icon : FolderTree;
+};
+
+export const isCategoryIconUrl = (icon?: string | null): boolean => {
+  if (!icon) return false;
+  const clean = icon.trim().toLowerCase();
+  return (
+    clean.startsWith("http://") ||
+    clean.startsWith("https://") ||
+    clean.startsWith("/") ||
+    clean.startsWith("blob:") ||
+    clean.startsWith("data:") ||
+    /\.(svg|png|jpg|jpeg|webp|gif|avif)(\?.*)?$/i.test(clean)
+  );
+};
+
+export interface CategoryIconDisplayProps {
+  icon?: string | null;
+  className?: string;
+  alt?: string;
+}
+
+export const CategoryIconDisplay: React.FC<CategoryIconDisplayProps> = ({
+  icon,
+  className = "size-4",
+  alt = "Category icon",
+}) => {
+  if (isCategoryIconUrl(icon)) {
+    return (
+      <img
+        src={icon!}
+        alt={alt}
+        className={cn("object-contain shrink-0", className)}
+        loading="lazy"
+      />
+    );
+  }
+  const IconComponent = getCategoryIcon(icon);
+  return <IconComponent className={className} />;
 };

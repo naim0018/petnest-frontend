@@ -97,7 +97,7 @@ export default function UserProfile({
     : "/user/dashboard";
 
   const dashboardLabel = isAdminOrSuper
-    ? "Admin Dashboard"
+    ? "Dashboard"
     : isEditorial
     ? "Editorial Hub"
     : "Dashboard";
@@ -163,7 +163,7 @@ export default function UserProfile({
         className={cn(
           "bg-card rounded-md border border-border-peach shadow-xl z-50 overflow-hidden duration-150",
           alignment === "header" &&
-            "absolute left-3 right-3 sm:left-auto sm:right-0 top-full mt-3 w-auto sm:w-72 animate-in fade-in zoom-in-95",
+            "absolute left-3 right-3 sm:left-auto sm:right-0 top-full mt-[2px] w-auto sm:w-72 animate-in fade-in zoom-in-95",
           alignment === "sidebar-expanded" &&
             "absolute bottom-full mb-2.5 left-0 w-full animate-in fade-in slide-in-from-bottom-2",
           alignment === "sidebar-collapsed" &&

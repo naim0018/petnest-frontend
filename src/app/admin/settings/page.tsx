@@ -23,7 +23,6 @@ import {
   Server,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -106,7 +105,7 @@ export default function AdminSettingsPage() {
             <span className="text-coral">AI & Security</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
-            <Sparkles className="size-7 text-coral" />
+            <Cpu className="size-7 text-coral" />
             System & AI Settings
           </h1>
           <p className="text-sm text-muted-foreground mt-1">

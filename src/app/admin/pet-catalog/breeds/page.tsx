@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
-import DynamicTable, { Column } from "@/components/common/DynamicTable";
+import DynamicTable, { Column, TableBadge } from "@/components/common/DynamicTable";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { StatsCard } from "@/components/common/StatsCard";
-import { Dog, Plus, Filter, HeartHandshake, Award, Sparkles } from "lucide-react";
+import { Dog, Plus, Filter, HeartHandshake, Award, BookOpen } from "lucide-react";
 
 interface BreedRecord {
   id: string;
@@ -144,19 +144,20 @@ export default function BreedsPage() {
       label: "Care Needs",
       sortable: true,
       align: "center",
-      render: (row) => {
-        const color =
-          row.careLevel === "High"
-            ? "text-rose-600 bg-rose-50 dark:bg-rose-950/40"
-            : row.careLevel === "Moderate"
-            ? "text-amber-600 bg-amber-50 dark:bg-amber-950/40"
-            : "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40";
-        return (
-          <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${color}`}>
-            {row.careLevel}
-          </span>
-        );
-      },
+      render: (row) => (
+        <TableBadge
+          variant={
+            row.careLevel === "High"
+              ? "danger"
+              : row.careLevel === "Moderate"
+              ? "warning"
+              : "success"
+          }
+          width="w-28"
+        >
+          {row.careLevel}
+        </TableBadge>
+      ),
     },
     {
       key: "status",
@@ -164,15 +165,13 @@ export default function BreedsPage() {
       sortable: true,
       align: "center",
       render: (row) => (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-            row.status === "Active"
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-          }`}
+        <TableBadge
+          variant={row.status === "Active" ? "success" : "warning"}
+          dot
+          width="w-28"
         >
           {row.status}
-        </span>
+        </TableBadge>
       ),
     },
   ];
@@ -225,7 +224,7 @@ export default function BreedsPage() {
             value="286 Articles"
             trendText="89% catalog coverage"
             trendType="positive"
-            icon={<Sparkles className="size-5 text-coral" />}
+            icon={<BookOpen className="size-5 text-coral" />}
           />
         </div>
       </AnimatedContainer>

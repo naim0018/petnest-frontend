@@ -19,7 +19,7 @@ import SearchField, { SearchSuggestionItem } from "@/components/common/SearchFie
 import {
   PawPrint,
   Plus,
-  Sparkles,
+  BookOpen,
   Layers,
   Award,
   AlertCircle,
@@ -94,7 +94,7 @@ export default function PetCatalogPage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="p-4 sm:p-5 rounded-xl bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
+              className="p-4 sm:p-5 rounded-lg bg-card border border-border-peach/80 min-h-[125px] flex flex-col justify-between shadow-2xs"
             >
               <div className="flex justify-between items-center">
                 <div className="h-3 w-28 bg-surface-muted rounded" />
@@ -151,7 +151,7 @@ export default function PetCatalogPage() {
             value="100% Active"
             trendText="All classes linked to health guides"
             trendType="positive"
-            icon={<Sparkles className="size-5" />}
+            icon={<BookOpen className="size-5" />}
           />
           <StatsCard
             title="Taxonomy Standards"
@@ -167,8 +167,8 @@ export default function PetCatalogPage() {
       <AnimatedContainer delay={0.1}>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-            <h3 className="font-bold text-ink text-base font-quicksand flex items-center gap-2 shrink-0">
-              <Layers className="size-4.5 text-coral" />
+            <h3 className="font-bold text-ink text-[18px] font-quicksand flex items-center gap-2 shrink-0">
+              <Layers className="size-5 text-coral" />
               All Pet Types
             </h3>
             <div className="w-full sm:w-80 md:w-96">
@@ -190,7 +190,7 @@ export default function PetCatalogPage() {
               gridClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
             />
           ) : isError ? (
-            <div className="p-12 text-center rounded-xl bg-card border border-border-peach space-y-3">
+            <div className="p-12 text-center rounded-lg bg-card border border-border-peach space-y-3">
               <AlertCircle className="size-10 text-coral mx-auto" />
               <p className="font-bold text-ink font-quicksand">Failed to load pet catalog</p>
               <p className="text-xs text-ink-muted">There was an issue fetching taxonomy records.</p>
@@ -199,7 +199,7 @@ export default function PetCatalogPage() {
               </PrimaryButton>
             </div>
           ) : filteredPetTypes.length === 0 ? (
-            <div className="p-12 text-center rounded-xl bg-card border border-border-peach">
+            <div className="p-12 text-center rounded-lg bg-card border border-border-peach">
               <AlertCircle className="size-10 text-ink-faint mx-auto mb-2 opacity-50" />
               <p className="font-bold text-ink font-quicksand">No Pet Types Found</p>
               <p className="text-xs text-ink-muted mt-1">
@@ -219,7 +219,7 @@ export default function PetCatalogPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {filteredPetTypes.map((type) => {
                 const breedCount = type.breeds?.length ?? type._count?.breeds ?? 0;
                 const breedsHref = `/admin/pet-catalog/${type.slug || type.id}`;

@@ -8,7 +8,7 @@ import {
   PawPrint,
   ShoppingCart,
   type LucideIcon,
-  Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFeedFilter } from "@/context/FeedFilterContext";
@@ -115,7 +115,7 @@ export function FeedNavigationCard({
             onClick={handleShowAll}
             className="font-bold text-coral hover:underline cursor-pointer flex items-center gap-1"
           >
-            <Sparkles className="size-3 text-coral" />
+            <RotateCcw className="size-3 text-coral" />
             <small className="text-coral font-bold">Show All</small>
           </button>
         )}

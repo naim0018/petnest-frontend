@@ -67,7 +67,7 @@ export default function ReusableFAQ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-emerald-900/10 dark:border-border shadow-xs transition-all duration-300 p-6 sm:p-8 lg:p-10",
+        "relative overflow-hidden rounded-lg border border-emerald-900/10 dark:border-border shadow-xs transition-all duration-300 p-6 sm:p-8 lg:p-10",
         bgGradient,
         className
       )}
@@ -117,7 +117,7 @@ export default function ReusableFAQ({
               return (
                 <div
                   key={item.id}
-                  className="rounded-xl sm:rounded-2xl bg-white dark:bg-card shadow-xs border border-border/80 overflow-hidden transition-all duration-200 hover:border-coral/40 hover:shadow-sm"
+                  className="rounded-lg bg-white dark:bg-card shadow-xs border border-border/80 overflow-hidden transition-all duration-200 hover:border-coral/40 hover:shadow-sm"
                 >
                   <button
                     type="button"

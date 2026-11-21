@@ -26,6 +26,9 @@ import {
   ShieldAlert,
   ClipboardPaste,
   FileCode2,
+  Copy,
+  Download,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -507,7 +510,7 @@ export function ArticleContentRenderer({ content }: { content: string }) {
           return (
             <figure
               key={idx}
-              className="my-5 rounded-2xl overflow-hidden border border-border-peach bg-surface-muted/30 shadow-xs"
+              className="my-5 rounded-lg overflow-hidden border border-border-peach bg-surface-muted/30 shadow-xs"
             >
               <div className="relative w-full aspect-video bg-surface-muted">
                 <Image
@@ -566,7 +569,7 @@ export function ArticleContentRenderer({ content }: { content: string }) {
           return (
             <pre
               key={idx}
-              className="p-4 rounded-xl bg-surface-muted border border-border-peach overflow-x-auto text-xs font-mono text-ink leading-relaxed"
+              className="p-4 rounded-lg bg-surface-muted border border-border-peach overflow-x-auto text-xs font-mono text-ink leading-relaxed"
             >
               <code>{block.code}</code>
             </pre>
@@ -578,7 +581,7 @@ export function ArticleContentRenderer({ content }: { content: string }) {
           return (
             <div
               key={idx}
-              className="my-4 w-full overflow-x-auto rounded-xl border border-border-peach bg-card shadow-2xs"
+              className="my-4 w-full overflow-x-auto rounded-lg border border-border-peach bg-card shadow-2xs"
             >
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
@@ -638,7 +641,7 @@ export function ArticleContentRenderer({ content }: { content: string }) {
             <div
               key={idx}
               className={cn(
-                "my-4 p-4 rounded-xl border border-l-4 space-y-2",
+                "my-4 p-4 rounded-lg border border-l-4 space-y-2",
                 style.wrapper
               )}
             >
@@ -780,6 +783,7 @@ export default function RichTextEditor({
   // Paste Markdown / HTML Modal state
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
   const [rawPasteInput, setRawPasteInput] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
 
   // Block-based state for WYSIWYG editing where images render as visual previews
   const [blocks, setBlocks] = useState<EditorBlock[]>(() => parseMarkdownToBlocks(value));
@@ -1058,6 +1062,55 @@ export default function RichTextEditor({
     );
   };
 
+  // Copy full article Markdown content to clipboard
+  const handleCopyMarkdown = async () => {
+    const markdown = serializeBlocksToMarkdown(blocks) || value || "";
+    if (!markdown.trim()) {
+      toast.error("Article body is empty.");
+      return;
+    }
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(markdown);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = markdown;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      setIsCopied(true);
+      toast.success("Markdown copied to clipboard!");
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy markdown to clipboard.");
+    }
+  };
+
+  // Download article as a .md file
+  const handleDownloadMarkdown = () => {
+    const markdown = serializeBlocksToMarkdown(blocks) || value || "";
+    if (!markdown.trim()) {
+      toast.error("Article body is empty.");
+      return;
+    }
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `article-${Date.now()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Markdown file downloaded (.md)");
+  };
+
   const handleCloseModal = () => {
     if (imageUrl && imageUrl.startsWith("blob:") && selectedFile) {
       URL.revokeObjectURL(imageUrl);
@@ -1315,11 +1368,62 @@ export default function RichTextEditor({
               <ClipboardPaste className="size-3.5" />
               <span>Paste MD / HTML</span>
             </button>
+
+            {/* Copy Markdown Button */}
+            <button
+              type="button"
+              onClick={handleCopyMarkdown}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-muted text-ink hover:border-coral/40 hover:text-coral font-bold text-xs cursor-pointer transition-all border border-border-peach"
+              title="Copy full article Markdown to clipboard"
+            >
+              {isCopied ? (
+                <Check className="size-3.5 text-emerald-600" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+              <span>{isCopied ? "Copied!" : "Copy MD"}</span>
+            </button>
+
+            {/* Export Markdown File Button */}
+            <button
+              type="button"
+              onClick={handleDownloadMarkdown}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-muted text-ink hover:border-coral/40 hover:text-coral font-bold text-xs cursor-pointer transition-all border border-border-peach"
+              title="Download full article as a .md file"
+            >
+              <Download className="size-3.5" />
+              <span>Export .md</span>
+            </button>
           </div>
         ) : (
-          <span className="text-xs font-bold text-ink-muted uppercase tracking-wider font-quicksand pl-2">
-            Article Live Render Preview
-          </span>
+          <div className="flex items-center gap-2 pl-2">
+            <span className="text-xs font-bold text-ink-muted uppercase tracking-wider font-quicksand">
+              Article Live Render Preview
+            </span>
+            <div className="h-4 w-px bg-border-peach mx-1" />
+            <button
+              type="button"
+              onClick={handleCopyMarkdown}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-muted text-ink hover:border-coral/40 hover:text-coral font-bold text-xs cursor-pointer transition-all border border-border-peach"
+              title="Copy full article Markdown to clipboard"
+            >
+              {isCopied ? (
+                <Check className="size-3.5 text-emerald-600" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+              <span>{isCopied ? "Copied!" : "Copy MD"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadMarkdown}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-muted text-ink hover:border-coral/40 hover:text-coral font-bold text-xs cursor-pointer transition-all border border-border-peach"
+              title="Download full article as a .md file"
+            >
+              <Download className="size-3.5" />
+              <span>Export .md</span>
+            </button>
+          </div>
         )}
 
         {/* Write / Preview Tab Toggles */}

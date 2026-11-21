@@ -17,6 +17,7 @@ import type {
   GenerateGuideAiResponse,
   GuideDetailResponse,
   GuideQuery,
+  GuideSummary,
   LikeResponse,
   PaginatedGuidesResponse,
   PublicCategoriesResponse,
@@ -84,6 +85,19 @@ const guidesApi = baseApi.injectEndpoints({
       query: (slug) => `/guides/${slug}`,
       providesTags: (result, _error, slug) => [
         { type: "Guides", id: result?.data?.guide?.id || slug },
+      ],
+    }),
+
+    findRelatedGuides: builder.query<
+      { success: boolean; statusCode: number; data: GuideSummary[] },
+      { idOrSlug: string; limit?: number }
+    >({
+      query: ({ idOrSlug, limit = 4 }) => ({
+        url: `/guides/${encodeURIComponent(idOrSlug)}/related`,
+        params: { limit },
+      }),
+      providesTags: (_result, _error, { idOrSlug }) => [
+        { type: "Guides", id: `RELATED_${idOrSlug}` },
       ],
     }),
 
@@ -423,6 +437,7 @@ export const {
   useFindAllFaqsPublicQuery,
   useFindAllPublicGuidesQuery,
   useFindOnePublicGuideBySlugQuery,
+  useFindRelatedGuidesQuery,
   useFindGuidesBySpeciesQuery,
   useFindGuidesByBreedQuery,
   // User Engagement

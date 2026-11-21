@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { ImageIcon, Sparkles, Send, X } from "lucide-react";
+import { ImageIcon, Award, Send, X } from "lucide-react";
 import PrimaryButton from "@/components/common/PrimaryButton";
 
 interface CreatePostCardProps {
@@ -111,7 +111,7 @@ export function CreatePostCard({ onPostSubmit, onClose, textareaRef }: CreatePos
                 variant="outline"
                 size="sm"
                 className="hidden sm:inline-flex"
-                leftIcon={<Sparkles className="w-4 h-4 text-amber-500" />}
+                leftIcon={<Award className="w-4 h-4 text-amber-500" />}
               >
                 Pet Milestone
               </PrimaryButton>

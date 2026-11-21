@@ -257,7 +257,7 @@ export default function PetSelectorPopover({
       {isOpen && (
         <div
           className={cn(
-            "absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-3",
+            "absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-[2px]",
             "w-[calc(100vw-16px)] sm:w-[860px] lg:w-[940px] xl:w-[980px] max-w-[95vw]",
             "bg-popover border border-border-peach rounded-lg shadow-2xl z-[100]",
             "p-5 sm:p-6 animate-in fade-in zoom-in-95 duration-200 select-none",

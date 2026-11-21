@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import UserProfile from "@/components/common/UserProfile";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import LanguageSelector from "@/components/common/LanguageSelector";
 import Logo from "@/components/common/Logo";
 import CommonWrapper from "@/components/common/CommonWrapper";
 import {
@@ -258,7 +259,7 @@ export default function PublicNavbar() {
 
             {/* Notification Dropdown */}
             {isNotifOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-3 w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Notifications
@@ -329,7 +330,7 @@ export default function PublicNavbar() {
 
             {/* Messages Dropdown */}
             {isMessagesOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-3 w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Messages
@@ -365,6 +366,9 @@ export default function PublicNavbar() {
             )}
           </div>
 
+          {/* Language Selector */}
+          <LanguageSelector />
+
           {/* Theme Toggle */}
           <ThemeToggle />
 
@@ -394,12 +398,15 @@ export default function PublicNavbar() {
               <span className="text-xs font-bold text-ink uppercase tracking-wider">
                 PetNest Menu
               </span>
-              <button
-                onClick={() => setIsHomePopoverOpen(false)}
-                className="p-1 text-ink-faint hover:text-ink rounded-full"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <LanguageSelector />
+                <button
+                  onClick={() => setIsHomePopoverOpen(false)}
+                  className="p-1 text-ink-faint hover:text-ink rounded-full"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 mb-3">
