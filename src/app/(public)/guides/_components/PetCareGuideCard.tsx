@@ -70,7 +70,7 @@ export default function PetCareGuideCard({
   return (
     <article
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-emerald-900/10 shadow-sm transition-all duration-300 min-h-[380px] sm:min-h-[420px] flex items-center",
+        "relative overflow-hidden rounded-lg border border-emerald-900/10 shadow-sm transition-all duration-300 min-h-[380px] sm:min-h-[420px] flex items-center",
         bgGradient,
         className
       )}

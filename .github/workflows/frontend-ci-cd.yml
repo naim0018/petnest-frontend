@@ -48,37 +48,11 @@ jobs:
         run: npm run lint
 
   # ========================================================
-  # 2. Next.js Production Build
-  # ========================================================
-  build:
-    name: Next.js Standalone Build
-    needs: lint-and-typecheck
-    runs-on: ubuntu-latest
-    env:
-      NEXT_TELEMETRY_DISABLED: 1
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:5000"
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Next.js Application
-        run: npm run build
-
-  # ========================================================
-  # 3. Docker Image Build & Push to GHCR
+  # 2. Docker Image Build & Push to GHCR
   # ========================================================
   docker-build:
     name: Docker Build & Push
-    needs: build
+    needs: lint-and-typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -110,7 +84,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ========================================================
-  # 4. Deploy to Hostinger VPS
+  # 3. Deploy to Hostinger VPS
   # ========================================================
   deploy:
     name: Deploy to Hostinger VPS

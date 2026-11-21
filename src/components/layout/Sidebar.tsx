@@ -96,6 +96,95 @@ const hasActiveChild = (
   return menuItem.children.some((child) => isItemActive(child, pathname, allLeafPaths));
 };
 
+const CollapsedSidebarItem = ({
+  item,
+  pathname,
+  allLeafPaths,
+}: {
+  item: NavItem;
+  pathname: string;
+  allLeafPaths: string[];
+}) => {
+  const hasChildren = Boolean(item.children && item.children.length > 0);
+  const isActive = isItemActive(item, pathname, allLeafPaths);
+  const Icon = item.icon;
+
+  return (
+    <div className="relative group/collapsed flex justify-center w-full">
+      <Link
+        href={item.path}
+        className={cn(
+          "flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 outline-none",
+          isActive
+            ? "bg-coral text-white shadow-xs"
+            : "text-ink-muted hover:bg-surface-muted hover:text-ink"
+        )}
+      >
+        {Icon && (
+          <Icon
+            className={cn(
+              "size-5 shrink-0 transition-colors",
+              isActive ? "text-white" : "text-ink-muted group-hover/collapsed:text-ink"
+            )}
+          />
+        )}
+      </Link>
+
+      {/* Flyout Submenu if other pages (children) exist */}
+      {hasChildren ? (
+        <div className="absolute left-full top-1/2 -translate-y-1/2 pl-5 z-[60] pointer-events-none group-hover/collapsed:pointer-events-auto invisible opacity-0 group-hover/collapsed:visible group-hover/collapsed:opacity-100 transition-all duration-150 ease-out">
+          <div className="relative bg-card border border-border-peach shadow-xl rounded-xl p-2 min-w-[210px] w-max max-w-[280px] text-left">
+            {/* Triangular arrow pointing to icon */}
+            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 size-3 bg-card border-l border-b border-border-peach rotate-45 pointer-events-none" />
+
+            {/* Header: Item Group Name */}
+            <div className="px-3 py-1.5 border-b border-border-peach/60 mb-1 relative z-10">
+              <span className="text-[11px] font-bold text-ink-faint uppercase tracking-wider font-quicksand">
+                {item.name}
+              </span>
+            </div>
+
+            {/* Subpages Links */}
+            <div className="space-y-0.5 relative z-10">
+              {item.children!.map((child) => {
+                const isChildActive = isItemActive(child, pathname, allLeafPaths);
+                return (
+                  <Link
+                    key={child.path}
+                    href={child.path}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-quicksand transition-colors",
+                      isChildActive
+                        ? "bg-coral-light/70 text-coral font-bold"
+                        : "text-ink-muted hover:bg-surface-muted hover:text-ink"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "size-1.5 rounded-full shrink-0 transition-colors",
+                        isChildActive ? "bg-coral" : "bg-ink-faint/40"
+                      )}
+                    />
+                    <span className="truncate">{child.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Tooltip only if no other pages exist */
+        <div className="absolute left-full top-1/2 -translate-y-1/2 pl-5 z-[60] pointer-events-none invisible opacity-0 group-hover/collapsed:visible group-hover/collapsed:opacity-100 transition-all duration-150 ease-out">
+          <div className="relative bg-ink text-white text-xs font-bold font-quicksand px-2.5 py-1.5 rounded-md shadow-lg whitespace-nowrap">
+            <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 bg-ink rotate-45 pointer-events-none" />
+            <span className="relative z-10">{item.name}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SidebarItem = ({
   item,
   pathname,
@@ -297,7 +386,14 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
       </div>
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-3.5 py-5 space-y-6 scrollbar-thin scrollbar-thumb-border-peach">
+      <div
+        className={cn(
+          "flex-1 px-3.5 py-5 space-y-6",
+          showCollapsed
+            ? "overflow-visible"
+            : "overflow-y-auto scrollbar-thin scrollbar-thumb-border-peach"
+        )}
+      >
         {navGroups.map((group, idx) => (
           <div key={idx} className="space-y-1.5">
             {!showCollapsed && (
@@ -308,28 +404,12 @@ export default function Sidebar({ navGroups, isMobileOpen, setIsMobileOpen }: Si
             <div className="space-y-1">
               {group.items.map((item) =>
                 showCollapsed ? (
-                  <Link
+                  <CollapsedSidebarItem
                     key={item.path}
-                    href={item.path}
-                    className={cn(
-                      "flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-200",
-                      isItemActive(item, pathname, allLeafPaths)
-                        ? "bg-coral text-white shadow-xs"
-                        : "text-ink-muted hover:bg-surface-muted hover:text-ink"
-                    )}
-                    title={item.name}
-                  >
-                    {item.icon && (
-                      <item.icon
-                        className={cn(
-                          "size-5 shrink-0",
-                          isItemActive(item, pathname, allLeafPaths)
-                            ? "text-white"
-                            : "text-ink-muted hover:text-ink"
-                        )}
-                      />
-                    )}
-                  </Link>
+                    item={item}
+                    pathname={pathname}
+                    allLeafPaths={allLeafPaths}
+                  />
                 ) : (
                   <SidebarItem
                     key={item.path}

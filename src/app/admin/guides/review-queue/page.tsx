@@ -167,7 +167,7 @@ export default function ReviewQueuePage() {
     {
       label: "Approve Guide",
       icon: <Check className="size-4" />,
-      variant: "primary" as const,
+      variant: "success" as const,
       onClick: (row: ReviewQueueRecord) => handleApprove(row),
     },
     {

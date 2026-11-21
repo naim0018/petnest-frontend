@@ -14,10 +14,14 @@ import {
   useFindOneSpeciesQuery,
   useFindBreedsBySpeciesQuery,
 } from "@/store/Api/Pets/pets.api";
-import { useFindGuidesBySpeciesQuery } from "@/store/Api/Guides/guides.api";
+import {
+  useFindGuidesBySpeciesQuery,
+  useUpdateGuideMutation,
+} from "@/store/Api/Guides/guides.api";
 import type { GuideSummary } from "@/store/Api/Guides/guides.types";
 import { SpeciesDeleteModal } from "@/components/admin/pet-catalog/SpeciesModals";
 import type { PetSpecies } from "@/store/Api/Pets/pets.types";
+import { toast } from "sonner";
 import {
   PawPrint,
   Heart,
@@ -79,7 +83,10 @@ export default function SpeciesDetailsPage({
     data: guidesResponse,
     isLoading: isLoadingGuides,
   } = useFindGuidesBySpeciesQuery(
-    { speciesIdOrSlug: typeId, query: { limit: 6 } },
+    {
+      speciesIdOrSlug: typeId,
+      query: { limit: 100, sortBy: "displayOrder", sortOrder: "asc" },
+    },
     { skip: !typeId }
   );
   const guidesPayload = (guidesResponse?.data as any)?.items
@@ -88,6 +95,45 @@ export default function SpeciesDetailsPage({
   const connectedGuides: GuideSummary[] = guidesPayload?.items || [];
   const totalGuides =
     guidesPayload?.meta?.total ?? connectedGuides.length;
+
+  const [localGuides, setLocalGuides] = useState<GuideSummary[]>([]);
+  const [updateGuide] = useUpdateGuideMutation();
+
+  useEffect(() => {
+    if (connectedGuides.length > 0) {
+      setLocalGuides(connectedGuides);
+    }
+  }, [connectedGuides]);
+
+  const handleRowReorder = async (
+    reordered: GuideSummary[],
+    _fromIndex: number,
+    _toIndex: number
+  ) => {
+    setLocalGuides(reordered);
+
+    try {
+      const updates = reordered
+        .map((guide, idx) => ({ guide, newOrder: idx + 1 }))
+        .filter(({ guide, newOrder }) => (guide.displayOrder ?? 0) !== newOrder);
+
+      if (updates.length === 0) return;
+
+      await Promise.all(
+        updates.map(({ guide, newOrder }) =>
+          updateGuide({
+            id: guide.id,
+            payload: { displayOrder: newOrder },
+          }).unwrap()
+        )
+      );
+
+      toast.success("Guide display order updated");
+    } catch {
+      setLocalGuides(connectedGuides);
+      toast.error("Failed to update guide order");
+    }
+  };
 
   const speciesDisplayName = petSpecies?.name || "Pet Classification";
 
@@ -99,9 +145,9 @@ export default function SpeciesDetailsPage({
         align: "left",
         sortable: true,
         render: (guide) => (
-          <div className="flex items-center gap-3 py-1">
+          <div className="flex items-center gap-2.5 sm:gap-3 py-1 min-w-[200px] max-w-[260px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[500px]">
             {guide.coverImage ? (
-              <div className="relative size-12 rounded-lg bg-surface-muted overflow-hidden shrink-0 border border-border-peach">
+              <div className="relative size-10 sm:size-12 rounded-lg bg-surface-muted overflow-hidden shrink-0 border border-border-peach">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={guide.coverImage}
@@ -110,19 +156,20 @@ export default function SpeciesDetailsPage({
                 />
               </div>
             ) : (
-              <div className="size-12 rounded-lg bg-coral/10 text-coral flex items-center justify-center shrink-0 border border-coral/20">
-                <BookOpen className="size-5" />
+              <div className="size-10 sm:size-12 rounded-lg bg-coral/10 text-coral flex items-center justify-center shrink-0 border border-coral/20">
+                <BookOpen className="size-4 sm:size-5" />
               </div>
             )}
             <div className="min-w-0 flex-1">
               <Link
                 href={`/admin/guides/${guide.id}`}
-                className="font-bold text-sm text-ink hover:text-coral transition-colors line-clamp-1 font-quicksand"
+                className="font-bold text-xs sm:text-sm text-ink hover:text-coral transition-colors line-clamp-2 sm:line-clamp-1 font-quicksand leading-snug"
+                title={guide.title}
               >
                 {guide.title}
               </Link>
               {guide.excerpt && (
-                <p className="text-xs text-ink-muted line-clamp-1 mt-0.5">
+                <p className="text-[11px] sm:text-xs text-ink-muted line-clamp-1 mt-0.5 leading-snug">
                   {guide.excerpt}
                 </p>
               )}
@@ -567,15 +614,17 @@ export default function SpeciesDetailsPage({
         <DynamicTable
           title="Connected Care Guides"
           countBadge={totalGuides}
-          data={connectedGuides}
+          data={localGuides.length > 0 ? localGuides : connectedGuides}
           columns={guideColumns}
           loading={isLoadingGuides}
           enableViewToggle
-          defaultViewMode="grid"
+          defaultViewMode="table"
+          reorderable
+          rowNumberHeader="No."
+          onRowReorder={handleRowReorder}
           searchable
           searchPlaceholder="Search connected care guides..."
           pagination
-          pageSize={6}
           showFilterButton={false}
           gridClassName="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           renderGridCard={(guide) => (

@@ -147,7 +147,7 @@ export default function GuideStatusDropdown({
               if (props.onClick) props.onClick(e);
             }}
             className={cn(
-              "group inline-flex items-center justify-between w-[136px] h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-150 cursor-pointer select-none",
+              "group inline-flex items-center justify-between w-[150px] h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-150 cursor-pointer select-none",
               currentConfig.badgeClass,
               isUpdating && "opacity-80 cursor-wait",
               disabled && "opacity-50 cursor-not-allowed",

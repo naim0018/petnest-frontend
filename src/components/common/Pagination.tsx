@@ -2,14 +2,22 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import PrimaryButton from "@/components/common/PrimaryButton";
+import CommonSelect from "@/components/common/CommonSelect";
 
-interface PaginationProps {
+export const DEFAULT_PAGE_SIZE_OPTIONS: (number | "all")[] = [
+  10, 20, 30, 40, 50, 100, "all",
+];
+
+export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   itemsPerPage: number;
   totalItems: number;
   onPageChange: (page: number) => void;
   label?: string;
+  pageSize?: number | "all";
+  pageSizeOptions?: (number | "all")[];
+  onPageSizeChange?: (pageSize: number | "all") => void;
 }
 
 const Pagination = ({
@@ -19,6 +27,9 @@ const Pagination = ({
   totalItems,
   onPageChange,
   label = "Results",
+  pageSize,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  onPageSizeChange,
 }: PaginationProps) => {
   const getPageButtons = () => {
     const buttons: (number | string)[] = [];
@@ -43,21 +54,51 @@ const Pagination = ({
     );
   };
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const isAll = pageSize === "all" || itemsPerPage >= totalItems;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = isAll ? totalItems : Math.min(currentPage * itemsPerPage, totalItems);
 
   if (totalItems === 0) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-5 border-t border-border bg-primary-background">
-      {/* Showing X-Y of Z */}
-      <div className="text-sm font-medium text-secondary-text">
-        Showing{" "}
-        <span className="text-primary-text font-semibold">
-          {startItem}-{endItem}
-        </span>{" "}
-        of <span className="text-primary-text font-semibold">{totalItems}</span>{" "}
-        {label}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-border-peach bg-card">
+      {/* Left side: Showing X-Y of Z + Page Size Dropdown */}
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm font-medium text-ink-muted">
+        <div>
+          Showing{" "}
+          <span className="text-ink font-semibold">
+            {startItem}-{endItem}
+          </span>{" "}
+          of <span className="text-ink font-semibold">{totalItems}</span>{" "}
+          {label}
+        </div>
+
+        {onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-muted">Show:</span>
+            <CommonSelect
+              options={pageSizeOptions.map((opt) => ({
+                label: opt === "all" ? "All" : `${opt} / page`,
+                value: String(opt),
+              }))}
+              value={String(
+                pageSize ??
+                  (itemsPerPage >= totalItems && totalItems > 0
+                    ? "all"
+                    : itemsPerPage),
+              )}
+              onChange={(val) => {
+                const nextVal = val === "all" ? "all" : Number(val);
+                onPageSizeChange(nextVal);
+              }}
+              size="sm"
+              className="h-8 text-xs font-bold font-quicksand rounded-lg border-border-peach bg-surface-soft text-ink hover:border-coral/50 cursor-pointer min-w-[110px]"
+              containerClassName="w-auto inline-flex"
+              popoverClassName="min-w-[125px] rounded-lg shadow-lg"
+              listClassName="overflow-hidden max-h-none"
+            />
+          </div>
+        )}
       </div>
 
       {/* Pagination Buttons */}
@@ -80,7 +121,7 @@ const Pagination = ({
               btn === "..." ? (
                 <span
                   key={idx}
-                  className="w-9 text-center text-secondary-text/40 font-bold select-none"
+                  className="w-9 text-center text-ink-muted/40 font-bold select-none"
                 >
                   ...
                 </span>

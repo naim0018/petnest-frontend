@@ -13,7 +13,9 @@ export type GuideCategoryPill =
   | "Grooming"
   | "Behavior"
   | "Life Stage"
-  | "General Care";
+  | "General Care"
+  | "Basic"
+  | string;
 
 export interface CareArticleCardData {
   id: string;
@@ -21,6 +23,8 @@ export interface CareArticleCardData {
   excerpt: string;
   readTime: string;
   category: GuideCategoryPill;
+  categoryId?: string;
+  categorySlug?: string;
   image: string;
   imageAlt?: string;
   expertReviewed?: boolean;
@@ -36,9 +40,52 @@ export interface CareArticleCardProps {
 }
 
 const CATEGORY_COLOR_STYLES: Record<
-  GuideCategoryPill,
+  string,
   { bg: string; text: string; border: string }
 > = {
+  // Database Categories
+  "Behavior & Shows": {
+    bg: "bg-[#dcfce7] dark:bg-[#152b20]",
+    text: "text-[#15803d] dark:text-[#86efac]",
+    border: "border-[#bbf7d0]/60 dark:border-[#86efac]/30",
+  },
+  "Emergency & First Aid": {
+    bg: "bg-[#fee2e2] dark:bg-[#3b1219]",
+    text: "text-[#b91c1c] dark:text-[#fca5a5]",
+    border: "border-[#fecaca]/60 dark:border-[#b91c1c]/30",
+  },
+  "Grooming & Hygiene": {
+    bg: "bg-[#e0f2fe] dark:bg-[#172838]",
+    text: "text-[#0369a1] dark:text-[#7dd3fc]",
+    border: "border-[#bae6fd]/60 dark:border-[#7dd3fc]/30",
+  },
+  "Health & Wellness": {
+    bg: "bg-[#ffe4e6] dark:bg-[#321d21]",
+    text: "text-[#be123c] dark:text-[#ffaaaa]",
+    border: "border-[#fecdd3]/60 dark:border-[#ffaaaa]/30",
+  },
+  Medicine: {
+    bg: "bg-[#f5f3ff] dark:bg-[#281d3d]",
+    text: "text-[#6366f1] dark:text-[#a5b4fc]",
+    border: "border-[#ddd6fe]/60 dark:border-[#6366f1]/30",
+  },
+  "Nutrition & Diet": {
+    bg: "bg-[#fff2d6] dark:bg-[#332e18]",
+    text: "text-[#8a5300] dark:text-[#ffe08a]",
+    border: "border-[#fed7aa]/60 dark:border-[#ffe08a]/30",
+  },
+  "Training & Skills": {
+    bg: "bg-[#f3e8ff] dark:bg-[#281f38]",
+    text: "text-[#7e22ce] dark:text-[#d8b4fe]",
+    border: "border-[#e9d5ff]/60 dark:border-[#d8b4fe]/30",
+  },
+  Basic: {
+    bg: "bg-[#eafbf1] dark:bg-[#152e22]",
+    text: "text-[#15803d] dark:text-[#86efac]",
+    border: "border-[#bbf7d0]/60 dark:border-[#15803d]/40",
+  },
+
+  // Fallbacks and aliases
   Nutrition: {
     bg: "bg-[#fff2d6] dark:bg-[#332e18]",
     text: "text-[#8a5300] dark:text-[#ffe08a]",
@@ -109,13 +156,13 @@ export default function CareArticleCard({
   return (
     <article
       className={cn(
-        "group bg-card text-card-foreground rounded-2xl border border-border overflow-hidden shadow-xs hover:shadow-md hover:border-coral/40 transition-all duration-300 flex flex-col justify-between",
+        "group bg-card text-card-foreground rounded-lg border border-border overflow-hidden shadow-xs hover:shadow-md hover:border-coral/40 transition-all duration-300 flex flex-col justify-between h-full",
         className
       )}
     >
-      <div>
+      <div className="flex flex-col flex-1">
         {/* Card Media Header */}
-        <div className="relative h-48 sm:h-52 w-full bg-surface-muted overflow-hidden">
+        <div className="relative h-56 sm:h-64 w-full bg-surface-muted overflow-hidden">
           <Link href={`/guides/${slug}`} className="block w-full h-full">
             <Image
               src={image}
@@ -142,16 +189,16 @@ export default function CareArticleCard({
         </div>
 
         {/* Card Body */}
-        <div className="p-4 sm:p-5 space-y-2.5">
-          <h3 className="text-base sm:text-[17px] font-bold text-ink leading-snug line-clamp-2 font-quicksand group-hover:text-coral transition-colors">
+        <div className="p-4 sm:p-5 flex flex-col flex-1">
+          <h3 className="text-base sm:text-[17px] font-bold text-ink leading-snug line-clamp-2 h-11 sm:h-12 font-quicksand group-hover:text-coral transition-colors">
             <Link href={`/guides/${slug}`}>{title}</Link>
           </h3>
-          <p className="text-sm text-ink-muted leading-relaxed line-clamp-3 font-normal">
+          <p className="mt-2 text-sm text-ink-muted leading-relaxed line-clamp-3 h-[4.25rem] sm:h-[4.5rem] font-normal">
             {excerpt}
           </p>
 
-          {/* Read More Link */}
-          <div className="pt-1">
+          {/* Read More Link pushed to the end */}
+          <div className="mt-auto pt-3">
             <Link
               href={`/guides/${slug}`}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-coral-dark group/btn transition-colors font-quicksand"

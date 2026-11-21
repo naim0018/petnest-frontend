@@ -109,7 +109,7 @@ export default function GuideCategoryDropdown({
               if (props.onClick) props.onClick(e);
             }}
             className={cn(
-              "group inline-flex items-center justify-between min-w-[130px] max-w-[160px] h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-150 cursor-pointer select-none bg-surface-muted/60 text-ink border-border-peach hover:border-coral/40 hover:bg-coral-light/20",
+              "group inline-flex items-center justify-between w-[150px] h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-150 cursor-pointer select-none bg-surface-muted/60 text-ink border-border-peach hover:border-coral/40 hover:bg-coral-light/20",
               isUpdating && "opacity-80 cursor-wait",
               disabled && "opacity-50 cursor-not-allowed",
               open && "ring-2 ring-coral/20 border-coral/40",

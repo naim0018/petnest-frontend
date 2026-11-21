@@ -47,6 +47,8 @@ import { toast } from "sonner";
 import BulkGuideImportModal from "@/components/admin/guides/BulkGuideImportModal";
 import GuideStatusDropdown from "@/components/admin/guides/GuideStatusDropdown";
 import GuideCategoryDropdown from "@/components/admin/guides/GuideCategoryDropdown";
+import GuideSpeciesDropdown from "@/components/admin/guides/GuideSpeciesDropdown";
+import GuideBreedDropdown from "@/components/admin/guides/GuideBreedDropdown";
 
 const PAGE_SIZE = 10;
 
@@ -119,6 +121,7 @@ export default function AllGuidesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sortValue, setSortValue] = useState("updatedAt:desc");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(10);
 
   // Delete confirmation modal state
   const [guideToDelete, setGuideToDelete] = useState<GuideSummary | null>(null);
@@ -144,7 +147,7 @@ export default function AllGuidesPage() {
     isFetching: isFetchingGuides,
   } = useFindAllEditorialQuery({
     page,
-    limit: PAGE_SIZE,
+    limit: pageSize === "all" ? 1000 : pageSize,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(categoryFilter ? { category: categoryFilter } : {}),
     ...(speciesFilter ? { species: speciesFilter } : {}),
@@ -334,7 +337,7 @@ export default function AllGuidesPage() {
       render: (row) => {
         const CategoryIcon = getCategoryIcon(row.category?.icon);
         return (
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-[220px]">
             {row.coverImage ? (
               <div className="relative size-10 rounded-lg overflow-hidden border border-border-peach bg-surface-muted shrink-0">
                 <Image
@@ -358,21 +361,6 @@ export default function AllGuidesPage() {
                 {row.title}
               </Link>
               <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-xs">
-                {row.species?.name && (
-                  <>
-                    <span className="text-ink-muted font-medium">
-                      {row.species.name}
-                      {row.breeds && row.breeds.length > 0
-                        ? ` (${row.breeds[0].name}${
-                            row.breeds.length > 1
-                              ? ` +${row.breeds.length - 1}`
-                              : ""
-                          })`
-                        : ""}
-                    </span>
-                    <span className="text-ink-faint">•</span>
-                  </>
-                )}
                 <span className="text-ink-muted">
                   {row.readTimeMinutes || 1} min read
                 </span>
@@ -395,12 +383,45 @@ export default function AllGuidesPage() {
       label: "Category",
       sortable: true,
       align: "center",
+      width: "170px",
       render: (row) => (
         <GuideCategoryDropdown
           guideId={row.id}
           currentCategoryId={row.category?.id}
           currentCategoryName={row.category?.name}
           currentCategoryIcon={row.category?.icon}
+          guideTitle={row.title}
+        />
+      ),
+    },
+    {
+      key: "species",
+      label: "Species",
+      sortable: true,
+      align: "center",
+      width: "170px",
+      render: (row) => (
+        <GuideSpeciesDropdown
+          guideId={row.id}
+          currentSpeciesId={row.species?.id}
+          currentSpeciesName={row.species?.name}
+          guideTitle={row.title}
+        />
+      ),
+    },
+    {
+      key: "breeds",
+      label: "Breed",
+      sortable: false,
+      align: "center",
+      width: "170px",
+      render: (row) => (
+        <GuideBreedDropdown
+          guideId={row.id}
+          speciesId={row.species?.id}
+          speciesName={row.species?.name}
+          currentBreedIds={row.breeds?.map((b) => b.id) || []}
+          currentBreeds={row.breeds || []}
           guideTitle={row.title}
         />
       ),
@@ -459,6 +480,7 @@ export default function AllGuidesPage() {
       label: "Status",
       sortable: true,
       align: "center",
+      width: "170px",
       render: (row) => (
         <GuideStatusDropdown
           guideId={row.id}
@@ -543,6 +565,8 @@ export default function AllGuidesPage() {
           data={guides}
           columns={columns}
           loading={isLoadingGuides}
+          showRowNumber
+          rowNumberOffset={(page - 1) * (pageSize === "all" ? 0 : pageSize)}
           searchable
           searchValue={searchInput}
           onSearchChange={setSearchInput}
@@ -659,37 +683,43 @@ export default function AllGuidesPage() {
           actions={[
             {
               label: "View",
-              icon: <Eye className="size-4" />,
-              variant: "secondary",
+              icon: <Eye className="size-3.5" />,
+              variant: "info",
               onClick: (row) => router.push(`/admin/guides/${row.id}`),
             },
             {
               label: "Edit",
-              icon: <Pencil className="size-4" />,
+              icon: <Pencil className="size-3.5" />,
               variant: "primary",
               onClick: (row) => router.push(`/admin/guides/${row.id}/edit`),
             },
             {
               label: "FAQs",
-              icon: <HelpCircle className="size-4" />,
-              variant: "secondary",
+              icon: <HelpCircle className="size-3.5" />,
+              variant: "purple",
               onClick: (row) => router.push(`/admin/guides/${row.id}/faqs`),
             },
             {
               label: "Delete",
-              icon: <Trash2 className="size-4" />,
+              icon: <Trash2 className="size-3.5" />,
               variant: "danger",
               onClick: (row) => setGuideToDelete(row),
             },
           ]}
           footer={
-            meta && meta.totalPages > 1 ? (
+            meta && meta.total > 0 ? (
               <Pagination
                 currentPage={meta.page}
                 totalPages={meta.totalPages}
-                itemsPerPage={meta.limit}
+                itemsPerPage={pageSize === "all" ? meta.total : meta.limit}
                 totalItems={meta.total}
                 onPageChange={(nextPage) => setPage(nextPage)}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 20, 30, 40, 50, 100, "all"]}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setPage(1);
+                }}
                 label="guides"
               />
             ) : undefined

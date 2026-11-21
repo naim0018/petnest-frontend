@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Tooltip } from "@/components/common/Tooltip";
 import {
   ChevronUp,
@@ -9,6 +9,7 @@ import {
   Filter,
   LayoutList,
   LayoutGrid,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/common/Pagination";
@@ -45,6 +46,56 @@ export interface Column<T> {
   showTooltip?: boolean;
 }
 
+export type ActionVariant =
+  | "primary"
+  | "danger"
+  | "secondary"
+  | "info"
+  | "warning"
+  | "success"
+  | "purple"
+  | "amber";
+
+export interface TableAction<T> {
+  label: string;
+  onClick: (row: T, index: number) => void;
+  icon?: React.ReactNode;
+  variant?: ActionVariant;
+  className?: string;
+}
+
+export const getActionVariantClass = (
+  variant?: ActionVariant | string,
+  customClass?: string,
+): string => {
+  if (customClass) return customClass;
+  switch (variant) {
+    case "primary":
+      // PetNest Coral brand
+      return "text-coral bg-coral/10 border-coral/25 hover:bg-coral hover:text-white hover:border-coral";
+    case "danger":
+      // Destructive / Rose
+      return "text-rose-500 bg-rose-50 border-rose-200 hover:bg-rose-500 hover:text-white hover:border-rose-500 dark:bg-rose-950/30 dark:border-rose-900/40";
+    case "info":
+      // Sky blue
+      return "text-sky-600 bg-sky-50 border-sky-200 hover:bg-sky-500 hover:text-white hover:border-sky-500 dark:bg-sky-950/30 dark:border-sky-900/40 dark:text-sky-400";
+    case "warning":
+    case "amber":
+      // Sunshine / Amber
+      return "text-amber-600 bg-amber-50 border-amber-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-400";
+    case "purple":
+      // Lavender / Purple
+      return "text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 dark:bg-purple-950/30 dark:border-purple-900/40 dark:text-purple-400";
+    case "success":
+      // Mint / Emerald
+      return "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400";
+    case "secondary":
+    default:
+      // Neutral ink / surface
+      return "text-ink-muted bg-surface-muted border-border-peach hover:bg-ink hover:text-white hover:border-ink";
+  }
+};
+
 export interface DynamicTableProps<T> {
   /** Array of data to display */
   data: T[];
@@ -57,7 +108,15 @@ export interface DynamicTableProps<T> {
   /** Enable pagination */
   pagination?: boolean;
   /** Items per page (default: 10) */
-  pageSize?: number;
+  pageSize?: number | "all";
+  /** Available page size choices (default: [10, 20, 30, 40, 50, 100, "all"]) */
+  pageSizeOptions?: (number | "all")[];
+  /** Callback when page size changes */
+  onPageSizeChange?: (pageSize: number | "all") => void;
+  /** Whether to show a sequential "No." column (default: true) */
+  showRowNumber?: boolean;
+  /** Optional base offset for row numbers (e.g. (page - 1) * pageSize) */
+  rowNumberOffset?: number;
   /** Enable search/filter */
   searchable?: boolean;
   /** Search placeholder text */
@@ -75,12 +134,7 @@ export interface DynamicTableProps<T> {
   /** Custom search function */
   onSearch?: (query: string, data: T[]) => T[];
   /** Row actions (edit, delete, etc.) */
-  actions?: {
-    label: string;
-    onClick: (row: T, index: number) => void;
-    icon?: React.ReactNode;
-    variant?: "primary" | "danger" | "secondary";
-  }[];
+  actions?: TableAction<T>[];
   /** Bulk actions for selected rows */
   bulkActions?: {
     label: string;
@@ -120,6 +174,12 @@ export interface DynamicTableProps<T> {
   isFilterActive?: boolean;
   /** Count of active filter parameters displayed as a pill */
   activeFilterCount?: number;
+  /** Enable row drag & drop reordering */
+  reorderable?: boolean;
+  /** Custom label for the row number / order column (default: "No.") */
+  rowNumberHeader?: string;
+  /** Callback when rows are reordered via drag & drop */
+  onRowReorder?: (newData: T[], fromIndex: number, toIndex: number) => void;
   /** Enable view mode switching between table and grid (default: true) */
   enableViewToggle?: boolean;
   /** Current view mode if controlled: "table" | "grid" */
@@ -227,6 +287,10 @@ const DynamicTable = <T extends object>({
   onSelectionChange,
   pagination = false,
   pageSize = 10,
+  pageSizeOptions,
+  onPageSizeChange,
+  showRowNumber = true,
+  rowNumberOffset,
   searchable = false,
   searchPlaceholder = "Search...",
   searchValue,
@@ -253,6 +317,9 @@ const DynamicTable = <T extends object>({
   onFilterClick,
   isFilterActive = false,
   activeFilterCount,
+  reorderable = false,
+  rowNumberHeader = "No.",
+  onRowReorder,
   enableViewToggle = true,
   viewMode,
   defaultViewMode = "table",
@@ -292,6 +359,8 @@ const DynamicTable = <T extends object>({
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // ============================================
   // 🔍 Search & Filter Logic
@@ -349,13 +418,26 @@ const DynamicTable = <T extends object>({
   // ============================================
   // 📄 Pagination Logic
   // ============================================
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, currentPage, pageSize]);
+  const [internalPageSize, setInternalPageSize] = useState<number | "all">(pageSize);
+  const effectivePageSize = onPageSizeChange ? pageSize : internalPageSize;
 
-  const totalPages = Math.ceil(sortedData.length / pageSize);
+  useEffect(() => {
+    setInternalPageSize(pageSize);
+  }, [pageSize]);
+
+  const paginatedData = useMemo(() => {
+    if (!pagination || effectivePageSize === "all") {
+      return sortedData;
+    }
+    const startIndex = (currentPage - 1) * effectivePageSize;
+    const endIndex = startIndex + effectivePageSize;
+    return sortedData.slice(startIndex, endIndex);
+  }, [pagination, sortedData, currentPage, effectivePageSize]);
+
+  const totalPages =
+    !pagination || effectivePageSize === "all"
+      ? 1
+      : Math.ceil(sortedData.length / effectivePageSize);
 
   // ============================================
   // 🎯 Event Handlers
@@ -805,7 +887,7 @@ const DynamicTable = <T extends object>({
                 gridClassName,
               )}
             >
-              {Array.from({ length: pageSize || 8 }).map((_, idx) => (
+              {Array.from({ length: typeof pageSize === "number" ? pageSize : 8 }).map((_, idx) => (
                 <div
                   key={idx}
                   className="rounded-2xl border border-border-peach bg-card p-5 animate-pulse shadow-xs flex flex-col justify-between space-y-4"
@@ -1019,12 +1101,8 @@ const DynamicTable = <T extends object>({
                                   action.onClick(row, index);
                                 }}
                                 className={cn(
-                                  "p-2 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs border",
-                                  action.variant === "danger"
-                                    ? "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100"
-                                    : action.variant === "primary"
-                                      ? "text-coral bg-coral/10 border-coral/20 hover:bg-coral/20"
-                                      : "text-ink bg-surface-muted border-border-peach hover:bg-border-peach hover:text-ink",
+                                  "size-8 rounded-lg border flex items-center justify-center transition-all duration-150 hover:scale-105 cursor-pointer shadow-2xs",
+                                  getActionVariantClass(action.variant, action.className),
                                 )}
                               >
                                 {action.icon}
@@ -1048,7 +1126,7 @@ const DynamicTable = <T extends object>({
             <thead>
               <tr className="bg-coral text-white border-b border-coral-dark">
                 {selectable && (
-                  <th className="px-6 py-4 w-12 text-left">
+                  <th className="px-3 py-3 w-10 text-left">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -1062,6 +1140,16 @@ const DynamicTable = <T extends object>({
                     </div>
                   </th>
                 )}
+                {showRowNumber && (
+                  <th
+                    className={cn(
+                      "px-2 py-3 text-center text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap",
+                      reorderable ? "w-16" : "w-10"
+                    )}
+                  >
+                    {rowNumberHeader}
+                  </th>
+                )}
                 {columns.map((column, colIndex) => {
                   const alignment = getColumnAlignment(column, colIndex);
                   const isSorted = sortConfig?.key === column.key;
@@ -1069,7 +1157,7 @@ const DynamicTable = <T extends object>({
                     <th
                       key={column.key}
                       className={cn(
-                        "px-6 py-4 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap",
+                        "px-3 py-3 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap",
                         getAlignmentClass(alignment),
                         column.hideOnMobile ? "hidden lg:table-cell" : "",
                       )}
@@ -1112,7 +1200,7 @@ const DynamicTable = <T extends object>({
                   );
                 })}
                 {actions && actions.length > 0 && (
-                  <th className="px-6 py-4 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap text-center">
+                  <th className="px-2 py-3 text-xs font-bold font-quicksand text-white uppercase tracking-wider whitespace-nowrap text-center min-w-[140px]">
                     Action
                   </th>
                 )}
@@ -1124,8 +1212,13 @@ const DynamicTable = <T extends object>({
                 Array.from({ length: 5 }).map((_, rowIndex) => (
                   <tr key={rowIndex} className="border-b border-border/40 animate-pulse">
                     {selectable && (
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2.5">
                         <div className="size-4 rounded bg-surface-muted" />
+                      </td>
+                    )}
+                    {showRowNumber && (
+                      <td className="px-2 py-2.5 text-center">
+                        <div className="h-4 w-6 rounded bg-surface-muted mx-auto" />
                       </td>
                     )}
                     {columns.map((col, colIndex) => {
@@ -1134,7 +1227,7 @@ const DynamicTable = <T extends object>({
                         <td
                           key={colIndex}
                           className={cn(
-                            "px-4 py-3.5",
+                            "px-3 py-2.5",
                             getAlignmentClass(alignment)
                           )}
                         >
@@ -1150,7 +1243,7 @@ const DynamicTable = <T extends object>({
                       );
                     })}
                     {actions && (
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-2 py-2.5 text-center">
                         <div className="h-6 w-16 bg-surface-muted rounded-full mx-auto" />
                       </td>
                     )}
@@ -1160,7 +1253,10 @@ const DynamicTable = <T extends object>({
                 <tr>
                   <td
                     colSpan={
-                      columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)
+                      columns.length +
+                      (selectable ? 1 : 0) +
+                      (showRowNumber ? 1 : 0) +
+                      (actions ? 1 : 0)
                     }
                     className="px-6 py-20 text-center"
                   >
@@ -1179,11 +1275,60 @@ const DynamicTable = <T extends object>({
                   const rowKey = getRowKey ? getRowKey(row, index) : index;
                   const isSelected = selectedRows.has(rowKey);
 
+                  const computedBaseOffset =
+                    rowNumberOffset !== undefined
+                      ? rowNumberOffset
+                      : pagination && typeof effectivePageSize === "number"
+                      ? (currentPage - 1) * effectivePageSize
+                      : 0;
+                  const rowNum = computedBaseOffset + index + 1;
+
                   return (
                     <tr
                       key={rowKey}
+                      draggable={reorderable}
+                      onDragStart={(e) => {
+                        if (!reorderable) return;
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", `${index}`);
+                        setDraggedIndex(index);
+                      }}
+                      onDragOver={(e) => {
+                        if (!reorderable || draggedIndex === null) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragOverIndex !== index) {
+                          setDragOverIndex(index);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverIndex === index) {
+                          setDragOverIndex(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        if (!reorderable || draggedIndex === null) return;
+                        e.preventDefault();
+                        if (draggedIndex !== index) {
+                          const updated = [...paginatedData];
+                          const [moved] = updated.splice(draggedIndex, 1);
+                          updated.splice(index, 0, moved);
+                          onRowReorder?.(updated, draggedIndex, index);
+                        }
+                        setDraggedIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedIndex(null);
+                        setDragOverIndex(null);
+                      }}
                       className={cn(
                         "transition-all duration-200 border-b border-border last:border-0",
+                        reorderable && "cursor-grab active:cursor-grabbing",
+                        draggedIndex === index && "opacity-40 bg-coral/10",
+                        dragOverIndex === index &&
+                          draggedIndex !== index &&
+                          "border-t-2 border-coral shadow-[inset_0_2px_0_0_var(--color-coral,#ff6b6b)] bg-coral/5",
                         striped
                           ? index % 2 === 0
                             ? "bg-stripe-1"
@@ -1197,7 +1342,7 @@ const DynamicTable = <T extends object>({
                       )}
                     >
                       {selectable && (
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-2.5 w-10">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -1208,13 +1353,30 @@ const DynamicTable = <T extends object>({
                           />
                         </td>
                       )}
+                      {showRowNumber && (
+                        <td
+                          className={cn(
+                            "px-2 py-2.5 text-xs font-bold font-quicksand text-ink-muted text-center whitespace-nowrap",
+                            reorderable ? "w-16" : "w-10"
+                          )}
+                        >
+                          {reorderable ? (
+                            <div className="flex items-center justify-center gap-1 text-ink-muted group-hover:text-coral transition-colors">
+                              <GripVertical className="size-3.5 text-ink-faint shrink-0" />
+                              <span className="tabular-nums font-bold text-xs">{rowNum}</span>
+                            </div>
+                          ) : (
+                            rowNum
+                          )}
+                        </td>
+                      )}
                       {columns.map((column, colIndex) => {
                         const alignment = getColumnAlignment(column, colIndex);
                         return (
                           <td
                             key={column.key}
                             className={cn(
-                              "px-6 py-4 text-sm font-semibold text-primary-text",
+                              "px-3 py-2.5 text-sm font-semibold text-primary-text",
                               getAlignmentClass(alignment),
                               column.hideOnMobile ? "hidden lg:table-cell" : "",
                             )}
@@ -1237,17 +1399,16 @@ const DynamicTable = <T extends object>({
                         );
                       })}
                       {actions && actions.length > 0 && (
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-3">
+                        <td className="px-2 py-2.5 text-center whitespace-nowrap min-w-[140px]">
+                          <div className="flex items-center justify-center gap-1.5">
                             {actions.map((action, idx) => (
                               <Tooltip key={idx} content={action.label}>
                                 <button
+                                  type="button"
                                   onClick={() => action.onClick(row, index)}
                                   className={cn(
-                                    "p-2 rounded-lg transition-all hover:scale-110",
-                                    action.variant === "danger"
-                                      ? "text-red-400 hover:bg-red-500/10 hover:text-red-500"
-                                      : "text-secondary-text hover:bg-light-background hover:text-primary-brand",
+                                    "size-7 rounded-md border flex items-center justify-center transition-all duration-150 hover:scale-110 cursor-pointer shadow-2xs",
+                                    getActionVariantClass(action.variant, action.className),
                                   )}
                                 >
                                   {action.icon}
@@ -1414,15 +1575,14 @@ const DynamicTable = <T extends object>({
                           actions.map((action, idx) => (
                             <Tooltip key={idx} content={action.label}>
                               <button
+                                type="button"
                                 onClick={() => action.onClick(row, index)}
                                 className={cn(
-                                  "p-1.5 rounded-sm transition-all border shadow-sm",
-                                  action.variant === "danger"
-                                    ? "text-red-500 border-red-500/20 bg-light-background"
-                                    : "text-blue-500 border-blue-500/20 bg-light-background",
+                                  "size-7 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-2xs",
+                                  getActionVariantClass(action.variant, action.className),
                                 )}
                               >
-                                <div className="scale-90">{action.icon}</div>
+                                {action.icon}
                               </button>
                             </Tooltip>
                           ))}
@@ -1457,9 +1617,18 @@ const DynamicTable = <T extends object>({
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          itemsPerPage={pageSize}
+          itemsPerPage={
+            effectivePageSize === "all" ? sortedData.length : effectivePageSize
+          }
           totalItems={sortedData.length}
           onPageChange={setCurrentPage}
+          pageSize={effectivePageSize}
+          pageSizeOptions={pageSizeOptions}
+          onPageSizeChange={(newSize) => {
+            setInternalPageSize(newSize);
+            setCurrentPage(1);
+            onPageSizeChange?.(newSize);
+          }}
           label="entries"
         />
       )}

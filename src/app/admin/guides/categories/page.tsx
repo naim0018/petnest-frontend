@@ -189,13 +189,15 @@ export default function GuideCategoriesPage() {
     {
       label: "View Category",
       icon: <Eye className="size-4" />,
+      variant: "info" as const,
       onClick: (row: AdminCategory) => {
         router.push(`/admin/guides/categories/${row.slug || row.id}`);
       },
     },
     {
       label: "Edit Category",
-      icon: <Pencil className="size-4 text-amber-500" />,
+      icon: <Pencil className="size-4" />,
+      variant: "primary" as const,
       onClick: (row: AdminCategory) => {
         router.push(`/admin/guides/categories/${row.id}/edit`);
       },

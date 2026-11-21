@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import UserProfile from "@/components/common/UserProfile";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import Logo from "@/components/common/Logo";
+import CommonWrapper from "@/components/common/CommonWrapper";
 import {
   Bell,
   Check,
@@ -150,12 +151,12 @@ export default function PublicNavbar() {
   return (
     <>
       {/* Top Header Navbar - Matching Pencil Spec */}
-      <nav className="w-full h-20 shrink-0 flex flex-row px-4 xl:px-15 justify-between items-center border-b border-border-peach sticky top-0 z-40 transition-colors bg-card">
-
-        {/* Logo Group */}
-        <Link href="/" className="no-underline shrink-0">
-          <Logo />
-        </Link>
+      <nav className="w-full h-20 shrink-0 border-b border-border-peach sticky top-0 z-40 transition-colors bg-card">
+        <CommonWrapper className="h-full py-0 flex flex-row justify-between items-center">
+          {/* Logo Group */}
+          <Link href="/" className="no-underline shrink-0">
+            <Logo />
+          </Link>
 
         {/* Search Bar */}
         <div className="hidden md:flex w-80 shrink-0 h-11 flex-row gap-2.5 px-4 justify-start items-center bg-surface-muted rounded-full">
@@ -227,13 +228,13 @@ export default function PublicNavbar() {
         </div>
 
         {/* Right User Group */}
-        <div className="flex flex-row gap-3 sm:gap-4 xl:gap-5 justify-start items-center shrink-0">
+        <div className="flex flex-row gap-3 sm:gap-4 xl:gap-5 justify-start items-center shrink-0 h-full">
 
           {/* Select Pets Pill Dropdown */}
           <PetSelectorPopover />
 
           {/* Notification Bell Button */}
-          <div className="relative" ref={notifRef}>
+          <div className="relative h-full flex items-center" ref={notifRef}>
 
             <button
               onClick={() => {
@@ -257,7 +258,7 @@ export default function PublicNavbar() {
 
             {/* Notification Dropdown */}
             {isNotifOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-3 w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Notifications
@@ -305,7 +306,7 @@ export default function PublicNavbar() {
           </div>
 
           {/* Message Circle Button */}
-          <div className="relative" ref={messagesRef}>
+          <div className="relative h-full flex items-center" ref={messagesRef}>
             <button
               onClick={() => {
                 setIsMessagesOpen(!isMessagesOpen);
@@ -328,7 +329,7 @@ export default function PublicNavbar() {
 
             {/* Messages Dropdown */}
             {isMessagesOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 mt-5.5 top-20 md:top-full w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-3 w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Messages
@@ -370,6 +371,7 @@ export default function PublicNavbar() {
           {/* User Profile */}
           <UserProfile />
         </div>
+        </CommonWrapper>
       </nav>
 
       {/* Bottom Mobile Navigation Bar */}

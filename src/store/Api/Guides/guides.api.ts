@@ -128,16 +128,16 @@ const guidesApi = baseApi.injectEndpoints({
           : [{ type: "Bookmarks", id: "LIST" }],
     }),
 
-    // ==================== EDITORIAL HUB & REVIEW QUEUE ====================
+    // ==================== ALL GUIDES & STATS ====================
 
     getEditorialStats: builder.query<EditorialStatsResponse, void>({
-      query: () => "/guides/editorial/stats",
+      query: () => "/guides/stats",
       providesTags: ["EditorialStats"],
     }),
 
     findAllEditorial: builder.query<PaginatedGuidesResponse, GuideQuery | void>({
       query: (params) => ({
-        url: "/guides/editorial",
+        url: "/guides/all",
         params: params || {},
       }),
       providesTags: (result) =>
@@ -153,7 +153,7 @@ const guidesApi = baseApi.injectEndpoints({
     }),
 
     findOneEditorial: builder.query<EditorialGuideResponse, string>({
-      query: (id) => `/guides/editorial/${id}`,
+      query: (id) => `/guides/all/${id}`,
       providesTags: (_result, _error, id) => [{ type: "EditorialGuides", id }],
     }),
 
@@ -211,6 +211,8 @@ const guidesApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Guides", id },
         { type: "Guides", id: "LIST" },
+        { type: "Guides", id: "BREED_LIST" },
+        { type: "Guides", id: "SPECIES_LIST" },
         { type: "EditorialGuides", id },
         { type: "EditorialGuides", id: "LIST" },
         "EditorialStats",
@@ -229,6 +231,8 @@ const guidesApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Guides", id },
         { type: "Guides", id: "LIST" },
+        { type: "Guides", id: "BREED_LIST" },
+        { type: "Guides", id: "SPECIES_LIST" },
         { type: "EditorialGuides", id },
         { type: "EditorialGuides", id: "LIST" },
         "EditorialStats",

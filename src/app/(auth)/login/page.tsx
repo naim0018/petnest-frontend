@@ -261,7 +261,7 @@ export default function LoginPage() {
         alt="PetNest companions and cozy room backdrop"
         fill
         priority
-        className="object-cover object-bottom pointer-events-none z-0"
+        className="object-cover object-center pointer-events-none z-0"
       />
 
       {/* Subtle top vignette for crystal clear text readability */}

@@ -10,30 +10,12 @@ import CareArticleCard, {
   GuideCategoryPill,
 } from "./CareArticleCard";
 import GuidesHelpBanner from "./GuidesHelpBanner";
-import ReusableFAQ from "@/components/common/ReusableFAQ";
 import GuidesTopicFilterBar from "./GuidesTopicFilterBar";
 import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
-import { CATEGORY_FAQS_MAP, CATEGORY_FAQ_CONFIG } from "./guideFaqData";
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { setPetFilter } from "@/store/features/PetFilterSlice/petFilterSlice";
-import {
-  useFindAllPublicGuidesQuery,
-  useFindAllFaqsPublicQuery,
-} from "@/store/Api/Guides/guides.api";
+import { useAppSelector } from "@/hooks/useRedux";
+import { useFindAllPublicGuidesQuery } from "@/store/Api/Guides/guides.api";
 import type { GuideSummary } from "@/store/Api/Guides/guides.types";
-
-const topicCategoryMap: Record<string, string[]> = {
-  "getting-started": ["General Care", "Life Stage", "Basic", "Getting Started"],
-  "daily-care": ["General Care", "Grooming", "Daily Care"],
-  nutrition: ["Nutrition", "Diet", "Food"],
-  training: ["Training"],
-  "health-vet-care": ["Health & Vet Care", "Medicine", "Health"],
-  grooming: ["Grooming"],
-  behavior: ["Behavior"],
-  "senior-pets": ["Life Stage", "Health & Vet Care", "Senior"],
-  emergency: ["Health & Vet Care", "Emergency", "Medicine"],
-};
 
 const categoryLabelMap: Record<string, string> = {
   birds: "Budgie & Bird",
@@ -75,6 +57,8 @@ function mapToCareArticle(guide: GuideSummary): CareArticleCardData {
     excerpt: guide.excerpt || "",
     readTime: `${guide.readTimeMinutes || 5} min read`,
     category: (guide.category?.name as GuideCategoryPill) || "General Care",
+    categoryId: guide.category?.id,
+    categorySlug: guide.category?.slug,
     image: guide.coverImage || "/CareGuideCard/dog-faq-mascot.png",
     imageAlt: guide.coverImageAlt || guide.title,
     expertReviewed: Boolean(guide.lastReviewedAt || guide.reviewer),
@@ -84,7 +68,6 @@ function mapToCareArticle(guide: GuideSummary): CareArticleCardData {
 }
 
 export default function GuidesInteractiveExplorer() {
-  const dispatch = useAppDispatch();
   const reduxFilter = useAppSelector((state) => state.petFilter);
 
   // Sync selectedCategory and selectedBreed with Redux (fallback to birds / all if 'all')
@@ -105,18 +88,12 @@ export default function GuidesInteractiveExplorer() {
     useFindAllPublicGuidesQuery({
       species: selectedCategory !== "all" ? selectedCategory : undefined,
       breed: selectedBreed !== "all" ? selectedBreed : undefined,
-      limit: 30,
-      sortBy: "publishedAt",
-      sortOrder: "desc",
+      limit: 50,
+      sortBy: "displayOrder",
+      sortOrder: "asc",
     });
 
   const apiGuides: GuideSummary[] = guidesResponse?.data?.items || [];
-
-  // Fetch live FAQs for the selected species
-  const { data: faqsResponse } = useFindAllFaqsPublicQuery(
-    selectedCategory !== "all" ? { species: selectedCategory } : undefined
-  );
-  const liveFaqs = faqsResponse?.data;
 
   // Fallback defaults
   const fallbackGuide =
@@ -128,47 +105,74 @@ export default function GuidesInteractiveExplorer() {
   const fallbackArticles =
     CATEGORY_ARTICLES_MAP[selectedCategory] || BUDGIE_CARE_ARTICLES;
 
-  // Partition guides:
-  // 1. Hero guide (prefer featured / pillar)
-  // 2. 2 Side articles next to hero
-  // 3. Remaining articles for topic-filtered grid
+  // Partition guides strictly by displayOrder:
+  // 1. Hero guide takes Order #1 (lowest displayOrder)
+  // 2. Side articles take Order #2 and Order #3
+  // 3. Cards grid displays Order #4 and all remaining guides in strict numeric sequence
   const { currentGuide, sideArticles, remainingArticles } = useMemo(() => {
     if (apiGuides.length > 0) {
-      const heroRecord =
-        apiGuides.find((g) => g.isFeatured || g.type === "PILLAR") || apiGuides[0];
+      // Sort helper: lower positive displayOrder first, then unranked (0 / undefined) sorted by published date
+      const sortByDisplayOrder = (a: GuideSummary, b: GuideSummary) => {
+        const aOrder =
+          typeof a.displayOrder === "number" && a.displayOrder > 0
+            ? a.displayOrder
+            : 9999;
+        const bOrder =
+          typeof b.displayOrder === "number" && b.displayOrder > 0
+            ? b.displayOrder
+            : 9999;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (
+          new Date(b.publishedAt || b.createdAt).getTime() -
+          new Date(a.publishedAt || a.createdAt).getTime()
+        );
+      };
+
+      const sortedGuides = [...apiGuides].sort(sortByDisplayOrder);
+
+      // 1. Top Hero Guide (Order #1)
+      const heroRecord = sortedGuides[0];
       const hero = mapToHeroGuide(heroRecord, fallbackGuide);
 
-      const otherGuides = apiGuides.filter((g) => g.id !== heroRecord.id);
-      const otherArticles = otherGuides.map(mapToCareArticle);
+      // 2. Top Side Articles (Order #2 and Order #3)
+      const sides: CareArticleCardData[] = sortedGuides
+        .slice(1, 3)
+        .map(mapToCareArticle);
 
-      // If other live articles exist, use them. If fewer than 2, fill with fallback
-      let sides: CareArticleCardData[] = [];
-      let gridArticles: CareArticleCardData[] = [];
-
-      if (otherArticles.length >= 2) {
-        sides = otherArticles.slice(0, 2);
-        gridArticles = otherArticles.slice(2);
-      } else if (otherArticles.length === 1) {
-        sides = [otherArticles[0], fallbackArticles[0]];
-        gridArticles = fallbackArticles.slice(1);
-      } else {
-        sides = fallbackArticles.slice(0, 2);
-        gridArticles = fallbackArticles.slice(2);
+      // If fewer than 2 side cards exist from live guides, fill with fallback
+      for (const fa of fallbackArticles) {
+        if (sides.length >= 2) break;
+        if (!sides.some((s) => s.id === fa.id) && fa.id !== heroRecord?.id) {
+          sides.push(fa);
+        }
       }
 
-      // Filter remaining articles based on selected topic
+      // 3. Guides Cards Grid (Order #4 through remaining guides)
+      const gridGuides = sortedGuides.slice(3);
+      const gridArticles =
+        gridGuides.length > 0
+          ? gridGuides.map(mapToCareArticle)
+          : fallbackArticles.filter(
+              (a) => !sides.some((s) => s.id === a.id) && a.id !== heroRecord?.id
+            );
+
+      // Filter grid articles based on selected topic (DB slug, categoryId, or category name)
       const filteredGrid = gridArticles.filter((article) => {
         if (selectedTopic === "all") return true;
-        const allowed = topicCategoryMap[selectedTopic];
-        if (allowed) {
-          return (
-            allowed.some(
-              (cat) => cat.toLowerCase() === article.category.toLowerCase()
-            ) ||
-            article.category.toLowerCase().includes(selectedTopic.toLowerCase())
-          );
-        }
-        return article.category.toLowerCase().includes(selectedTopic.toLowerCase());
+        const target = selectedTopic.toLowerCase();
+        const catSlug = article.categorySlug?.toLowerCase();
+        const catId = article.categoryId?.toLowerCase();
+        const catName = article.category?.toLowerCase();
+        const normName = catName?.replace(/[^a-z0-9]+/g, "-");
+
+        return (
+          catSlug === target ||
+          catId === target ||
+          catName === target ||
+          normName === target ||
+          (catName && catName.includes(target)) ||
+          target.includes(catName || "")
+        );
       });
 
       return {
@@ -179,16 +183,34 @@ export default function GuidesInteractiveExplorer() {
     }
 
     // Fallback when no live guides are loaded yet for the category
+    const sortFallback = (a: CareArticleCardData, b: CareArticleCardData) => {
+      const aOrder =
+        typeof a.displayOrder === "number" && a.displayOrder > 0
+          ? a.displayOrder
+          : 9999;
+      const bOrder =
+        typeof b.displayOrder === "number" && b.displayOrder > 0
+          ? b.displayOrder
+          : 9999;
+      return aOrder - bOrder;
+    };
+    const sortedFallback = [...fallbackArticles].sort(sortFallback);
     const hero = fallbackGuide;
-    const sides = fallbackArticles.slice(0, 2);
-    const filteredGrid = fallbackArticles.slice(2).filter((article) => {
-      if (selectedTopic === "all") return true;
-      const allowed = topicCategoryMap[selectedTopic];
-      if (allowed) {
-        return allowed.includes(article.category);
-      }
-      return true;
-    });
+    const sides = sortedFallback.slice(0, 2);
+    const filteredGrid = sortedFallback
+      .slice(2)
+      .filter((article) => {
+        if (selectedTopic === "all") return true;
+        const target = selectedTopic.toLowerCase();
+        const catName = article.category?.toLowerCase();
+        const normName = catName?.replace(/[^a-z0-9]+/g, "-");
+        return (
+          catName === target ||
+          normName === target ||
+          (catName && catName.includes(target)) ||
+          target.includes(catName || "")
+        );
+      });
 
     return {
       currentGuide: hero,
@@ -199,29 +221,14 @@ export default function GuidesInteractiveExplorer() {
 
   const activeCategoryTitle = categoryLabelMap[selectedCategory] || "Pet";
 
-  // Dynamic FAQs with fallback to configured defaults
-  const currentFaqs = useMemo(() => {
-    if (liveFaqs && liveFaqs.length > 0) {
-      return liveFaqs.map((faq, idx) => ({
-        id: faq.id || `faq-${idx}`,
-        question: faq.question,
-        answer: faq.answer,
-      }));
-    }
-    return CATEGORY_FAQS_MAP[selectedCategory] || CATEGORY_FAQS_MAP.birds;
-  }, [liveFaqs, selectedCategory]);
-
-  const currentFaqConfig =
-    CATEGORY_FAQ_CONFIG[selectedCategory] || CATEGORY_FAQ_CONFIG.birds;
-
   return (
     <div className="space-y-8">
       {/* Top Row: Care Guide Card takes 2-card width on the left + 2 individual cards on the right */}
       {isLoadingGuides ? (
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch animate-pulse">
-          <div className="md:col-span-2 lg:col-span-2 h-72 rounded-3xl bg-surface-muted border border-border-peach/50" />
-          <div className="h-72 rounded-3xl bg-surface-muted border border-border-peach/50" />
-          <div className="h-72 rounded-3xl bg-surface-muted border border-border-peach/50" />
+          <div className="md:col-span-2 lg:col-span-2 h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
+          <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
+          <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
         </section>
       ) : (
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">
@@ -269,22 +276,6 @@ export default function GuidesInteractiveExplorer() {
           </div>
         )}
       </section>
-
-      {/* Common Questions / Reusable FAQ Accordion */}
-      <ReusableFAQ
-        title={currentFaqConfig.title}
-        subtitle={currentFaqConfig.subtitle}
-        items={currentFaqs}
-        mascotImage={currentFaqConfig.mascotImage}
-        mascotAlt={currentFaqConfig.mascotAlt}
-        cardImage={currentFaqConfig.cardImage}
-        cardImageAlt={currentFaqConfig.cardImageAlt}
-        bgGradient={currentFaqConfig.bgGradient}
-        bubbleColor={currentFaqConfig.bubbleColor}
-        blendOverlayClass={currentFaqConfig.blendOverlayClass}
-        viewAllHref="/community"
-        viewAllText="View all questions"
-      />
 
       {/* Help / Ask Community & Expert Banner */}
       <GuidesHelpBanner />
