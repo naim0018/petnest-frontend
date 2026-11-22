@@ -199,6 +199,8 @@
     text-size-adjust: 100%;
     scrollbar-gutter: stable;
     scroll-padding-top: calc(var(--header-height) + var(--space-16));
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   body {
@@ -209,6 +211,8 @@
     font-size: var(--type-body-sm);
     line-height: var(--leading-body);
     letter-spacing: 0;
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   /* ========================================
@@ -458,5 +462,14 @@ font[style] {
 
 [data-sonner-toast] [data-close-button]:hover {
   transform: scale(1.1) !important;
+}
+
+/* ==========================================================================
+   Next.js Dev Indicators (Prevent overlaying bottom mobile navigation)
+   ========================================================================== */
+nextjs-portal,
+[data-nextjs-toast],
+#__next-build-watcher {
+  display: none !important;
 }
 

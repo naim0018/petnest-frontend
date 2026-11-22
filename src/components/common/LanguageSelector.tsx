@@ -119,7 +119,7 @@ export default function LanguageSelector({
             {...props}
             type="button"
             className={cn(
-              "group inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg border border-border-peach bg-coral-light/40 hover:bg-coral-light text-ink hover:border-coral/50 transition-all cursor-pointer font-bold select-none",
+              "group inline-flex items-center gap-1 sm:gap-1.5 h-9 sm:h-10 px-2 sm:px-2.5 rounded-lg border border-border-peach bg-coral-light/40 hover:bg-coral-light text-ink hover:border-coral/50 transition-all cursor-pointer font-bold select-none shrink-0",
               open && "border-coral ring-2 ring-coral/20",
               className
             )}
@@ -130,7 +130,7 @@ export default function LanguageSelector({
               <Loader2 className="size-4 animate-spin text-coral" />
             ) : variant === "icon" ? (
               <div className="relative flex items-center justify-center">
-                <Languages className="size-5 text-coral" />
+                <Languages className="size-4.5 sm:size-5 text-coral" />
                 <span className="absolute -bottom-1 -right-1 text-[9px] font-black uppercase tracking-tighter bg-coral text-white px-1 rounded-xs">
                   {activeLang.code.slice(0, 2)}
                 </span>
@@ -138,12 +138,12 @@ export default function LanguageSelector({
             ) : (
               <>
                 <span className="text-base leading-none">{activeLang.flag}</span>
-                <span className="text-xs uppercase font-extrabold text-ink group-hover:text-coral transition-colors font-quicksand">
+                <span className="hidden sm:inline-block text-xs uppercase font-extrabold text-ink group-hover:text-coral transition-colors font-quicksand">
                   {activeLang.code.slice(0, 2)}
                 </span>
                 <ChevronDown
                   className={cn(
-                    "size-3 text-ink-muted transition-transform duration-200",
+                    "hidden sm:inline-block size-3 text-ink-muted transition-transform duration-200",
                     open && "rotate-180"
                   )}
                 />

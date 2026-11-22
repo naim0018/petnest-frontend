@@ -15,8 +15,9 @@ import {
 } from "lucide-react";
 import { getGuideBySlug, guidesData } from "@/lib/data/petnest-data";
 import CommonWrapper from "@/components/common/CommonWrapper";
-import ReusableFAQ, { FAQItem } from "@/components/common/ReusableFAQ";
+import { FAQItem } from "@/components/common/ReusableFAQ";
 import LocalizedGuideArticle from "@/components/public/guides/LocalizedGuideArticle";
+import LocalizedGuideFaq from "@/components/public/guides/LocalizedGuideFaq";
 import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 interface GuidePageProps {
@@ -405,21 +406,6 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
               publishedAt={guide.publishedAt}
               coverImage={guide.image}
             />
-
-            {/* Dedicated Guide FAQs */}
-            {guide.faqs && guide.faqs.length > 0 && (
-              <section className="pt-8 border-t border-border-peach">
-                <ReusableFAQ
-                  title="Frequently Asked Questions"
-                  subtitle={`Common questions & answers about ${guide.title}`}
-                  items={guide.faqs}
-                  mascotImage={faqMascot}
-                  mascotAlt={`${guide.category} FAQ Mascot`}
-                  viewAllHref="/community"
-                  viewAllText="Ask a question in community"
-                />
-              </section>
-            )}
           </article>
         </div>
 
@@ -532,6 +518,26 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
           </div>
         </aside>
       </div>
+
+      {/* ======================================================== */}
+      {/* ❓ FULL-WIDTH GUIDE FAQS                                 */}
+      {/* ======================================================== */}
+      {((guide.faqs && guide.faqs.length > 0) ||
+        Boolean(guide.translations?.bn?.faqs?.length)) && (
+        <section className="mt-12 sm:mt-16 pt-8 border-t border-border-peach w-full">
+          <LocalizedGuideFaq
+            defaultTitle="Frequently Asked Questions"
+            defaultSubtitle={`Common questions & answers about ${guide.title}`}
+            defaultItems={guide.faqs}
+            translations={guide.translations}
+            guideTitle={guide.title}
+            categoryName={guide.category}
+            mascotImage={faqMascot}
+            mascotAlt={`${guide.category} FAQ Mascot`}
+            viewAllHref="/community"
+          />
+        </section>
+      )}
     </CommonWrapper>
   );
 }

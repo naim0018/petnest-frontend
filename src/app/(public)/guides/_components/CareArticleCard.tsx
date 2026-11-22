@@ -34,6 +34,7 @@ export interface CareArticleCardData {
   order?: number;
   displayOrder?: number;
   translations?: GuideTranslationsMap | null;
+  isBookmarked?: boolean;
 }
 
 export interface CareArticleCardProps {
@@ -131,7 +132,7 @@ export default function CareArticleCard({
   className,
   onBookmarkToggle,
 }: CareArticleCardProps) {
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(Boolean(article.isBookmarked));
 
   const {
     id,

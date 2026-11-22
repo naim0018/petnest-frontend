@@ -11,12 +11,12 @@ interface LogoProps {
 
 const Logo = ({ className, collapsed, showText = true }: LogoProps) => {
   return (
-    <div className={cn("flex items-center gap-3 select-none", className)}>
+    <div className={cn("flex items-center gap-2 sm:gap-3 select-none", className)}>
       {/* Brand Icon Box matching exact SVG specs with tokenized color */}
-      <div className="w-10 h-10 rounded-xl bg-coral flex items-center justify-center shrink-0">
+      <div className="size-8.5 sm:size-10 rounded-xl bg-coral flex items-center justify-center shrink-0">
         <svg
           viewBox="0 0 20 20"
-          className="w-5 h-5"
+          className="size-4 sm:size-5"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -30,7 +30,7 @@ const Logo = ({ className, collapsed, showText = true }: LogoProps) => {
         </svg>
       </div>
       {(!collapsed && showText) && (
-        <span className="text-2xl font-bold text-coral tracking-tight whitespace-nowrap">
+        <span className="text-xl sm:text-2xl font-bold text-coral tracking-tight whitespace-nowrap font-quicksand">
           PetNest
         </span>
       )}

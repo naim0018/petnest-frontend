@@ -85,29 +85,29 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="relative h-16 bg-card border-b border-border-peach sticky top-0 z-30 flex items-center shrink-0 px-4 sm:px-6 shadow-2xs">
-      <div className="flex items-center justify-between w-full gap-4">
-        {/* Left Side: Mobile Hamburger & Breadcrumbs (removed title/description) */}
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+    <header className="relative h-16 bg-card border-b border-border-peach sticky top-0 z-30 flex items-center shrink-0 px-3 sm:px-5 md:px-6 shadow-2xs">
+      <div className="flex items-center justify-between w-full gap-2 sm:gap-4 min-w-0">
+        {/* Left Side: Mobile Hamburger & Breadcrumbs */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             onClick={onMenuClick}
-            className="p-2 -ml-1 rounded-lg hover:bg-surface-muted text-ink-muted hover:text-ink sm:hidden cursor-pointer shrink-0 transition-colors"
+            className="p-1.5 sm:p-2 -ml-1 rounded-lg hover:bg-surface-muted text-ink-muted hover:text-ink sm:hidden cursor-pointer shrink-0 transition-colors"
             aria-label="Open sidebar menu"
           >
             <Menu className="size-5" />
           </button>
 
           {/* Breadcrumb relocated directly into header */}
-          <div className="min-w-0 overflow-hidden">
+          <div className="min-w-0 flex-1 overflow-hidden">
             <Breadcrumbs />
           </div>
         </div>
 
         {/* Right Side: Actions & Profile */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 h-full">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 h-full">
           {/* Dynamic Page Action Button Slot */}
           {headerAction && (
-            <div className="flex items-center mr-1">
+            <div className="flex items-center shrink-0">
               {headerAction}
             </div>
           )}

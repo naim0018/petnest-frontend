@@ -4,18 +4,8 @@ import { useEffect } from "react";
 
 declare global {
   interface Window {
-    google?: {
-      translate?: {
-        TranslateElement: new (
-          options: {
-            pageLanguage: string;
-            includedLanguages?: string;
-            autoDisplay?: boolean;
-          },
-          elementId: string
-        ) => void;
-      };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google?: any;
     googleTranslateElementInit?: () => void;
   }
 }

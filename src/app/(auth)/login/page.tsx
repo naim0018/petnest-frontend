@@ -256,15 +256,15 @@ export default function LoginPage() {
       {/* 🖼️ SINGLE UNIFIED FULL-SCREEN BACKGROUND                */}
       {/* ======================================================== */}
       <Image
-        src="/auth-bg.jpg"
-        alt="PetNest companions and cozy room backdrop"
+        src="/auth-bg.png"
+        alt="PetNest companions and birds floral backdrop"
         fill
         priority
         className="object-cover object-center pointer-events-none z-0"
       />
 
-      {/* Subtle top vignette for crystal clear text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none z-1" />
+      {/* Adaptive vignette for contrast in both light and dark modes */}
+      <div className="absolute inset-0 bg-gradient-to-r from-amber-50/40 via-transparent to-transparent dark:from-black/75 dark:via-black/50 dark:to-black/35 pointer-events-none z-1" />
 
       {/* ======================================================== */}
       {/* 🐾 TOP BAR: Brand Logo & Theme Switcher via CommonWrapper*/}
@@ -296,15 +296,15 @@ export default function LoginPage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full lg:max-w-xl space-y-6 lg:pb-32 self-start pt-2 lg:pt-4"
           >
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-quicksand text-white leading-[1.15] tracking-tight drop-shadow-md">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-quicksand text-slate-900 dark:text-white leading-[1.15] tracking-tight drop-shadow-xs">
               A Happier Life <br className="hidden sm:inline" />
               for Your{" "}
-              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-coral via-[#FF8566] to-sunshine bg-clip-text text-transparent drop-shadow-md">
+              <span className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-coral via-[#FF8566] to-sunshine bg-clip-text text-transparent drop-shadow-xs">
                 Furry Friend
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base lg:text-lg text-white/90 font-normal leading-relaxed max-w-md drop-shadow-xs">
+            <p className="text-sm sm:text-base lg:text-lg text-slate-800 dark:text-white/90 font-medium leading-relaxed max-w-md">
               Discover pet care tips, connect with fellow pet lovers, and give
               your pets the best life.
             </p>
@@ -312,32 +312,32 @@ export default function LoginPage() {
             {/* Feature Tags matching system design & mockup */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-5 pt-2">
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                <div className="size-8 sm:size-9 rounded-full bg-coral/15 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
                   <Heart className="size-4 text-coral fill-coral" />
                 </div>
-                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
+                <span className="text-slate-800 dark:text-white font-bold text-xs sm:text-sm tracking-normal select-none">
                   Expert Care Tips
                 </span>
               </div>
 
-              <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
+              <div className="hidden sm:block h-4.5 w-px bg-slate-300 dark:bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                <div className="size-8 sm:size-9 rounded-full bg-coral/15 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
                   <Users className="size-4 text-coral" strokeWidth={2.2} />
                 </div>
-                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
+                <span className="text-slate-800 dark:text-white font-bold text-xs sm:text-sm tracking-normal select-none">
                   Pet Community
                 </span>
               </div>
 
-              <div className="hidden sm:block h-4.5 w-px bg-white/20 shrink-0" aria-hidden="true" />
+              <div className="hidden sm:block h-4.5 w-px bg-slate-300 dark:bg-white/20 shrink-0" aria-hidden="true" />
 
               <div className="inline-flex items-center gap-2.5">
-                <div className="size-8 sm:size-9 rounded-full bg-coral/20 border border-coral/35 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
+                <div className="size-8 sm:size-9 rounded-full bg-coral/15 border border-coral/30 flex items-center justify-center shrink-0 backdrop-blur-xs shadow-xs">
                   <ShoppingCart className="size-4 text-coral" strokeWidth={2.2} />
                 </div>
-                <span className="text-white font-medium text-xs sm:text-sm tracking-normal select-none drop-shadow-xs">
+                <span className="text-slate-800 dark:text-white font-bold text-xs sm:text-sm tracking-normal select-none">
                   Shop Essentials
                 </span>
               </div>
@@ -859,7 +859,7 @@ export default function LoginPage() {
 
       {/* Spacer footer via CommonWrapper */}
       <footer className="w-full relative z-10">
-        <CommonWrapper className="max-w-[1600px] px-4 sm:px-6 md:px-8 xl:px-0 py-3 text-center text-xs text-white/60">
+        <CommonWrapper className="max-w-[1600px] px-4 sm:px-6 md:px-8 xl:px-0 py-3 text-center text-xs text-slate-600 dark:text-white/70 font-medium">
           © {new Date().getFullYear()} PetNest Inc. All rights reserved.
         </CommonWrapper>
       </footer>

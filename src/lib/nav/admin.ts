@@ -86,6 +86,7 @@ export const adminNavItems: NavGroup[] = [
         icon: BarChart3,
         children: [
           { name: "Platform Analytics", path: "/admin/analytics/platform" },
+          { name: "Visitor Analytics", path: "/admin/analytics/visitors" },
           { name: "Guide Analytics", path: "/admin/analytics/guides" },
           { name: "Marketplace Analytics", path: "/admin/analytics/marketplace" },
         ],

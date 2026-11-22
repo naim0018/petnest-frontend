@@ -40,6 +40,12 @@ const rawBaseQuery = fetchBaseQuery({
   credentials: "include", // REQUIRED so browser sends & stores httpOnly cookies
   prepareHeaders: (headers) => {
     headers.set("x-visitor-id", getOrCreateVisitorId());
+    if (typeof window !== "undefined") {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) headers.set("x-timezone", tz);
+      } catch {}
+    }
     return headers;
   },
 });

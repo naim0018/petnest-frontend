@@ -163,7 +163,7 @@ export default function UserProfile({
         className={cn(
           "bg-card rounded-md border border-border-peach shadow-xl z-50 overflow-hidden duration-150",
           alignment === "header" &&
-            "absolute left-3 right-3 sm:left-auto sm:right-0 top-full mt-[2px] w-auto sm:w-72 animate-in fade-in zoom-in-95",
+            "absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] animate-in fade-in zoom-in-95",
           alignment === "sidebar-expanded" &&
             "absolute bottom-full mb-2.5 left-0 w-full animate-in fade-in slide-in-from-bottom-2",
           alignment === "sidebar-collapsed" &&
@@ -378,12 +378,12 @@ export default function UserProfile({
             className="w-full h-full object-cover"
           />
         </div>
-        <span className="hidden sm:inline-block text-xs sm:text-sm font-bold text-ink max-w-28 truncate font-quicksand">
+        <span className="hidden lg:inline-block text-xs sm:text-sm font-bold text-ink max-w-28 truncate font-quicksand">
           {displayName}
         </span>
         <ChevronDown
           className={cn(
-            "size-3.5 text-ink-muted transition-transform duration-200",
+            "hidden lg:inline-block size-3.5 text-ink-muted transition-transform duration-200",
             isOpen && "rotate-180"
           )}
         />

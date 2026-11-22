@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState, useEffect, useMemo } from "react";
+import React, { use, useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,8 @@ import {
   useFindOneEditorialQuery,
   useFindAllCategoriesPublicQuery,
   useUpdateGuideMutation,
+  useImportGuideZipMutation,
+  downloadGuideZip,
 } from "@/store/Api/Guides/guides.api";
 import type { GuideStatus, GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 import {
@@ -41,6 +43,8 @@ import {
   HelpCircle,
   AlertCircle,
   Tag,
+  Download,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -97,6 +101,44 @@ export default function EditGuidePage({
     () => new Map()
   );
   const [isProcessingUploads, setIsProcessingUploads] = useState(false);
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+  const [importGuideZip, { isLoading: isImportingZip }] =
+    useImportGuideZipMutation();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleDownloadZip = async () => {
+    if (!guide) return;
+    try {
+      setIsDownloadingZip(true);
+      toast.info("Preparing ZIP archive with images...");
+      await downloadGuideZip(guide.id, guide.slug);
+      toast.success("Guide ZIP downloaded successfully!");
+    } catch {
+      toast.error("Failed to download guide ZIP");
+    } finally {
+      setIsDownloadingZip(false);
+    }
+  };
+
+  const handleZipFileSelected = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !guide) return;
+    try {
+      toast.info("Updating guide and uploading images from ZIP...");
+      await importGuideZip({ id: guide.id, file }).unwrap();
+      toast.success("Guide updated successfully from ZIP!");
+      refetch();
+    } catch (err: unknown) {
+      const msg =
+        (err as { data?: { message?: string } })?.data?.message ||
+        "Failed to update guide from ZIP";
+      toast.error(msg);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
   const [processingState, setProcessingState] = useState<{
     isOpen: boolean;
     title: string;
@@ -247,6 +289,44 @@ export default function EditGuidePage({
     ? "Super Admin"
     : guide?.author?.name || "Editor";
 
+  const formStateRef = React.useRef({
+    title,
+    categoryId,
+    speciesId,
+    breedId,
+    summary,
+    content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
+    status,
+    displayOrder,
+    tags,
+    coverFile,
+    coverPreviewUrl,
+    pendingBodyImages,
+    guide,
+  });
+
+  formStateRef.current = {
+    title,
+    categoryId,
+    speciesId,
+    breedId,
+    summary,
+    content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
+    status,
+    displayOrder,
+    tags,
+    coverFile,
+    coverPreviewUrl,
+    pendingBodyImages,
+    guide,
+  };
+
   const handleRegisterPendingImage = (blobUrl: string, file: File) => {
     setPendingBodyImages((prev) => {
       const next = new Map(prev);
@@ -256,35 +336,45 @@ export default function EditGuidePage({
   };
 
   const handleSaveChanges = async (overrideStatus?: GuideStatus) => {
-    if (!title.trim()) {
+    const state = formStateRef.current;
+    if (!state.title.trim()) {
       toast.error("Please enter an article title");
       return;
     }
-    if (!categoryId) {
+    if (!state.categoryId) {
       toast.error("Please select a category pillar");
       return;
     }
-    if (!summary.trim()) {
+    if (!state.summary.trim()) {
       toast.error("Please provide an executive summary");
       return;
     }
-    if (!content.trim()) {
+    if (!state.content.trim()) {
       toast.error("Please write the article content");
       return;
     }
 
-    const nextStatus = overrideStatus ?? status;
-    let finalContent = content.trim();
+    const nextStatus = overrideStatus ?? state.status;
+    let finalContent = state.content.trim();
+    let finalBanglaContent = state.banglaContent.trim();
+
     const blobUrlsInContent = Array.from(
       new Set(finalContent.match(/blob:[^\s)"]+/g) || [])
     );
-    const pendingBodyEntries = blobUrlsInContent
-      .map((blobUrl) => ({ blobUrl, file: pendingBodyImages.get(blobUrl) }))
+    const blobUrlsInBangla = Array.from(
+      new Set(finalBanglaContent.match(/blob:[^\s)"]+/g) || [])
+    );
+    const allBlobUrls = Array.from(
+      new Set([...blobUrlsInContent, ...blobUrlsInBangla])
+    );
+
+    const pendingBodyEntries = allBlobUrls
+      .map((blobUrl) => ({ blobUrl, file: state.pendingBodyImages.get(blobUrl) }))
       .filter((entry): entry is { blobUrl: string; file: File } =>
         Boolean(entry.file)
       );
 
-    const totalMediaUploads = (coverFile ? 1 : 0) + pendingBodyEntries.length;
+    const totalMediaUploads = (state.coverFile ? 1 : 0) + pendingBodyEntries.length;
 
     const initialSteps: ProcessingStep[] = [
       ...(totalMediaUploads > 0
@@ -322,8 +412,8 @@ export default function EditGuidePage({
 
     try {
       let finalCoverUrl: string | null =
-        coverPreviewUrl && !coverPreviewUrl.startsWith("blob:")
-          ? coverPreviewUrl
+        state.coverPreviewUrl && !state.coverPreviewUrl.startsWith("blob:")
+          ? state.coverPreviewUrl
           : null;
 
       if (totalMediaUploads > 0) {
@@ -359,7 +449,7 @@ export default function EditGuidePage({
         };
 
         const [uploadedCoverUrl, ...uploadedBodyUrls] = await Promise.all([
-          coverFile ? uploadOne(coverFile) : Promise.resolve(finalCoverUrl),
+          state.coverFile ? uploadOne(state.coverFile) : Promise.resolve(finalCoverUrl),
           ...pendingBodyEntries.map(({ file }) => uploadOne(file)),
         ]);
 
@@ -371,6 +461,7 @@ export default function EditGuidePage({
           const remoteUrl = uploadedBodyUrls[idx];
           if (remoteUrl) {
             finalContent = finalContent.split(blobUrl).join(remoteUrl);
+            finalBanglaContent = finalBanglaContent.split(blobUrl).join(remoteUrl);
           }
         });
       }
@@ -388,38 +479,47 @@ export default function EditGuidePage({
         ),
       }));
 
-      const translationsPayload: GuideTranslationsMap | undefined =
-        banglaTitle.trim() || banglaExcerpt.trim() || banglaContent.trim()
-          ? {
-              bn: {
-                title: banglaTitle.trim(),
-                excerpt: banglaExcerpt.trim(),
-                content: banglaContent.trim(),
-              },
-            }
-          : undefined;
+      const hasBanglaContent = Boolean(
+        state.banglaTitle.trim() ||
+        state.banglaExcerpt.trim() ||
+        finalBanglaContent.trim()
+      );
+
+      const existingTranslations =
+        (state.guide?.translations as GuideTranslationsMap) || {};
+
+      const translationsPayload: GuideTranslationsMap = hasBanglaContent
+        ? {
+            ...existingTranslations,
+            bn: {
+              title: state.banglaTitle.trim(),
+              excerpt: state.banglaExcerpt.trim(),
+              content: finalBanglaContent.trim(),
+            },
+          }
+        : {};
 
       await updateGuide({
         id: guideId,
         payload: {
-          title: title.trim(),
-          categoryId,
-          speciesId: speciesId || null,
-          breedIds: speciesId ? (breedId ? [breedId] : []) : [],
-          excerpt: summary.trim(),
+          title: state.title.trim(),
+          categoryId: state.categoryId,
+          speciesId: state.speciesId || null,
+          breedIds: state.speciesId ? (state.breedId ? [state.breedId] : []) : [],
+          excerpt: state.summary.trim(),
           content: finalContent,
           coverImage: finalCoverUrl,
-          displayOrder,
-          tags,
+          displayOrder: state.displayOrder,
+          tags: state.tags,
           translations: translationsPayload,
           ...(canDirectPublish ? { status: nextStatus } : {}),
         },
       }).unwrap();
 
-      if (coverPreviewUrl && coverPreviewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(coverPreviewUrl);
+      if (state.coverPreviewUrl && state.coverPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(state.coverPreviewUrl);
       }
-      blobUrlsInContent.forEach((bUrl) => URL.revokeObjectURL(bUrl));
+      allBlobUrls.forEach((bUrl) => URL.revokeObjectURL(bUrl));
 
       setProcessingState((prev) => ({ ...prev, isOpen: false }));
       toast.success(
@@ -470,6 +570,42 @@ export default function EditGuidePage({
             </>
           )}
         </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".zip"
+          onChange={handleZipFileSelected}
+          className="hidden"
+        />
+
+        <PrimaryButton
+          type="button"
+          variant="outline"
+          size="sm"
+          rounded="md"
+          leftIcon={<Download className="size-4" />}
+          isLoading={isDownloadingZip}
+          onClick={handleDownloadZip}
+          className="font-bold cursor-pointer"
+          title="Download guide in ZIP format (guides.json + images/)"
+        >
+          Download ZIP
+        </PrimaryButton>
+
+        <PrimaryButton
+          type="button"
+          variant="outline"
+          size="sm"
+          rounded="md"
+          leftIcon={<Upload className="size-4" />}
+          isLoading={isImportingZip}
+          onClick={() => fileInputRef.current?.click()}
+          className="font-bold cursor-pointer"
+          title="Update this guide with a modified ZIP archive"
+        >
+          Update from ZIP
+        </PrimaryButton>
 
         <Link href={`/admin/guides/${guide.id}/faqs`}>
           <PrimaryButton
@@ -529,9 +665,14 @@ export default function EditGuidePage({
     breedId,
     summary,
     content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
     coverPreviewUrl,
     coverFile,
     pendingBodyImages,
+    isDownloadingZip,
+    isImportingZip,
   ]);
 
   // Exact Layout Skeleton

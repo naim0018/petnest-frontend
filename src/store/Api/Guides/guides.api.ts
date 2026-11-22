@@ -20,6 +20,7 @@ import type {
   GuideSummary,
   LikeResponse,
   PaginatedGuidesResponse,
+  PaginatedPublicGuidesResponse,
   PublicCategoriesResponse,
   PublicFaqsResponse,
   ReviewGuidePayload,
@@ -67,7 +68,10 @@ const guidesApi = baseApi.injectEndpoints({
 
     // ==================== PUBLIC GUIDES ====================
 
-    findAllPublicGuides: builder.query<PaginatedGuidesResponse, GuideQuery | void>({
+    findAllPublicGuides: builder.query<
+      PaginatedPublicGuidesResponse,
+      GuideQuery | void
+    >({
       query: (params) => ({
         url: "/guides",
         params: params || {},
@@ -222,6 +226,30 @@ const guidesApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: payload,
       }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Guides", id },
+        { type: "Guides", id: "LIST" },
+        { type: "Guides", id: "BREED_LIST" },
+        { type: "Guides", id: "SPECIES_LIST" },
+        { type: "EditorialGuides", id },
+        { type: "EditorialGuides", id: "LIST" },
+        "EditorialStats",
+      ],
+    }),
+
+    importGuideZip: builder.mutation<
+      EditorialGuideResponse,
+      { id: string; file: File }
+    >({
+      query: ({ id, file }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return {
+          url: `/guides/${id}/import-zip`,
+          method: "POST",
+          body: formData,
+        };
+      },
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Guides", id },
         { type: "Guides", id: "LIST" },
@@ -452,6 +480,7 @@ export const {
   useCreateGuideMutation,
   useBulkImportGuidesZipMutation,
   useUpdateGuideMutation,
+  useImportGuideZipMutation,
   useReviewGuideMutation,
   useDeleteGuideMutation,
   // Admin Categories
@@ -466,6 +495,29 @@ export const {
   useUpdateFaqMutation,
   useRemoveFaqMutation,
 } = guidesApi;
+
+export async function downloadGuideZip(
+  guideId: string,
+  slug?: string,
+): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  const res = await fetch(`${baseUrl}/guides/${guideId}/export-zip`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to download guide ZIP (status: ${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slug || guideId}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
 
 export default guidesApi;
 

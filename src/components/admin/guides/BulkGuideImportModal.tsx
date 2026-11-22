@@ -283,6 +283,14 @@ export default function BulkGuideImportModal({
                   <p><code className="font-mono text-coral">faqs[]</code> (question, answer, displayOrder, isActive)</p>
                 </div>
               </div>
+              <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-ink-muted">
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-0.5">
+                  🇧🇩 Bilingual English & Bangla Auto-Pairing:
+                </span>
+                <p>
+                  Include an English entry and a Bangla entry in <code className="font-mono text-coral">guides.json</code> (with <code className="font-mono text-coral">-bn</code> slug or Bengali title). They are automatically merged into a single bilingual guide with full native Bangla text, images, and FAQs.
+                </p>
+              </div>
             </div>
           )}
 
@@ -450,6 +458,14 @@ export default function BulkGuideImportModal({
                             </span>
                             <span>•</span>
                             <span>{res.imagesLinked} images linked</span>
+                            {res.hasTranslation && (
+                              <>
+                                <span>•</span>
+                                <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px]">
+                                  🇧🇩 Bangla Included
+                                </span>
+                              </>
+                            )}
                           </div>
                         ) : (
                           <p className="text-xs text-rose-600 mt-0.5 font-medium">

@@ -322,18 +322,55 @@ export default function CreateGuidePage() {
     }
   };
 
+  const formStateRef = React.useRef({
+    title,
+    categoryId,
+    speciesId,
+    breedId,
+    summary,
+    content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
+    displayOrder,
+    tags,
+    coverFile,
+    coverPreviewUrl,
+    pendingBodyImages,
+    savedGuideId,
+  });
+
+  formStateRef.current = {
+    title,
+    categoryId,
+    speciesId,
+    breedId,
+    summary,
+    content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
+    displayOrder,
+    tags,
+    coverFile,
+    coverPreviewUrl,
+    pendingBodyImages,
+    savedGuideId,
+  };
+
   // Handle Save Draft, Submit for Review, or Direct Publish (Super Admin)
   const handleSave = async (status: "DRAFT" | "IN_REVIEW" | "PUBLISHED") => {
-    const resolvedCategoryId = categoryId || basicCategory?.id;
-    if (!title.trim()) {
+    const state = formStateRef.current;
+    const resolvedCategoryId = state.categoryId || basicCategory?.id;
+    if (!state.title.trim()) {
       toast.error("Please enter an article title");
       return;
     }
-    if (!summary.trim()) {
+    if (!state.summary.trim()) {
       toast.error("Please provide an executive summary");
       return;
     }
-    if (!content.trim()) {
+    if (!state.content.trim()) {
       toast.error("Please write the article content");
       return;
     }
@@ -352,17 +389,26 @@ export default function CreateGuidePage() {
         ? "Submitting to editorial queue"
         : "Saving article draft";
 
-    let finalContent = content.trim();
+    let finalContent = state.content.trim();
+    let finalBanglaContent = state.banglaContent.trim();
+
     const blobUrlsInContent = Array.from(
       new Set(finalContent.match(/blob:[^\s)"]+/g) || [])
     );
-    const pendingBodyEntries = blobUrlsInContent
-      .map((blobUrl) => ({ blobUrl, file: pendingBodyImages.get(blobUrl) }))
+    const blobUrlsInBangla = Array.from(
+      new Set(finalBanglaContent.match(/blob:[^\s)"]+/g) || [])
+    );
+    const allBlobUrls = Array.from(
+      new Set([...blobUrlsInContent, ...blobUrlsInBangla])
+    );
+
+    const pendingBodyEntries = allBlobUrls
+      .map((blobUrl) => ({ blobUrl, file: state.pendingBodyImages.get(blobUrl) }))
       .filter((entry): entry is { blobUrl: string; file: File } =>
         Boolean(entry.file)
       );
 
-    const totalMediaUploads = (coverFile ? 1 : 0) + pendingBodyEntries.length;
+    const totalMediaUploads = (state.coverFile ? 1 : 0) + pendingBodyEntries.length;
 
     const initialSteps: ProcessingStep[] = [
       ...(totalMediaUploads > 0
@@ -396,8 +442,8 @@ export default function CreateGuidePage() {
 
     try {
       let finalCoverUrl: string | null =
-        coverPreviewUrl && !coverPreviewUrl.startsWith("blob:")
-          ? coverPreviewUrl
+        state.coverPreviewUrl && !state.coverPreviewUrl.startsWith("blob:")
+          ? state.coverPreviewUrl
           : null;
 
       // 1. Upload Cover Photo + All Inline Body Images IN PARALLEL
@@ -434,7 +480,7 @@ export default function CreateGuidePage() {
         };
 
         const [uploadedCoverUrl, ...uploadedBodyUrls] = await Promise.all([
-          coverFile ? uploadOne(coverFile) : Promise.resolve(finalCoverUrl),
+          state.coverFile ? uploadOne(state.coverFile) : Promise.resolve(finalCoverUrl),
           ...pendingBodyEntries.map(({ file }) => uploadOne(file)),
         ]);
 
@@ -446,6 +492,7 @@ export default function CreateGuidePage() {
           const remoteUrl = uploadedBodyUrls[idx];
           if (remoteUrl) {
             finalContent = finalContent.split(blobUrl).join(remoteUrl);
+            finalBanglaContent = finalBanglaContent.split(blobUrl).join(remoteUrl);
           }
         });
       }
@@ -464,63 +511,68 @@ export default function CreateGuidePage() {
         ),
       }));
 
-      let newGuideId = savedGuideId;
-      let newGuideTitle = title.trim();
+      let newGuideId = state.savedGuideId;
+      let newGuideTitle = state.title.trim();
 
-      const translationsPayload: GuideTranslationsMap | undefined =
-        banglaTitle.trim() || banglaExcerpt.trim() || banglaContent.trim()
-          ? {
-              bn: {
-                title: banglaTitle.trim(),
-                excerpt: banglaExcerpt.trim(),
-                content: banglaContent.trim(),
-              },
-            }
-          : undefined;
+      const hasBanglaContent = Boolean(
+        state.banglaTitle.trim() ||
+        state.banglaExcerpt.trim() ||
+        finalBanglaContent.trim()
+      );
 
-      if (savedGuideId) {
+      const translationsPayload: GuideTranslationsMap = hasBanglaContent
+        ? {
+            bn: {
+              title: state.banglaTitle.trim(),
+              excerpt: state.banglaExcerpt.trim(),
+              content: finalBanglaContent.trim(),
+            },
+          }
+        : {};
+
+      if (state.savedGuideId) {
         const updateRes = await updateGuide({
-          id: savedGuideId,
+          id: state.savedGuideId,
           payload: {
-            title: title.trim(),
+            title: state.title.trim(),
             categoryId: resolvedCategoryId,
-            speciesId: speciesId || null,
-            breedIds: breedId ? [breedId] : undefined,
-            excerpt: summary.trim(),
+            speciesId: state.speciesId || null,
+            breedIds: state.breedId ? [state.breedId] : undefined,
+            excerpt: state.summary.trim(),
             content: finalContent,
             coverImage: finalCoverUrl,
-            displayOrder,
-            tags,
+            displayOrder: state.displayOrder,
+            tags: state.tags,
             status,
             translations: translationsPayload,
           },
         }).unwrap();
-        newGuideId = updateRes?.data?.id || savedGuideId;
-        newGuideTitle = updateRes?.data?.title || title.trim();
+        newGuideId = updateRes?.data?.id || state.savedGuideId;
+        newGuideTitle = updateRes?.data?.title || state.title.trim();
       } else {
         const createdRes = await createGuide({
-          title: title.trim(),
+          title: state.title.trim(),
           categoryId: resolvedCategoryId,
-          speciesId: speciesId || null,
-          breedIds: breedId ? [breedId] : undefined,
-          excerpt: summary.trim(),
+          speciesId: state.speciesId || null,
+          breedIds: state.breedId ? [state.breedId] : undefined,
+          excerpt: state.summary.trim(),
           content: finalContent,
           coverImage: finalCoverUrl,
-          displayOrder,
-          tags,
+          displayOrder: state.displayOrder,
+          tags: state.tags,
           status,
           translations: translationsPayload,
         }).unwrap();
 
         newGuideId = createdRes?.data?.id;
-        newGuideTitle = createdRes?.data?.title || title.trim();
+        newGuideTitle = createdRes?.data?.title || state.title.trim();
         if (newGuideId) {
           setSavedGuideId(newGuideId);
         }
       }
 
       // If there are staged FAQs that weren't auto-saved, attach them now
-      if (newGuideId && stagedFaqs.length > 0 && !savedGuideId) {
+      if (newGuideId && stagedFaqs.length > 0 && !state.savedGuideId) {
         try {
           await createFaqsBulk({
             guideId: newGuideId,
@@ -537,10 +589,10 @@ export default function CreateGuidePage() {
       }
 
       // Revoke created blobs
-      if (coverPreviewUrl && coverPreviewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(coverPreviewUrl);
+      if (state.coverPreviewUrl && state.coverPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(state.coverPreviewUrl);
       }
-      blobUrlsInContent.forEach((bUrl) => URL.revokeObjectURL(bUrl));
+      allBlobUrls.forEach((bUrl) => URL.revokeObjectURL(bUrl));
 
       setProcessingState((prev) => ({
         ...prev,
@@ -652,6 +704,9 @@ export default function CreateGuidePage() {
     breedId,
     summary,
     content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
     coverPreviewUrl,
     coverFile,
     pendingBodyImages,

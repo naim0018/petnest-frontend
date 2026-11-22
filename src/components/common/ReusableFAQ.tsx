@@ -54,6 +54,9 @@ export default function ReusableFAQ({
     defaultOpenId ? [defaultOpenId] : []
   );
 
+  const displayImage = mascotImage || cardImage;
+  const displayAlt = mascotAlt || cardImageAlt || "FAQ Mascot";
+
   const toggleItem = (id: string) => {
     if (allowMultiple) {
       setOpenIds((prev) =>
@@ -67,7 +70,7 @@ export default function ReusableFAQ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg border border-emerald-900/10 dark:border-border shadow-xs transition-all duration-300 p-6 sm:p-8 lg:p-10",
+        "relative overflow-hidden rounded-lg border border-emerald-900/10 dark:border-border shadow-xs transition-all duration-300 p-6 sm:p-8 lg:p-10 w-full",
         bgGradient,
         className
       )}
@@ -82,8 +85,8 @@ export default function ReusableFAQ({
 
       {/* FOREGROUND CONTENT */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-        {/* Left Column: Title + Subtitle + Transparent Mascot Illustration */}
-        <div className="lg:col-span-4 flex flex-col justify-between space-y-5">
+        {/* Left Column: Title + Subtitle + Circular Mascot / Cover Image */}
+        <div className="lg:col-span-4 flex flex-col space-y-6">
           <div className="space-y-1.5 text-left">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-ink font-quicksand leading-tight tracking-tight">
               {title}
@@ -93,17 +96,15 @@ export default function ReusableFAQ({
             </p>
           </div>
 
-          {/* Mascot Pet Cutout (Budgie / Puppy / Cat / Hamster / Betta / Chameleon) */}
-          {mascotImage && (
-            <div className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 pt-2">
-              {/* Soft circular accent background behind mascot */}
-              <div className="absolute inset-0 m-auto w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-xs shadow-2xs pointer-events-none" />
+          {/* Circular Cover / Mascot Image with object-cover */}
+          {displayImage && (
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-full overflow-hidden shadow-md border-4 border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/5 shrink-0 transition-transform duration-300 hover:scale-105">
               <Image
-                src={mascotImage}
-                alt={mascotAlt}
+                src={displayImage}
+                alt={displayAlt}
                 fill
-                className="object-contain object-bottom drop-shadow-md select-none transition-transform duration-300 hover:scale-105"
-                sizes="(max-width: 640px) 144px, 192px"
+                className="object-cover select-none"
+                sizes="(max-width: 640px) 128px, 176px"
               />
             </div>
           )}

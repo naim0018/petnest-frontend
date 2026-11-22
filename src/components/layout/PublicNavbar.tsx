@@ -14,6 +14,7 @@ import {
   CheckCheck,
   Home,
   X,
+  Search,
   Rss,
   MessageSquare,
   Users,
@@ -94,19 +95,23 @@ const initialMessages: MessageItem[] = [
 ];
 
 const navLinks = [
-  // { label: "Feed", href: "/", icon: Rss },
-  // { label: "Community", href: "/community", icon: Users },
-  // { label: "Guides", href: "/guides", icon: BookOpen },
   { label: "Guides", href: "/", icon: BookOpen },
-  // { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-  // { label: "Adoption", href: "/adoption", icon: HeartHandshake },
-  // { label: "Shelter", href: "/shelter", icon: Building2 },
+];
+
+const mobileDrawerLinks = [
+  { label: "Guides", href: "/", icon: BookOpen },
+  { label: "Feed", href: "/feed", icon: Rss },
+  { label: "Community", href: "/community", icon: Users },
+  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+  { label: "Adoption", href: "/adoption", icon: HeartHandshake },
+  { label: "Shelter", href: "/shelter", icon: Building2 },
 ];
 
 export default function PublicNavbar() {
   const pathname = usePathname();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [messages] = useState<MessageItem[]>(initialMessages);
 
@@ -151,44 +156,39 @@ export default function PublicNavbar() {
 
   return (
     <>
-      {/* Top Header Navbar - Matching Pencil Spec */}
-      <nav className="w-full h-20 shrink-0 border-b border-border-peach sticky top-0 z-40 transition-colors bg-card">
-        <CommonWrapper className="h-full py-0 flex flex-row justify-between items-center">
+      {/* Top Header Navbar */}
+      <nav className="w-full h-16 sm:h-20 shrink-0 border-b border-border-peach sticky top-0 z-40 transition-colors bg-card/95 backdrop-blur-md">
+        <CommonWrapper className="h-full py-0 px-3 sm:px-4 md:px-6 flex flex-row justify-between items-center gap-1.5 sm:gap-3 md:gap-4">
           {/* Logo Group */}
           <Link href="/" className="no-underline shrink-0">
             <Logo />
           </Link>
 
-        {/* Search Bar */}
-        <div className="hidden md:flex w-80 shrink-0 h-11 flex-row gap-2.5 px-4 justify-start items-center bg-surface-muted rounded-full">
-          <div className="size-4.5 shrink-0 relative overflow-hidden flex items-center justify-center">
-            <svg
-              viewBox="0 0 18 18"
-              className="size-3.5"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13.66016 13.66016l4.34 4.34m-10.00016-2.00016c4.41828 0 8-3.58172 8-8m-16 0c0 4.41828 3.58172 8 8 8m0-16c-4.41828 0-8 3.58172-8 8m16 0c0-4.41828-3.58172-8-8-8"
-                className="stroke-ink-faint"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+        {/* Search Bar - Fluid responsive */}
+        <div className="hidden md:flex flex-1 min-w-[140px] max-w-xs xl:max-w-sm h-10 lg:h-11 flex-row gap-2.5 px-3.5 lg:px-4 justify-start items-center bg-surface-muted rounded-full mx-1.5 lg:mx-3 border border-transparent focus-within:border-coral/40 transition-all">
+          <div className="size-4 shrink-0 relative overflow-hidden flex items-center justify-center">
+            <Search className="size-3.5 text-ink-faint" />
           </div>
           <input
             type="text"
             placeholder="Search pets, posts, guides, people..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+            className="w-full bg-transparent text-xs lg:text-sm text-ink placeholder:text-ink-faint focus:outline-none"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="p-1 text-ink-muted hover:text-ink cursor-pointer"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Nav Tabs */}
         <div className="hidden lg:flex flex-row gap-1.5 justify-start items-center shrink-0">
-
-
           {navLinks.map((link) => {
             const LinkIcon = link.icon;
             const active =
@@ -201,9 +201,9 @@ export default function PublicNavbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "w-32 py-2.5 px-3 flex flex-row gap-2 justify-center items-center rounded-full no-underline transition-all duration-200 shrink-0",
+                  "px-4 xl:px-5 py-2 xl:py-2.5 flex flex-row gap-2 justify-center items-center rounded-full no-underline transition-all duration-200 shrink-0",
                   active
-                    ? "bg-coral text-white shadow-sm"
+                    ? "bg-coral text-white shadow-sm font-bold"
                     : "relative overflow-hidden group text-ink-muted hover:text-white before:absolute before:inset-0 before:rounded-full before:bg-coral before:-translate-x-[101%] hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out"
                 )}
               >
@@ -229,28 +229,41 @@ export default function PublicNavbar() {
         </div>
 
         {/* Right User Group */}
-        <div className="flex flex-row gap-3 sm:gap-4 xl:gap-5 justify-start items-center shrink-0 h-full">
+        <div className="flex flex-row gap-1.5 sm:gap-2 md:gap-2.5 xl:gap-3.5 justify-end items-center shrink-0 h-full">
+          {/* Mobile Search Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            className={cn(
+              "md:hidden size-9 sm:size-10 flex items-center justify-center rounded-lg border border-border-peach transition-colors cursor-pointer shrink-0",
+              isMobileSearchOpen
+                ? "bg-coral text-white border-coral"
+                : "bg-coral-light/50 text-coral hover:bg-coral-light"
+            )}
+            aria-label="Toggle search bar"
+          >
+            <Search className="size-4" />
+          </button>
 
           {/* Select Pets Pill Dropdown */}
           <PetSelectorPopover />
 
           {/* Notification Bell Button */}
           <div className="relative h-full flex items-center" ref={notifRef}>
-
             <button
               onClick={() => {
                 setIsNotifOpen(!isNotifOpen);
                 setIsMessagesOpen(false);
               }}
-              className="size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light rounded-lg relative cursor-pointer border border-border-peach focus:outline-none"
+              className="size-9 sm:size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light/50 hover:bg-coral-light rounded-lg relative cursor-pointer border border-border-peach focus:outline-none transition-colors"
               aria-label="Toggle notifications"
             >
               <div className="size-5 relative overflow-hidden flex items-center justify-center">
-                <Bell className="w-5 h-5 text-coral stroke-[2]" />
+                <Bell className="size-4.5 sm:size-5 text-coral stroke-[2]" />
               </div>
               {unreadNotifCount > 0 && (
-                <div className="size-5 absolute left-6 -top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10">
-                  <span className="text-[10px] text-white font-bold whitespace-nowrap">
+                <div className="size-4 sm:size-5 absolute -top-1.5 -right-1.5 sm:left-6 sm:-top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10 ring-2 ring-card">
+                  <span className="text-[9px] sm:text-[10px] text-white font-bold whitespace-nowrap">
                     {unreadNotifCount}
                   </span>
                 </div>
@@ -259,7 +272,7 @@ export default function PublicNavbar() {
 
             {/* Notification Dropdown */}
             {isNotifOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-16 sm:top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Notifications
@@ -306,22 +319,22 @@ export default function PublicNavbar() {
             )}
           </div>
 
-          {/* Message Circle Button */}
-          <div className="relative h-full flex items-center" ref={messagesRef}>
+          {/* Message Circle Button - hidden on narrow phones, accessible on sm+ */}
+          <div className="relative h-full hidden sm:flex items-center" ref={messagesRef}>
             <button
               onClick={() => {
                 setIsMessagesOpen(!isMessagesOpen);
                 setIsNotifOpen(false);
               }}
-              className="size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light rounded-lg relative cursor-pointer border-border-peach border  focus:outline-none"
+              className="size-9 sm:size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light/50 hover:bg-coral-light rounded-lg relative cursor-pointer border-border-peach border focus:outline-none transition-colors"
               aria-label="Toggle messages"
             >
               <div className="size-5 relative overflow-hidden flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-coral stroke-[2]" />
+                <MessageSquare className="size-4.5 sm:size-5 text-coral stroke-[2]" />
               </div>
               {unreadMsgCount > 0 && (
-                <div className="size-5 absolute left-6 -top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10">
-                  <span className="text-[10px] text-white font-bold whitespace-nowrap">
+                <div className="size-4 sm:size-5 absolute -top-1.5 -right-1.5 sm:left-6 sm:-top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10 ring-2 ring-card">
+                  <span className="text-[9px] sm:text-[10px] text-white font-bold whitespace-nowrap">
                     {unreadMsgCount}
                   </span>
                 </div>
@@ -330,7 +343,7 @@ export default function PublicNavbar() {
 
             {/* Messages Dropdown */}
             {isMessagesOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-16 sm:top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Messages
@@ -366,16 +379,53 @@ export default function PublicNavbar() {
             )}
           </div>
 
-          {/* Language Selector */}
-          <LanguageSelector />
+          {/* Language Selector - hidden on compact mobile (accessible via drawer menu), visible sm+ */}
+          <div className="hidden sm:flex items-center">
+            <LanguageSelector />
+          </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+          {/* Theme Toggle - hidden on compact mobile (accessible via drawer menu), visible sm+ */}
+          <div className="hidden sm:flex items-center">
+            <ThemeToggle />
+          </div>
 
           {/* User Profile */}
           <UserProfile />
         </div>
         </CommonWrapper>
+
+        {/* Mobile Search Expandable Bar */}
+        {isMobileSearchOpen && (
+          <div className="md:hidden w-full px-3 sm:px-4 py-2 bg-card border-t border-border-peach animate-in fade-in slide-in-from-top-2 duration-150 shadow-xs">
+            <div className="flex items-center gap-2 h-10 px-3 bg-surface-muted rounded-full border border-border-peach/70">
+              <Search className="size-4 text-ink-faint shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Search pets, posts, guides, people..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 text-ink-muted hover:text-ink cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsMobileSearchOpen(false)}
+                className="text-xs font-bold text-coral px-1 hover:underline cursor-pointer shrink-0"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Bottom Mobile Navigation Bar */}
@@ -400,6 +450,7 @@ export default function PublicNavbar() {
               </span>
               <div className="flex items-center gap-2">
                 <LanguageSelector />
+                <ThemeToggle />
                 <button
                   onClick={() => setIsHomePopoverOpen(false)}
                   className="p-1 text-ink-faint hover:text-ink rounded-full"
@@ -410,7 +461,7 @@ export default function PublicNavbar() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 mb-3">
-              {navLinks.map((item) => {
+              {mobileDrawerLinks.map((item) => {
                 const ItemIcon = item.icon;
                 const active =
                   pathname === item.href ||
@@ -444,63 +495,71 @@ export default function PublicNavbar() {
           </div>
         )}
 
-        <div className="bg-card/90 backdrop-blur-xl border-t border-border-peach h-16 flex items-center justify-around px-2 shadow-lg">
+        <div className="w-full max-w-full bg-card/95 backdrop-blur-xl border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-5 items-center px-0.5 sm:px-2 shadow-lg">
           <Link
-            href="/"
+            href="/feed"
             className={cn(
-              "flex flex-col items-center justify-center flex-1 py-1 no-underline transition-colors",
-              pathname === "/" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
+              pathname.startsWith("/feed") ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
             )}
           >
-            <Rss className="w-5 h-5 mb-0.5" />
-            <span className="text-xs tracking-tight font-medium">Feed</span>
+            <Rss className="size-5 mb-0.5 shrink-0" />
+            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+              Feed
+            </span>
           </Link>
 
           <Link
             href="/community"
             className={cn(
-              "flex flex-col items-center justify-center flex-1 py-1 no-underline transition-colors",
+              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
               pathname === "/community" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
             )}
           >
-            <Users className="w-5 h-5 mb-0.5" />
-            <span className="text-xs tracking-tight font-medium">Community</span>
+            <Users className="size-5 mb-0.5 shrink-0" />
+            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+              Community
+            </span>
           </Link>
 
           {/* Center Floating Home FAB */}
-          <div className="relative -mt-6 flex-1 flex justify-center">
+          <div className="relative -mt-5 sm:-mt-6 flex justify-center items-center min-w-0 w-full">
             <button
               onClick={() => setIsHomePopoverOpen(!isHomePopoverOpen)}
               className={cn(
-                "size-13 bg-coral text-white rounded-full flex items-center justify-center shadow-lg shadow-coral/40 hover:shadow-coral/60 active:scale-95 transition-all border-4 border-card cursor-pointer",
+                "size-12 sm:size-13 bg-coral text-white rounded-full flex items-center justify-center shadow-lg shadow-coral/40 hover:shadow-coral/60 active:scale-95 transition-all border-3 sm:border-4 border-card cursor-pointer shrink-0",
                 isHomePopoverOpen && "rotate-45"
               )}
               aria-label="Open home menu"
             >
-              <Home className="w-6 h-6" />
+              <Home className="size-5.5 sm:size-6" />
             </button>
           </div>
 
           <Link
             href="/marketplace"
             className={cn(
-              "flex flex-col items-center justify-center flex-1 py-1 no-underline transition-colors",
+              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
               pathname === "/marketplace" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
             )}
           >
-            <ShoppingBag className="w-5 h-5 mb-0.5" />
-            <span className="text-xs tracking-tight font-medium">Marketplace</span>
+            <ShoppingBag className="size-5 mb-0.5 shrink-0" />
+            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+              Marketplace
+            </span>
           </Link>
 
           <Link
             href="/adoption"
             className={cn(
-              "flex flex-col items-center justify-center flex-1 py-1 no-underline transition-colors",
+              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
               pathname === "/adoption" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
             )}
           >
-            <HeartHandshake className="w-5 h-5 mb-0.5" />
-            <span className="text-xs tracking-tight font-medium">Adoption</span>
+            <HeartHandshake className="size-5 mb-0.5 shrink-0" />
+            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+              Adoption
+            </span>
           </Link>
         </div>
       </div>

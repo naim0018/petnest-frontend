@@ -15,7 +15,7 @@ import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
 import { useAppSelector } from "@/hooks/useRedux";
 import { useFindAllPublicGuidesQuery } from "@/store/Api/Guides/guides.api";
-import type { GuideSummary } from "@/store/Api/Guides/guides.types";
+import type { PublicGuideCardItem } from "@/store/Api/Guides/guides.types";
 
 const categoryLabelMap: Record<string, string> = {
   birds: "Budgie & Bird",
@@ -27,7 +27,7 @@ const categoryLabelMap: Record<string, string> = {
 };
 
 function mapToHeroGuide(
-  guide: GuideSummary,
+  guide: PublicGuideCardItem,
   fallback: PetCareGuideCardData
 ): PetCareGuideCardData {
   return {
@@ -37,7 +37,7 @@ function mapToHeroGuide(
     title: guide.title,
     description: guide.excerpt || fallback.description,
     readTime: `${guide.readTimeMinutes || 5} min read`,
-    expertReviewed: Boolean(guide.lastReviewedAt || guide.reviewer),
+    expertReviewed: Boolean(guide.expertReviewed ?? guide.lastReviewedAt),
     ctaText: "Read Full Guide",
     href: `/guides/${guide.slug || guide.id}`,
     image: guide.coverImage || fallback.image,
@@ -50,7 +50,7 @@ function mapToHeroGuide(
   };
 }
 
-function mapToCareArticle(guide: GuideSummary): CareArticleCardData {
+function mapToCareArticle(guide: PublicGuideCardItem): CareArticleCardData {
   return {
     id: guide.id,
     title: guide.title,
@@ -61,9 +61,11 @@ function mapToCareArticle(guide: GuideSummary): CareArticleCardData {
     categorySlug: guide.category?.slug,
     image: guide.coverImage || "/CareGuideCard/dog-faq-mascot.png",
     imageAlt: guide.coverImageAlt || guide.title,
-    expertReviewed: Boolean(guide.lastReviewedAt || guide.reviewer),
+    expertReviewed: Boolean(guide.expertReviewed ?? guide.lastReviewedAt),
     slug: guide.slug || guide.id,
     displayOrder: guide.displayOrder,
+    translations: guide.translations,
+    isBookmarked: guide.isBookmarked,
   };
 }
 
@@ -93,7 +95,7 @@ export default function GuidesInteractiveExplorer() {
       sortOrder: "asc",
     });
 
-  const apiGuides: GuideSummary[] = guidesResponse?.data?.items || [];
+  const apiGuides: PublicGuideCardItem[] = guidesResponse?.data?.items || [];
 
   // Fallback defaults
   const fallbackGuide =
@@ -112,7 +114,10 @@ export default function GuidesInteractiveExplorer() {
   const { currentGuide, sideArticles, remainingArticles } = useMemo(() => {
     if (apiGuides.length > 0) {
       // Sort helper: lower positive displayOrder first, then unranked (0 / undefined) sorted by published date
-      const sortByDisplayOrder = (a: GuideSummary, b: GuideSummary) => {
+      const sortByDisplayOrder = (
+        a: PublicGuideCardItem,
+        b: PublicGuideCardItem
+      ) => {
         const aOrder =
           typeof a.displayOrder === "number" && a.displayOrder > 0
             ? a.displayOrder
@@ -123,8 +128,8 @@ export default function GuidesInteractiveExplorer() {
             : 9999;
         if (aOrder !== bOrder) return aOrder - bOrder;
         return (
-          new Date(b.publishedAt || b.createdAt).getTime() -
-          new Date(a.publishedAt || a.createdAt).getTime()
+          new Date(b.publishedAt || 0).getTime() -
+          new Date(a.publishedAt || 0).getTime()
         );
       };
 

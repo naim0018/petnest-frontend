@@ -64,10 +64,46 @@ export interface GuideLocalizedVariant {
   keyTakeaways?: string[];
   metaTitle?: string;
   metaDescription?: string;
+  faqs?: Array<{
+    id?: string;
+    question: string;
+    answer: string;
+    displayOrder?: number;
+    isActive?: boolean;
+  }>;
   translations?: GuideTranslationsMap;
 }
 
 export type GuideTranslationsMap = Record<string, GuideLocalizedVariant>;
+
+export interface PublicGuideCardCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+}
+
+export interface PublicGuideCardItem {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  type: GuideType;
+  coverImage?: string | null;
+  coverImageAlt?: string | null;
+  readTimeMinutes: number;
+  displayOrder: number;
+  publishedAt?: string | null;
+  lastReviewedAt?: string | null;
+  translations?: Record<string, { title?: string; excerpt?: string }> | null;
+  category: PublicGuideCardCategory;
+  expertReviewed?: boolean;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
+}
+
+export type PaginatedPublicGuidesResponse =
+  ApiResponse<PaginatedData<PublicGuideCardItem>>;
 
 export interface GuideSummary {
   id: string;
@@ -85,6 +121,7 @@ export interface GuideSummary {
   tags: string[];
   status: GuideStatus;
   isFeatured: boolean;
+  expertReviewed?: boolean;
   viewCount: number;
   likeCount: number;
   bookmarkCount: number;
@@ -308,6 +345,7 @@ export interface BulkImportGuideResult {
   status?: string;
   faqsCount: number;
   imagesLinked: number;
+  hasTranslation?: boolean;
   success: boolean;
   error?: string;
 }

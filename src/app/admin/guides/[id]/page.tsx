@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import React, { use, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,8 @@ import {
   useFindOneEditorialQuery,
   useDeleteGuideMutation,
   useReviewGuideMutation,
+  useImportGuideZipMutation,
+  downloadGuideZip,
 } from "@/store/Api/Guides/guides.api";
 import type { GuideStatus } from "@/store/Api/Guides/guides.types";
 import {
@@ -31,6 +33,8 @@ import {
   ChevronUp,
   AlertCircle,
   Tag,
+  Download,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -101,6 +105,44 @@ export default function ViewGuideDetailPage({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
   const [activeLangTab, setActiveLangTab] = useState<"en" | "bn">("en");
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+  const [importGuideZip, { isLoading: isImportingZip }] =
+    useImportGuideZipMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDownloadZip = async () => {
+    if (!guide) return;
+    try {
+      setIsDownloadingZip(true);
+      toast.info("Preparing ZIP archive with images...");
+      await downloadGuideZip(guide.id, guide.slug);
+      toast.success("Guide ZIP downloaded successfully!");
+    } catch {
+      toast.error("Failed to download guide ZIP");
+    } finally {
+      setIsDownloadingZip(false);
+    }
+  };
+
+  const handleZipFileSelected = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !guide) return;
+    try {
+      toast.info("Updating guide and uploading images from ZIP...");
+      await importGuideZip({ id: guide.id, file }).unwrap();
+      toast.success("Guide updated successfully from ZIP!");
+      refetch();
+    } catch (err: unknown) {
+      const msg =
+        (err as { data?: { message?: string } })?.data?.message ||
+        "Failed to update guide from ZIP";
+      toast.error(msg);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handlePublishNow = async () => {
     if (!guide) return;
@@ -142,6 +184,42 @@ export default function ViewGuideDetailPage({
 
     setHeaderAction(
       <div className="flex items-center gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".zip"
+          onChange={handleZipFileSelected}
+          className="hidden"
+        />
+
+        <PrimaryButton
+          type="button"
+          variant="outline"
+          size="sm"
+          rounded="md"
+          leftIcon={<Download className="size-4" />}
+          isLoading={isDownloadingZip}
+          onClick={handleDownloadZip}
+          className="font-bold cursor-pointer"
+          title="Download guide in ZIP format (guides.json + images/)"
+        >
+          Download ZIP
+        </PrimaryButton>
+
+        <PrimaryButton
+          type="button"
+          variant="outline"
+          size="sm"
+          rounded="md"
+          leftIcon={<Upload className="size-4" />}
+          isLoading={isImportingZip}
+          onClick={() => fileInputRef.current?.click()}
+          className="font-bold cursor-pointer"
+          title="Update this guide with a modified ZIP archive"
+        >
+          Update from ZIP
+        </PrimaryButton>
+
         <Link href={`/admin/guides/${guide.id}/faqs`}>
           <PrimaryButton
             type="button"
@@ -196,7 +274,14 @@ export default function ViewGuideDetailPage({
     );
 
     return () => setHeaderAction(null);
-  }, [setHeaderAction, guide, canPublish, isPublishing]);
+  }, [
+    setHeaderAction,
+    guide,
+    canPublish,
+    isPublishing,
+    isDownloadingZip,
+    isImportingZip,
+  ]);
 
   // Exact Layout Skeleton while loading
   if (isLoading) {

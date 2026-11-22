@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   useFindOneEditorialQuery,
   useFindOneCategoryQuery,
@@ -286,22 +287,34 @@ export default function Breadcrumbs() {
 
       {crumbs.map((crumb, index) => {
         const isLast = index === crumbs.length - 1;
+        const isIntermediate = index > 0 && !isLast && crumbs.length > 2;
+
         return (
-          <div key={`${crumb.url}-${index}`} className="flex items-center space-x-1.5 min-w-0">
-            <ChevronRight className="size-3.5 text-ink-faint shrink-0" />
-            {isLast ? (
-              <span className="text-coral font-bold truncate max-w-36 sm:max-w-60">
-                {crumb.label}
-              </span>
-            ) : (
-              <Link
-                href={crumb.url}
-                className="text-ink-muted hover:text-coral transition-colors no-underline font-medium hover:underline truncate max-w-32 sm:max-w-52"
-              >
-                {crumb.label}
-              </Link>
+          <React.Fragment key={`${crumb.url}-${index}`}>
+            {index === 1 && crumbs.length > 2 && (
+              <span className="sm:hidden text-ink-faint text-xs px-0.5">…</span>
             )}
-          </div>
+            <div
+              className={cn(
+                "flex items-center space-x-1.5 min-w-0",
+                isIntermediate && "hidden sm:flex"
+              )}
+            >
+              <ChevronRight className="size-3.5 text-ink-faint shrink-0" />
+              {isLast ? (
+                <span className="text-coral font-bold truncate max-w-28 xs:max-w-36 sm:max-w-60">
+                  {crumb.label}
+                </span>
+              ) : (
+                <Link
+                  href={crumb.url}
+                  className="text-ink-muted hover:text-coral transition-colors no-underline font-medium hover:underline truncate max-w-24 sm:max-w-52"
+                >
+                  {crumb.label}
+                </Link>
+              )}
+            </div>
+          </React.Fragment>
         );
       })}
     </nav>

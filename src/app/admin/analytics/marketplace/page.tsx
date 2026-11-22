@@ -81,15 +81,6 @@ export default function MarketplaceAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">Marketplace Analytics</h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Financial revenue metrics, transaction volumes, store performance, and average order values.
-          </p>
-        </div>
-      </div>
-
       <AnimatedContainer delay={0.1}>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <StatsCard

@@ -13,6 +13,7 @@ import {
   Rabbit,
   Fish,
   Turtle,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -210,7 +211,7 @@ export default function PetSelectorPopover({
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
-            "relative size-10 rounded-full cursor-pointer transition-all duration-200 select-none shrink-0 flex items-center justify-center",
+            "relative size-9 sm:size-10 rounded-full cursor-pointer transition-all duration-200 select-none shrink-0 flex items-center justify-center",
             "focus:outline-none",
             isOpen && "scale-105"
           )}
@@ -220,11 +221,11 @@ export default function PetSelectorPopover({
         >
           <div className="w-full h-full rounded-full flex items-center justify-center shrink-0">
             {selectedType === "all" ? (
-              <div className="size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-xs">
-                <PawPrint className="size-5 text-white" />
+              <div className="size-9 sm:size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-xs">
+                <PawPrint className="size-4.5 sm:size-5 text-white" />
               </div>
             ) : selectedBreed !== "all" && selectedBreedItem ? (
-              <div className="relative size-10 rounded-full p-[2px] bg-gradient-to-tr from-[#ff6b6b] to-[#ffe66d] shadow-xs shrink-0 flex items-center justify-center">
+              <div className="relative size-9 sm:size-10 rounded-full p-[2px] bg-gradient-to-tr from-[#ff6b6b] to-[#ffe66d] shadow-xs shrink-0 flex items-center justify-center">
                 <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white dark:border-slate-900 bg-card">
                   <Image
                     src={selectedBreedItem.image}
@@ -236,8 +237,8 @@ export default function PetSelectorPopover({
                 </div>
               </div>
             ) : (
-              <div className="size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-xs">
-                <CategoryIcon catId={selectedType} className="size-5.5 text-white stroke-[2.2]" />
+              <div className="size-9 sm:size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-xs">
+                <CategoryIcon catId={selectedType} className="size-4.5 sm:size-5.5 text-white stroke-[2.2]" />
               </div>
             )}
           </div>
@@ -253,52 +254,63 @@ export default function PetSelectorPopover({
         </button>
       </Tooltip>
 
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          className="sm:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-[99] animate-in fade-in duration-200"
+        />
+      )}
+
       {/* Popover Card */}
       {isOpen && (
         <div
           className={cn(
-            "absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-[2px]",
-            "w-[calc(100vw-16px)] sm:w-[860px] lg:w-[940px] xl:w-[980px] max-w-[95vw]",
-            "bg-popover border border-border-peach rounded-lg shadow-2xl z-[100]",
-            "p-5 sm:p-6 animate-in fade-in zoom-in-95 duration-200 select-none",
-            "max-h-[85vh] overflow-y-auto"
+            "fixed inset-x-2 top-16 sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2",
+            "sm:w-[780px] md:w-[840px] lg:w-[920px] xl:w-[960px] max-w-[calc(100vw-1rem)]",
+            "bg-popover border border-border-peach rounded-xl shadow-2xl z-[100]",
+            "p-3.5 sm:p-5 md:p-6 animate-in fade-in zoom-in-95 duration-200 select-none",
+            "max-h-[calc(100dvh-5.5rem)] sm:max-h-[82vh] overflow-y-auto"
           )}
         >
           <div className="hidden sm:block absolute -top-2 right-8 size-4 bg-popover border-t border-l border-border-peach rotate-45 z-10 rounded-tl-xs" />
 
           {/* Header Section */}
-          <div className="flex items-center justify-between pb-3.5 mb-5 border-b border-border-peach gap-3">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-sm shrink-0">
-                <PawPrint className="size-5" />
+          <div className="flex items-center justify-between pb-3 mb-4 sm:mb-5 border-b border-border-peach gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="size-8 sm:size-10 rounded-full bg-coral flex items-center justify-center text-white shadow-xs shrink-0">
+                <PawPrint className="size-4 sm:size-5" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold font-quicksand text-ink leading-tight">
+              <h3 className="text-sm sm:text-base md:text-lg font-bold font-quicksand text-ink leading-tight truncate">
                 Select Pets
               </h3>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleReset}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-coral/30 hover:border-coral text-coral hover:bg-coral-light/40 text-xs font-bold font-quicksand transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full border border-coral/30 hover:border-coral text-coral hover:bg-coral-light/40 text-xs font-bold font-quicksand transition-colors cursor-pointer"
+                title="Reset selection"
               >
                 <RotateCcw className="size-3.5" />
-                <span>Reset</span>
+                <span className="hidden xs:inline">Reset</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="px-3.5 py-1.5 rounded-full border border-border-peach text-ink-muted hover:text-ink hover:bg-surface-muted text-xs font-bold font-quicksand transition-colors cursor-pointer"
+                className="size-8 sm:size-auto sm:px-3.5 sm:py-1.5 rounded-full border border-border-peach text-ink-muted hover:text-ink hover:bg-surface-muted text-xs font-bold font-quicksand transition-colors cursor-pointer flex items-center justify-center"
+                aria-label="Close pet selection"
               >
-                Close
+                <X className="size-4 sm:hidden" />
+                <span className="hidden sm:inline">Close</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleApply}
-                className="px-5 py-1.5 rounded-full bg-coral hover:bg-coral-hover text-white text-xs font-bold font-quicksand shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
+                className="px-3.5 sm:px-5 py-1.5 rounded-full bg-coral hover:bg-coral-hover text-white text-xs font-bold font-quicksand shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 Apply
               </button>
@@ -314,33 +326,33 @@ export default function PetSelectorPopover({
               </h4>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-10 gap-3 sm:gap-4 py-1 items-start">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-10 gap-2 xs:gap-3 sm:gap-4 py-1 items-start">
               {/* Option: All */}
               <button
                 type="button"
                 onClick={() => handleSelectType("all")}
-                className="group flex flex-col items-center gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
+                className="group flex flex-col items-center gap-1.5 sm:gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
               >
                 <div
                   className={cn(
-                    "relative size-16 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
+                    "relative size-13 xs:size-15 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
                     selectedType === "all"
                       ? "p-[3px] bg-gradient-to-tr from-[#ff6b6b] to-[#ffe66d] scale-105"
                       : "p-[2px] bg-transparent hover:scale-105"
                   )}
                 >
                   <div className="w-full h-full rounded-full border-2 border-white dark:border-slate-900 bg-coral flex items-center justify-center text-white shadow-xs">
-                    <PawPrint className="size-8 text-white" />
+                    <PawPrint className="size-6 sm:size-8 text-white" />
                   </div>
                   {selectedType === "all" && (
-                    <div className="absolute top-0 right-0 size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
-                      <Check className="size-3 stroke-[3]" />
+                    <div className="absolute top-0 right-0 size-4 sm:size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
+                      <Check className="size-2.5 sm:size-3 stroke-[3]" />
                     </div>
                   )}
                 </div>
                 <span
                   className={cn(
-                    "text-xs font-bold text-center truncate max-w-[76px] font-quicksand transition-colors",
+                    "text-[10px] xs:text-xs font-bold text-center truncate max-w-full font-quicksand transition-colors leading-tight",
                     selectedType === "all"
                       ? "text-coral font-bold"
                       : "text-ink-muted group-hover:text-ink"
@@ -359,11 +371,11 @@ export default function PetSelectorPopover({
                     key={cat.id}
                     type="button"
                     onClick={() => handleSelectType(cat.id)}
-                    className="group flex flex-col items-center gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
+                    className="group flex flex-col items-center gap-1.5 sm:gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
                   >
                     <div
                       className={cn(
-                        "relative size-16 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
+                        "relative size-13 xs:size-15 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
                         isSelected
                           ? "p-[3px] bg-gradient-to-tr from-[#ff6b6b] to-[#ffe66d] scale-105"
                           : "p-[2px] border border-border-peach hover:border-coral/60 hover:scale-105"
@@ -375,18 +387,18 @@ export default function PetSelectorPopover({
                           alt={cat.label}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-110"
-                          sizes="72px"
+                          sizes="(max-width: 640px) 60px, 72px"
                         />
                       </div>
                       {isSelected && (
-                        <div className="absolute top-0 right-0 size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
-                          <Check className="size-3 stroke-[3]" />
+                        <div className="absolute top-0 right-0 size-4 sm:size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
+                          <Check className="size-2.5 sm:size-3 stroke-[3]" />
                         </div>
                       )}
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-bold text-center truncate max-w-[76px] font-quicksand transition-colors",
+                        "text-[10px] xs:text-xs font-bold text-center truncate max-w-full font-quicksand transition-colors leading-tight",
                         isSelected
                           ? "text-coral font-bold"
                           : "text-ink-muted group-hover:text-ink"
@@ -403,7 +415,7 @@ export default function PetSelectorPopover({
 
           {/* Section 2: Popular Breeds & Types */}
           {currentCategory && currentCategory.breeds.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-border-peach space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-border-peach space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-2">
                 <div className="relative size-4 rounded-full overflow-hidden">
                   <Image
@@ -418,7 +430,7 @@ export default function PetSelectorPopover({
                 </h4>
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-10 gap-3 sm:gap-4 py-1 items-start">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-10 gap-2 xs:gap-3 sm:gap-4 py-1 items-start">
                 {currentCategory.breeds.map((breed) => {
                   const isBreedSelected = selectedBreed === breed.id;
                   const isAllBreed = breed.id === "all";
@@ -428,11 +440,11 @@ export default function PetSelectorPopover({
                       key={breed.id}
                       type="button"
                       onClick={() => handleSelectBreed(breed.id)}
-                      className="group flex flex-col items-center gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
+                      className="group flex flex-col items-center gap-1.5 sm:gap-2 w-full shrink-0 cursor-pointer focus:outline-none"
                     >
                       <div
                         className={cn(
-                          "relative size-16 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
+                          "relative size-13 xs:size-15 sm:size-18 rounded-full transition-all duration-200 flex items-center justify-center",
                           isBreedSelected
                             ? "p-[3px] bg-gradient-to-tr from-[#ff6b6b] to-[#ffe66d] scale-105"
                             : "p-[2px] border border-border-peach hover:border-coral/60 hover:scale-105"
@@ -442,7 +454,7 @@ export default function PetSelectorPopover({
                           <div className="w-full h-full rounded-full border-2 border-white dark:border-slate-900 bg-coral flex items-center justify-center shadow-xs">
                             <CategoryIcon
                               catId={currentCategory.id}
-                              className="size-8 text-white stroke-[2.2]"
+                              className="size-6 sm:size-8 text-white stroke-[2.2]"
                             />
                           </div>
                         ) : (
@@ -452,20 +464,20 @@ export default function PetSelectorPopover({
                               alt={breed.label}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-110"
-                              sizes="72px"
+                              sizes="(max-width: 640px) 60px, 72px"
                             />
                           </div>
                         )}
 
                         {isBreedSelected && (
-                          <div className="absolute top-0 right-0 size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
-                            <Check className="size-3 stroke-[3]" />
+                          <div className="absolute top-0 right-0 size-4 sm:size-5 rounded-full bg-coral text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 z-10">
+                            <Check className="size-2.5 sm:size-3 stroke-[3]" />
                           </div>
                         )}
                       </div>
                       <span
                         className={cn(
-                          "text-[11px] font-bold text-center truncate max-w-[76px] font-quicksand transition-colors leading-tight",
+                          "text-[10px] xs:text-xs font-bold text-center truncate max-w-full font-quicksand transition-colors leading-tight",
                           isBreedSelected
                             ? "text-coral font-bold"
                             : "text-ink-muted group-hover:text-ink"
