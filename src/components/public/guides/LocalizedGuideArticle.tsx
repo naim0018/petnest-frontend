@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useCurrentLanguage } from "@/hooks/useCurrentLanguage";
 import { ArticleContentRenderer } from "@/components/admin/guides/RichTextEditor";
-import { Sparkles, CheckCircle2, User, Calendar, Languages } from "lucide-react";
+import { Sparkles, CheckCircle2, User, Calendar, Languages, Clock, Eye } from "lucide-react";
 import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 export interface LocalizedGuideArticleProps {
@@ -19,6 +19,10 @@ export interface LocalizedGuideArticleProps {
   author: string;
   publishedAt: string;
   coverImage?: string;
+  category?: string;
+  species?: { id: string; name: string; slug: string } | null;
+  readTime?: string;
+  viewCount?: number;
 }
 
 export default function LocalizedGuideArticle({
@@ -33,6 +37,10 @@ export default function LocalizedGuideArticle({
   author,
   publishedAt,
   coverImage,
+  category,
+  species,
+  readTime,
+  viewCount,
 }: LocalizedGuideArticleProps) {
   const currentLang = useCurrentLanguage();
 
@@ -143,15 +151,46 @@ export default function LocalizedGuideArticle({
         {title}
       </h1>
 
-      {/* Author & Published Date Metadata */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-ink-muted pt-3 border-t border-border-peach">
-        <span className="flex items-center gap-1.5 font-semibold">
-          <User className="w-4 h-4 text-coral" /> {author}
-        </span>
-        <span>•</span>
-        <span className="flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-coral" /> {publishedAt}
-        </span>
+      {/* Author, Published Date & Tags Metadata */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-muted pt-3 border-t border-border-peach">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 font-semibold text-ink">
+            <User className="w-3.5 h-3.5 text-coral" /> {author}
+          </span>
+          <span className="text-ink-faint">•</span>
+          <span className="flex items-center gap-1.5 text-ink-muted">
+            <Calendar className="w-3.5 h-3.5 text-coral" /> {publishedAt}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {category && (
+            <span className="text-coral bg-coral/10 px-2.5 py-0.5 rounded-full border border-coral/20 font-bold text-[11px]">
+              {category}
+            </span>
+          )}
+          {species && (
+            <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 font-bold text-[11px]">
+              {species.name}
+            </span>
+          )}
+          {readTime && (
+            <>
+              <span className="text-ink-faint">•</span>
+              <span className="flex items-center gap-1 text-ink-muted font-medium">
+                <Clock className="w-3.5 h-3.5 text-coral" /> {readTime}
+              </span>
+            </>
+          )}
+          {viewCount !== undefined && viewCount > 0 && (
+            <>
+              <span className="text-ink-faint">•</span>
+              <span className="flex items-center gap-1 text-ink-muted">
+                <Eye className="w-3.5 h-3.5" /> {viewCount} views
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Hero Cover Image */}

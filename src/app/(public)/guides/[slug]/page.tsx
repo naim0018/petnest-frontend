@@ -453,32 +453,7 @@ export default async function GuideDetailPage({
           </nav>
 
           <article className="space-y-6">
-            <header className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2.5 text-xs text-ink-faint font-semibold">
-                <span className="text-coral bg-coral/10 px-3 py-1 rounded-full border border-coral/20 font-bold">
-                  {guide.category}
-                </span>
-                {guide.species && (
-                  <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 font-bold">
-                    {guide.species.name}
-                  </span>
-                )}
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-coral" /> {guide.readTime}
-                </span>
-                {guide.viewCount !== undefined && guide.viewCount > 0 && (
-                  <>
-                    <span>•</span>
-                    <span className="flex items-center gap-1 text-ink-muted">
-                      <Eye className="w-3.5 h-3.5" /> {guide.viewCount} views
-                    </span>
-                  </>
-                )}
-              </div>
-            </header>
-
-            {/* Localized Article Presentation (handles Title, Author, Cover, Key Takeaways, Excerpt, Content) */}
+            {/* Localized Article Presentation (handles Title, Author, Date, Tags, Cover, Key Takeaways, Excerpt, Content) */}
             <LocalizedGuideArticle
               defaultTitle={guide.title}
               defaultExcerpt={guide.excerpt}
@@ -491,6 +466,10 @@ export default async function GuideDetailPage({
               author={guide.author}
               publishedAt={guide.publishedAt}
               coverImage={guide.image}
+              category={guide.category}
+              species={guide.species}
+              readTime={guide.readTime}
+              viewCount={guide.viewCount}
             />
           </article>
         </div>
@@ -499,8 +478,8 @@ export default async function GuideDetailPage({
         {/* 🧭 RIGHT SIDEBAR: RELATED GUIDES & WIDGETS (Right: 3 Cols)*/}
         {/* ======================================================== */}
         <aside className="col-span-1 lg:col-span-3 w-full space-y-6 lg:sticky lg:top-24">
-          {/* Related Guides Card */}
-          <div className="rounded-lg border border-border-peach p-4 sm:p-5 xl:p-6 space-y-5">
+          {/* Related Guides Card - Unbordered */}
+          <div className="space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-border-peach">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-coral/10 text-coral">
@@ -523,9 +502,9 @@ export default async function GuideDetailPage({
                   <Link
                     key={item.id}
                     href={`/guides/${item.slug}`}
-                    className="group flex items-start gap-3 p-2 rounded-lg hover:bg-surface-muted/60 transition-colors border border-transparent hover:border-border-peach/60"
+                    className="group flex items-start gap-3 p-2 rounded-lg hover:bg-surface-muted/60 transition-colors"
                   >
-                    <div className="relative w-18 h-18 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-surface-muted border border-border-peach/80">
+                    <div className="relative w-18 h-18 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-surface-muted">
                       <Image
                         src={item.coverImage || "/CareGuideCard/budgie-faq-mascot.png"}
                         alt={item.title}

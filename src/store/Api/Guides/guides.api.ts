@@ -212,6 +212,7 @@ const guidesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [
         { type: "Guides", id: "LIST" },
+        { type: "EditorialGuides" },
         { type: "EditorialGuides", id: "LIST" },
         "EditorialStats",
       ],

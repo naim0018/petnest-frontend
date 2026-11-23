@@ -452,6 +452,15 @@ export default function BulkGuideImportModal({
                             <span className="font-mono text-ink-faint">
                               /{res.slug}
                             </span>
+                            {res.isUpdated ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full text-[10px]">
+                                Updated
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px]">
+                                Created
+                              </span>
+                            )}
                             <span>•</span>
                             <span className="text-coral font-semibold">
                               {res.faqsCount} FAQs

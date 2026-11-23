@@ -1,32 +1,30 @@
 import CommonWrapper from "@/components/common/CommonWrapper";
-import { CreatePostCardSkeleton } from "./feed/_components/feed/main-content/CreatePostCard";
-import { FeedPostCardSkeleton } from "./feed/_components/feed/main-content/FeedPostCard";
-import { TrendingTopicsWidgetSkeleton } from "./feed/_components/feed/right-content/TrendingTopicsWidget";
-import { ShareLoveWidgetSkeleton } from "./feed/_components/feed/left-content/ShareLoveWidget";
-import { StorySectionSkeleton } from "./feed/_components/feed/main-content/StorySection";
-import { FeedFilterTabsSkeleton } from "./feed/_components/feed/main-content/FeedFilterTabs";
 
-export default function Loading() {
+export default function GenericPublicLoading() {
   return (
-    <CommonWrapper>
-      <div className="grid grid-cols-1 lg:grid-cols-16 gap-6">
-        {/* Left Column Skeleton */}
-        <div className="hidden lg:block lg:col-span-3">
-          <ShareLoveWidgetSkeleton />
-        </div>
+    <CommonWrapper className="py-6 sm:py-8 lg:py-10 animate-pulse space-y-8">
+      {/* Top Banner / Hero Skeleton */}
+      <div className="w-full h-48 sm:h-64 rounded-2xl bg-surface-muted" />
 
-        {/* Center Main Feed Skeletons */}
-        <div className="col-span-1 lg:col-span-10 space-y-6">
-          <StorySectionSkeleton />
-          <FeedFilterTabsSkeleton />
-          <CreatePostCardSkeleton />
-          <FeedPostCardSkeleton />
-        </div>
-
-        {/* Right Sidebar Skeleton */}
-        <div className="col-span-1 lg:col-span-3">
-          <TrendingTopicsWidgetSkeleton />
-        </div>
+      {/* Grid Content Skeletons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-border-peach/50 bg-card p-4 space-y-4 shadow-2xs"
+          >
+            <div className="w-full h-44 rounded-lg bg-surface-muted" />
+            <div className="space-y-2">
+              <div className="h-4 w-3/4 bg-surface-muted rounded-md" />
+              <div className="h-3 w-full bg-surface-muted rounded-md" />
+              <div className="h-3 w-5/6 bg-surface-muted rounded-md" />
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-border-peach/40">
+              <div className="h-3 w-16 bg-surface-muted rounded-md" />
+              <div className="h-3 w-12 bg-surface-muted rounded-md" />
+            </div>
+          </div>
+        ))}
       </div>
     </CommonWrapper>
   );

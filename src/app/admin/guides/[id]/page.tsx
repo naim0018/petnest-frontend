@@ -131,8 +131,12 @@ export default function ViewGuideDetailPage({
     if (!file || !guide) return;
     try {
       toast.info("Updating guide and uploading images from ZIP...");
-      await importGuideZip({ id: guide.id, file }).unwrap();
+      const res = await importGuideZip({ id: guide.id, file }).unwrap();
       toast.success("Guide updated successfully from ZIP!");
+      const updated = res?.data || (res as any);
+      if (updated?.translations?.bn?.title || updated?.translations?.bn?.content) {
+        setActiveLangTab("bn");
+      }
       refetch();
     } catch (err: unknown) {
       const msg =
@@ -342,16 +346,16 @@ export default function ViewGuideDetailPage({
     label: guide.status,
     className: "bg-surface-muted text-ink-muted border border-border-peach",
   };
-  const faqs = [...(guide.faqs || [])].sort(
-    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
-  );
-
   const bnVariant = guide.translations?.bn;
   const isBanglaActive = activeLangTab === "bn";
   const hasBnContent = Boolean(bnVariant?.title?.trim());
   const displayTitle = (isBanglaActive && hasBnContent ? bnVariant?.title : guide.title) || "";
   const displayExcerpt = isBanglaActive && hasBnContent ? bnVariant?.excerpt : guide.excerpt;
   const displayContent = (isBanglaActive && hasBnContent ? bnVariant?.content : guide.content) || "";
+  const bnFaqs = Array.isArray(bnVariant?.faqs) ? bnVariant.faqs : [];
+  const faqs = [
+    ...(isBanglaActive && bnFaqs.length > 0 ? bnFaqs : guide.faqs || []),
+  ].sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
 
   return (
     <div className="w-full space-y-6 pb-12">
@@ -617,16 +621,17 @@ export default function ViewGuideDetailPage({
             </p>
           ) : (
             <div className="space-y-3">
-              {faqs.map((faq) => {
-                const isOpen = expandedFaqId === faq.id;
+              {faqs.map((faq, idx) => {
+                const faqKey = faq.id || `faq-${idx}`;
+                const isOpen = expandedFaqId === faqKey;
                 return (
                   <div
-                    key={faq.id}
+                    key={faqKey}
                     className="rounded-lg border border-border-peach bg-surface-soft/50 overflow-hidden"
                   >
                     <button
                       type="button"
-                      onClick={() => setExpandedFaqId(isOpen ? null : faq.id)}
+                      onClick={() => setExpandedFaqId(isOpen ? null : faqKey)}
                       className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left cursor-pointer hover:bg-surface-muted/40 transition-colors"
                     >
                       <span className="text-sm font-bold font-quicksand text-ink">

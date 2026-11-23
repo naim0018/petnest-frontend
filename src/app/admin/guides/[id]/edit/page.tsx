@@ -98,7 +98,7 @@ export default function EditGuidePage({
   const guide = guideResponse?.data;
 
   // Form state
-  const [hydratedId, setHydratedId] = useState<string>("");
+  const [hydratedVersion, setHydratedVersion] = useState<string>("");
 
   // React Hook Form for Edit Guide Fields
   const {
@@ -190,8 +190,39 @@ export default function EditGuidePage({
     if (!file || !guide) return;
     try {
       toast.info("Updating guide and uploading images from ZIP...");
-      await importGuideZip({ id: guide.id, file }).unwrap();
+      const res = await importGuideZip({ id: guide.id, file }).unwrap();
       toast.success("Guide updated successfully from ZIP!");
+
+      const updated = res?.data || (res as any);
+      if (updated) {
+        const bn = updated.translations?.bn;
+        const newVals = {
+          title: updated.title || "",
+          categoryId: updated.category?.id || "",
+          speciesId: updated.species?.id || "",
+          breedId: updated.breeds?.[0]?.id || "",
+          summary: updated.excerpt || "",
+          content: updated.content || "",
+          status: (updated.status as GuideStatus) || "DRAFT",
+          displayOrder: updated.displayOrder ?? 0,
+          tags: updated.tags || [],
+          coverPreviewUrl: updated.coverImage || "",
+          coverFile: null,
+          banglaTitle: bn?.title || "",
+          banglaExcerpt: bn?.excerpt || "",
+          banglaContent: bn?.content || "",
+        };
+
+        reset(newVals);
+        Object.entries(newVals).forEach(([k, v]) => {
+          setValue(k as any, v, { shouldDirty: false, shouldTouch: false });
+        });
+
+        if (bn?.title || bn?.content) {
+          setActiveLanguageTab("bn");
+        }
+        setHydratedVersion(`${updated.id}-${updated.updatedAt || Date.now()}-${Date.now()}`);
+      }
       refetch();
     } catch (err: unknown) {
       const msg =
@@ -218,9 +249,10 @@ export default function EditGuidePage({
 
   // Hydrate form once guide loads
   useEffect(() => {
-    if (guide && guide.id !== hydratedId) {
+    const currentVersion = guide ? `${guide.id}-${guide.updatedAt || ""}` : "";
+    if (guide && currentVersion !== hydratedVersion) {
       const bn = guide.translations?.bn;
-      reset({
+      const newVals = {
         title: guide.title || "",
         categoryId: guide.category?.id || "",
         speciesId: guide.species?.id || "",
@@ -235,10 +267,14 @@ export default function EditGuidePage({
         banglaTitle: bn?.title || "",
         banglaExcerpt: bn?.excerpt || "",
         banglaContent: bn?.content || "",
+      };
+      reset(newVals);
+      Object.entries(newVals).forEach(([k, v]) => {
+        setValue(k as any, v, { shouldDirty: false, shouldTouch: false });
       });
-      setHydratedId(guide.id);
+      setHydratedVersion(currentVersion);
     }
-  }, [guide, hydratedId, reset]);
+  }, [guide, hydratedVersion, reset, setValue]);
 
   // Redux Auth User
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -518,7 +554,7 @@ export default function EditGuidePage({
               content: finalBanglaContent.trim(),
             },
           }
-        : {};
+        : existingTranslations;
 
       await updateGuide({
         id: guideId,
@@ -1009,6 +1045,7 @@ export default function EditGuidePage({
                         </span>
                       </div>
                       <RichTextEditor
+                        key={`editor-en-${hydratedVersion}`}
                         value={content}
                         onChange={setContent}
                         placeholder="Edit article body..."
@@ -1061,6 +1098,7 @@ export default function EditGuidePage({
                         </span>
                       </div>
                       <RichTextEditor
+                        key={`editor-bn-${hydratedVersion}`}
                         value={banglaContent}
                         onChange={setBanglaContent}
                         placeholder="বাংলায় সম্পূর্ণ নির্দেশিকা লিখুন..."

@@ -16,6 +16,7 @@ import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData"
 import { useAppSelector } from "@/hooks/useRedux";
 import { useFindAllPublicGuidesQuery } from "@/store/Api/Guides/guides.api";
 import type { PublicGuideCardItem } from "@/store/Api/Guides/guides.types";
+import { cn } from "@/lib/utils";
 
 const categoryLabelMap: Record<string, string> = {
   birds: "Budgie & Bird",
@@ -120,11 +121,16 @@ export default function GuidesInteractiveExplorer() {
   const fallbackArticles =
     CATEGORY_ARTICLES_MAP[selectedCategory] || BUDGIE_CARE_ARTICLES;
 
-  // Partition guides strictly by displayOrder:
-  // 1. Hero guide takes Order #1 (lowest displayOrder)
-  // 2. Side articles take Order #2 and Order #3
-  // 3. Cards grid displays Order #4 and all remaining guides in strict numeric sequence
-  const { currentGuide, sideArticles, remainingArticles } = useMemo(() => {
+  // Partition guides:
+  // 1. All Basic guides are displayed on the top before the category slider (hero + side cards + extra basic cards)
+  // 2. All topic-specific guides are displayed below the category slider and filtered by topic
+  const { currentGuide, sideArticles, extraBasicArticles, remainingArticles } = useMemo(() => {
+    const isBasicItem = (catSlug?: string | null, catName?: string | null) => {
+      const s = (catSlug || "").toLowerCase();
+      const n = (catName || "").toLowerCase();
+      return s === "basic" || n === "basic";
+    };
+
     if (apiGuides.length > 0) {
       // Sort helper: lower positive displayOrder first, then unranked (0 / undefined) sorted by published date
       const sortByDisplayOrder = (
@@ -148,30 +154,41 @@ export default function GuidesInteractiveExplorer() {
 
       const sortedGuides = [...apiGuides].sort(sortByDisplayOrder);
 
-      // 1. Top Hero Guide (Order #1)
-      const heroRecord = sortedGuides[0];
+      // Separate all Basic guides from Topic-categorized guides
+      const basicGuides = sortedGuides.filter((g) =>
+        isBasicItem(g.category?.slug, g.category?.name)
+      );
+      const topicGuides = sortedGuides.filter(
+        (g) => !isBasicItem(g.category?.slug, g.category?.name)
+      );
+
+      // 1. Hero Guide (Top Basic Guide, or fallback to first sorted guide)
+      const heroRecord = basicGuides[0] || sortedGuides[0];
       const hero = mapToHeroGuide(heroRecord, fallbackGuide);
 
-      // 2. Top Side Articles (Order #2 and Order #3)
-      const sides: CareArticleCardData[] = sortedGuides
-        .slice(1, 3)
-        .map(mapToCareArticle);
+      // 2. Side Basic Articles (up to 2 basic guides beside hero)
+      const sides: CareArticleCardData[] =
+        basicGuides.length > 1
+          ? basicGuides.slice(1, 3).map(mapToCareArticle)
+          : basicGuides.length === 0
+          ? topicGuides.slice(0, 2).map(mapToCareArticle)
+          : [];
 
-      // If fewer than 2 side cards exist from live guides, fill with fallback
-      for (const fa of fallbackArticles) {
-        if (sides.length >= 2) break;
-        if (!sides.some((s) => s.id === fa.id) && fa.id !== heroRecord?.id) {
-          sides.push(fa);
-        }
-      }
+      // 3. Extra Basic Articles (any additional basic guides beyond the top 3)
+      const extraBasic: CareArticleCardData[] =
+        basicGuides.length > 3
+          ? basicGuides.slice(3).map(mapToCareArticle)
+          : [];
 
-      // 3. Guides Cards Grid (Order #4 through remaining guides)
-      const gridGuides = sortedGuides.slice(3);
-      const gridArticles =
+      // 4. Topic Guides Grid: only topic guides (excluding all basic guides)
+      const gridGuides =
+        basicGuides.length === 0 ? topicGuides.slice(2) : topicGuides;
+
+      const gridArticles: CareArticleCardData[] =
         gridGuides.length > 0
           ? gridGuides.map(mapToCareArticle)
           : fallbackArticles.filter(
-              (a) => !sides.some((s) => s.id === a.id) && a.id !== heroRecord?.id
+              (a) => !isBasicItem(a.categorySlug, a.category)
             );
 
       // Filter grid articles based on selected topic (DB slug, categoryId, or category name)
@@ -196,6 +213,7 @@ export default function GuidesInteractiveExplorer() {
       return {
         currentGuide: hero,
         sideArticles: sides,
+        extraBasicArticles: extraBasic,
         remainingArticles: filteredGrid,
       };
     }
@@ -213,26 +231,46 @@ export default function GuidesInteractiveExplorer() {
       return aOrder - bOrder;
     };
     const sortedFallback = [...fallbackArticles].sort(sortFallback);
+    const basicFallback = sortedFallback.filter((a) =>
+      isBasicItem(a.categorySlug, a.category)
+    );
+    const topicFallback = sortedFallback.filter(
+      (a) => !isBasicItem(a.categorySlug, a.category)
+    );
+
     const hero = fallbackGuide;
-    const sides = sortedFallback.slice(0, 2);
-    const filteredGrid = sortedFallback
-      .slice(2)
-      .filter((article) => {
-        if (selectedTopic === "all") return true;
-        const target = selectedTopic.toLowerCase();
-        const catName = article.category?.toLowerCase();
-        const normName = catName?.replace(/[^a-z0-9]+/g, "-");
-        return (
-          catName === target ||
-          normName === target ||
-          (catName && catName.includes(target)) ||
-          target.includes(catName || "")
-        );
-      });
+    const sides =
+      basicFallback.length > 1
+        ? basicFallback.slice(1, 3)
+        : basicFallback.length === 0
+        ? sortedFallback.slice(0, 2)
+        : [];
+    const extraBasic =
+      basicFallback.length > 3 ? basicFallback.slice(3) : [];
+    const gridArticles =
+      basicFallback.length === 0
+        ? sortedFallback.slice(2)
+        : topicFallback.length > 0
+        ? topicFallback
+        : sortedFallback;
+
+    const filteredGrid = gridArticles.filter((article) => {
+      if (selectedTopic === "all") return true;
+      const target = selectedTopic.toLowerCase();
+      const catName = article.category?.toLowerCase();
+      const normName = catName?.replace(/[^a-z0-9]+/g, "-");
+      return (
+        catName === target ||
+        normName === target ||
+        (catName && catName.includes(target)) ||
+        target.includes(catName || "")
+      );
+    });
 
     return {
       currentGuide: hero,
       sideArticles: sides,
+      extraBasicArticles: extraBasic,
       remainingArticles: filteredGrid,
     };
   }, [apiGuides, fallbackGuide, fallbackArticles, selectedTopic]);
@@ -249,18 +287,44 @@ export default function GuidesInteractiveExplorer() {
           <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
         </section>
       ) : (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-          {/* Left: Care Guide Card spanning 2 card spaces */}
-          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
-            <PetCareGuideCard guide={currentGuide} className="h-full" />
+        <section className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            {/* Left: Care Guide Card */}
+            <div
+              className={cn(
+                "flex flex-col",
+                sideArticles.length === 0
+                  ? "col-span-full"
+                  : sideArticles.length === 1
+                  ? "md:col-span-2 lg:col-span-3"
+                  : "md:col-span-2 lg:col-span-2"
+              )}
+            >
+              <PetCareGuideCard guide={currentGuide} className="h-full" />
+            </div>
+
+            {/* Right: Side Basic Cards */}
+            {sideArticles.map((article) => (
+              <div
+                key={article.id}
+                className={cn(
+                  "flex flex-col",
+                  sideArticles.length === 1 ? "md:col-span-2 lg:col-span-1" : ""
+                )}
+              >
+                <CareArticleCard article={article} className="h-full" />
+              </div>
+            ))}
           </div>
 
-          {/* Right: 2 individual Care Article Cards */}
-          {sideArticles.map((article) => (
-            <div key={article.id} className="flex flex-col">
-              <CareArticleCard article={article} className="h-full" />
+          {/* Any additional Basic Guides beyond the top 3 */}
+          {extraBasicArticles.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {extraBasicArticles.map((article) => (
+                <CareArticleCard key={article.id} article={article} />
+              ))}
             </div>
-          ))}
+          )}
         </section>
       )}
 

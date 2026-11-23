@@ -355,6 +355,7 @@ export interface BulkImportGuideResult {
   faqsCount: number;
   imagesLinked: number;
   hasTranslation?: boolean;
+  isUpdated?: boolean;
   success: boolean;
   error?: string;
 }
