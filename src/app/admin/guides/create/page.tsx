@@ -340,23 +340,25 @@ export default function CreateGuidePage() {
     savedGuideId,
   });
 
-  formStateRef.current = {
-    title,
-    categoryId,
-    speciesId,
-    breedId,
-    summary,
-    content,
-    banglaTitle,
-    banglaExcerpt,
-    banglaContent,
-    displayOrder,
-    tags,
-    coverFile,
-    coverPreviewUrl,
-    pendingBodyImages,
-    savedGuideId,
-  };
+  useEffect(() => {
+    formStateRef.current = {
+      title,
+      categoryId,
+      speciesId,
+      breedId,
+      summary,
+      content,
+      banglaTitle,
+      banglaExcerpt,
+      banglaContent,
+      displayOrder,
+      tags,
+      coverFile,
+      coverPreviewUrl,
+      pendingBodyImages,
+      savedGuideId,
+    };
+  });
 
   // Handle Save Draft, Submit for Review, or Direct Publish (Super Admin)
   const handleSave = async (status: "DRAFT" | "IN_REVIEW" | "PUBLISHED") => {

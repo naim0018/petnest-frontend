@@ -308,24 +308,26 @@ export default function EditGuidePage({
     guide,
   });
 
-  formStateRef.current = {
-    title,
-    categoryId,
-    speciesId,
-    breedId,
-    summary,
-    content,
-    banglaTitle,
-    banglaExcerpt,
-    banglaContent,
-    status,
-    displayOrder,
-    tags,
-    coverFile,
-    coverPreviewUrl,
-    pendingBodyImages,
-    guide,
-  };
+  useEffect(() => {
+    formStateRef.current = {
+      title,
+      categoryId,
+      speciesId,
+      breedId,
+      summary,
+      content,
+      banglaTitle,
+      banglaExcerpt,
+      banglaContent,
+      status,
+      displayOrder,
+      tags,
+      coverFile,
+      coverPreviewUrl,
+      pendingBodyImages,
+      guide,
+    };
+  });
 
   const handleRegisterPendingImage = (blobUrl: string, file: File) => {
     setPendingBodyImages((prev) => {
