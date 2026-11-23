@@ -254,11 +254,11 @@ export default function PetSelectorPopover({
         </button>
       </Tooltip>
 
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Backdrop Overlay - Scoped below top navbar and above bottom nav */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="sm:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-[99] animate-in fade-in duration-200"
+          className="sm:hidden fixed inset-x-0 top-16 sm:top-20 bottom-16 lg:bottom-0 bg-black/30 z-40 animate-in fade-in duration-200"
         />
       )}
 
@@ -268,7 +268,7 @@ export default function PetSelectorPopover({
           className={cn(
             "fixed inset-x-2 top-16 sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2",
             "sm:w-[780px] md:w-[840px] lg:w-[920px] xl:w-[960px] max-w-[calc(100vw-1rem)]",
-            "bg-popover border border-border-peach rounded-xl shadow-2xl z-[100]",
+            "bg-popover border border-border-peach rounded-xl shadow-2xl z-50",
             "p-3.5 sm:p-5 md:p-6 animate-in fade-in zoom-in-95 duration-200 select-none",
             "max-h-[calc(100dvh-5.5rem)] sm:max-h-[82vh] overflow-y-auto"
           )}

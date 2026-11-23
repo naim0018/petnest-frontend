@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers, cookies } from "next/headers";
 import {
   Clock,
   ArrowLeft,
@@ -22,6 +23,7 @@ import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 interface GuidePageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ lang?: string }>;
 }
 
 export interface RelatedGuideItem {
@@ -35,6 +37,9 @@ export interface RelatedGuideItem {
   species?: { id: string; name: string; slug: string } | null;
   publishedAt?: string;
   viewCount?: number;
+  locale?: string;
+  isNativeTranslation?: boolean;
+  availableLocales?: string[];
 }
 
 export interface GuideViewData {
@@ -55,6 +60,9 @@ export interface GuideViewData {
   keyTakeaways: string[];
   faqs: FAQItem[];
   translations?: GuideTranslationsMap | null;
+  locale?: string;
+  isNativeTranslation?: boolean;
+  availableLocales?: string[];
 }
 
 export interface GuideDetailResult {
@@ -102,14 +110,60 @@ function getGuideFaqMascot(guide: GuideViewData): string {
   return "/CareGuideCard/budgie-faq-mascot.png";
 }
 
-async function getGuide(slug: string): Promise<GuideDetailResult | null> {
+async function getGuide(
+  slug: string,
+  searchLang?: string,
+): Promise<GuideDetailResult | null> {
   const cleanSlug = decodeURIComponent(slug).trim().toLowerCase();
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+  let headerStore: any = null;
+  let cookieStore: any = null;
   try {
-    const res = await fetch(`${apiBase}/guides/${encodeURIComponent(cleanSlug)}`, {
-      cache: "no-store",
-    });
+    headerStore = await headers();
+    cookieStore = await cookies();
+  } catch {
+    // In build or static generation environments
+  }
+
+  const fwdHeaders: Record<string, string> = {};
+  if (headerStore) {
+    const headerKeys = [
+      "cookie",
+      "x-forwarded-for",
+      "x-real-ip",
+      "cf-ipcountry",
+      "x-vercel-ip-country",
+      "cloudfront-viewer-country",
+      "x-timezone",
+      "x-vercel-ip-timezone",
+      "cf-timezone",
+      "accept-language",
+    ];
+    for (const k of headerKeys) {
+      const val = headerStore.get(k);
+      if (val) fwdHeaders[k] = val;
+    }
+  }
+
+  if (cookieStore && !fwdHeaders["cookie"]) {
+    fwdHeaders["cookie"] = cookieStore.toString();
+  }
+
+  const queryParams = new URLSearchParams();
+  if (searchLang) {
+    queryParams.set("lang", searchLang);
+  }
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
+  try {
+    const res = await fetch(
+      `${apiBase}/guides/${encodeURIComponent(cleanSlug)}${queryString}`,
+      {
+        headers: fwdHeaders,
+        cache: "no-store",
+      },
+    );
 
     if (res.ok) {
       const json = await res.json();
@@ -137,14 +191,19 @@ async function getGuide(slug: string): Promise<GuideDetailResult | null> {
               })
             : undefined,
           viewCount: r.viewCount,
+          locale: r.locale,
+          isNativeTranslation: r.isNativeTranslation,
+          availableLocales: r.availableLocales,
         }));
 
         // If related guides not returned in main payload, fallback to dedicated related endpoint
         if (relatedGuides.length === 0) {
           try {
             const relRes = await fetch(
-              `${apiBase}/guides/${encodeURIComponent(cleanSlug)}/related?limit=4`,
-              { cache: "no-store" }
+              `${apiBase}/guides/${encodeURIComponent(cleanSlug)}/related?limit=4${
+                searchLang ? `&lang=${searchLang}` : ""
+              }`,
+              { headers: fwdHeaders, cache: "no-store" },
             );
             if (relRes.ok) {
               const relJson = await relRes.json();
@@ -169,6 +228,9 @@ async function getGuide(slug: string): Promise<GuideDetailResult | null> {
                     })
                   : undefined,
                 viewCount: r.viewCount,
+                locale: r.locale,
+                isNativeTranslation: r.isNativeTranslation,
+                availableLocales: r.availableLocales,
               }));
             }
           } catch {
@@ -210,9 +272,12 @@ async function getGuide(slug: string): Promise<GuideDetailResult | null> {
                 id: f.id,
                 question: f.question,
                 answer: f.answer,
-              })
+              }),
             ),
             translations: live.translations || null,
+            locale: live.locale || "en",
+            isNativeTranslation: Boolean(live.isNativeTranslation),
+            availableLocales: live.availableLocales || ["en"],
           },
           relatedGuides,
         };
@@ -269,9 +334,18 @@ export async function generateStaticParams() {
   return guidesData.map((guide) => ({ slug: guide.slug }));
 }
 
-export async function generateMetadata({ params }: GuidePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: GuidePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const result = await getGuide(slug);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const searchLang =
+    typeof resolvedSearchParams?.lang === "string"
+      ? resolvedSearchParams.lang
+      : undefined;
+
+  const result = await getGuide(slug, searchLang);
 
   if (!result || !result.guide) {
     return { title: "Guide Not Found - PetNest" };
@@ -304,9 +378,18 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   };
 }
 
-export default async function GuideDetailPage({ params }: GuidePageProps) {
+export default async function GuideDetailPage({
+  params,
+  searchParams,
+}: GuidePageProps) {
   const { slug } = await params;
-  const result = await getGuide(slug);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const searchLang =
+    typeof resolvedSearchParams?.lang === "string"
+      ? resolvedSearchParams.lang
+      : undefined;
+
+  const result = await getGuide(slug, searchLang);
 
   if (!result || !result.guide) {
     notFound();
@@ -402,6 +485,9 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
               defaultContent={guide.content}
               defaultKeyTakeaways={guide.keyTakeaways}
               translations={guide.translations}
+              locale={guide.locale}
+              isNativeTranslation={guide.isNativeTranslation}
+              availableLocales={guide.availableLocales}
               author={guide.author}
               publishedAt={guide.publishedAt}
               coverImage={guide.image}
@@ -530,6 +616,8 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
             defaultSubtitle={`Common questions & answers about ${guide.title}`}
             defaultItems={guide.faqs}
             translations={guide.translations}
+            locale={guide.locale}
+            isNativeTranslation={guide.isNativeTranslation}
             guideTitle={guide.title}
             categoryName={guide.category}
             mascotImage={faqMascot}

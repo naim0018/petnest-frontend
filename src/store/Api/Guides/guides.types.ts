@@ -98,6 +98,11 @@ export interface PublicGuideCardItem {
   translations?: Record<string, { title?: string; excerpt?: string }> | null;
   category: PublicGuideCardCategory;
   expertReviewed?: boolean;
+  locale?: string;
+  isNativeTranslation?: boolean;
+  availableLocales?: string[];
+  likeCount?: number;
+  bookmarkCount?: number;
   isLiked?: boolean;
   isBookmarked?: boolean;
 }
@@ -112,6 +117,9 @@ export interface GuideSummary {
   excerpt: string;
   type: GuideType;
   translations?: GuideTranslationsMap | null;
+  locale?: string;
+  isNativeTranslation?: boolean;
+  availableLocales?: string[];
   coverImage?: string | null;
   coverImageAlt?: string | null;
   faqImage?: string | null;
@@ -162,6 +170,7 @@ export interface GuideQuery extends PaginationQuery {
   status?: GuideStatus;
   isFeatured?: boolean;
   authorId?: string;
+  lang?: string;
 }
 
 export interface BookmarkedGuideSummary extends GuideSummary {

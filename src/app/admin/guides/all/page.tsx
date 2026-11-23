@@ -66,9 +66,9 @@ const STATUS_OPTIONS = [
 ];
 
 const SORT_OPTIONS = [
+  { value: "createdAt:desc", label: "Newest Created" },
   { value: "updatedAt:desc", label: "Recently Updated" },
   { value: "displayOrder:asc", label: "Display Order (1st First)" },
-  { value: "createdAt:desc", label: "Newest Created" },
   { value: "viewCount:desc", label: "Most Viewed" },
   { value: "likeCount:desc", label: "Most Liked" },
   { value: "title:asc", label: "Title (A–Z)" },
@@ -123,7 +123,7 @@ export default function AllGuidesPage() {
   const [speciesFilter, setSpeciesFilter] = useState("");
   const [breedFilter, setBreedFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [sortValue, setSortValue] = useState("updatedAt:desc");
+  const [sortValue, setSortValue] = useState("createdAt:desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = usePersistedPageSize("admin-guides-all", 10);
 
@@ -141,7 +141,7 @@ export default function AllGuidesPage() {
 
   const [sortBy, sortOrder] = useMemo(() => {
     const [field, order] = sortValue.split(":");
-    return [field || "updatedAt", (order === "asc" ? "asc" : "desc") as "asc" | "desc"];
+    return [field || "createdAt", (order === "asc" ? "asc" : "desc") as "asc" | "desc"];
   }, [sortValue]);
 
   // Real API queries
@@ -507,15 +507,15 @@ export default function AllGuidesPage() {
       ),
     },
     {
-      key: "updatedAt",
-      label: "Last Updated",
+      key: "createdAt",
+      label: "Created At",
       sortable: true,
       align: "center",
       cardSide: "left",
       cardAlign: "left",
       render: (row) => (
         <span className="text-xs text-ink-muted whitespace-nowrap">
-          {formatDate(row.updatedAt || row.createdAt)}
+          {formatDate(row.createdAt)}
         </span>
       ),
     },

@@ -2,10 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Clock, ShieldCheck, Bookmark, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Clock,
+  ThumbsUp,
+  MessageSquare,
+  Bookmark,
+  ArrowRight,
+} from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCurrentLanguage } from "@/hooks/useCurrentLanguage";
+import { useAppSelector } from "@/hooks/useRedux";
+import {
+  useToggleBookmarkMutation,
+  useToggleLikeMutation,
+} from "@/store/Api/Guides/guides.api";
 import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 export type GuideCategoryPill =
@@ -34,6 +46,13 @@ export interface CareArticleCardData {
   order?: number;
   displayOrder?: number;
   translations?: GuideTranslationsMap | null;
+  locale?: string;
+  isNativeTranslation?: boolean;
+  availableLocales?: string[];
+  likeCount?: number;
+  commentsCount?: number;
+  bookmarkCount?: number;
+  isLiked?: boolean;
   isBookmarked?: boolean;
 }
 
@@ -133,6 +152,23 @@ export default function CareArticleCard({
   onBookmarkToggle,
 }: CareArticleCardProps) {
   const [isSaved, setIsSaved] = useState(Boolean(article.isBookmarked));
+  const [bookmarkCount, setBookmarkCount] = useState(article.bookmarkCount ?? 0);
+  const [isLiked, setIsLiked] = useState(Boolean(article.isLiked));
+  const [likeCount, setLikeCount] = useState(article.likeCount ?? 0);
+  const commentsCount = article.commentsCount ?? 0;
+
+  const [toggleBookmark, { isLoading: isBookmarking }] = useToggleBookmarkMutation();
+  const [toggleLike, { isLoading: isLiking }] = useToggleLikeMutation();
+
+  const authUser = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = Boolean(authUser?.userId);
+
+  useEffect(() => {
+    setIsSaved(Boolean(article.isBookmarked));
+    setBookmarkCount(article.bookmarkCount ?? 0);
+    setIsLiked(Boolean(article.isLiked));
+    setLikeCount(article.likeCount ?? 0);
+  }, [article.isBookmarked, article.bookmarkCount, article.isLiked, article.likeCount]);
 
   const {
     id,
@@ -142,26 +178,79 @@ export default function CareArticleCard({
     category,
     image,
     imageAlt,
-    expertReviewed = true,
     slug = id,
   } = article;
 
   const currentLang = useCurrentLanguage();
-  const isBangla = currentLang === "bn";
+  const isBangla = currentLang === "bn" || article.locale === "bn";
   const nativeBn = isBangla ? article.translations?.bn : null;
-  const displayTitle = nativeBn?.title?.trim() || title;
-  const displayExcerpt = nativeBn?.excerpt?.trim() || excerpt;
-  const isNative = Boolean(isBangla && (nativeBn?.title || nativeBn?.excerpt));
+  const displayTitle = (isBangla && nativeBn?.title?.trim()) || title;
+  const displayExcerpt = (isBangla && nativeBn?.excerpt?.trim()) || excerpt;
+  const isNative = Boolean(
+    article.isNativeTranslation ||
+      (isBangla && (nativeBn?.title || nativeBn?.excerpt)),
+  );
 
   const categoryStyle =
     CATEGORY_COLOR_STYLES[category] || CATEGORY_COLOR_STYLES["General Care"];
 
-  const handleBookmarkClick = (e: React.MouseEvent) => {
+  const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const nextState = !isSaved;
-    setIsSaved(nextState);
-    onBookmarkToggle?.(id, nextState);
+
+    if (!isAuthenticated) {
+      toast.info("Please log in to save guides to your bookmarks");
+      return;
+    }
+
+    if (isBookmarking) return;
+
+    const nextSaved = !isSaved;
+    const nextCount = Math.max(0, bookmarkCount + (nextSaved ? 1 : -1));
+    setIsSaved(nextSaved);
+    setBookmarkCount(nextCount);
+    onBookmarkToggle?.(id, nextSaved);
+
+    try {
+      const res = await toggleBookmark(id).unwrap();
+      if (res?.data) {
+        setIsSaved(res.data.bookmarked);
+        setBookmarkCount(res.data.bookmarkCount);
+      }
+    } catch {
+      setIsSaved(!nextSaved);
+      setBookmarkCount(bookmarkCount);
+      toast.error("Failed to update bookmark");
+    }
+  };
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.info("Please log in to like guides");
+      return;
+    }
+
+    if (isLiking) return;
+
+    const nextLiked = !isLiked;
+    const nextCount = Math.max(0, likeCount + (nextLiked ? 1 : -1));
+    setIsLiked(nextLiked);
+    setLikeCount(nextCount);
+
+    try {
+      const res = await toggleLike(id).unwrap();
+      if (res?.data) {
+        setIsLiked(res.data.liked);
+        setLikeCount(res.data.likeCount);
+      }
+    } catch {
+      setIsLiked(!nextLiked);
+      setLikeCount(likeCount);
+      toast.error("Failed to update like");
+    }
   };
 
   return (
@@ -227,40 +316,65 @@ export default function CareArticleCard({
         </div>
       </div>
 
-      {/* Card Footer: Metadata & Bookmark Action */}
-      <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-between mt-auto bg-surface-muted/50">
-        <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold text-ink-muted">
-          {/* Read time */}
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-ink-muted" />
-            <span>{readTime}</span>
-          </div>
-
-          {/* Expert Reviewed */}
-          {expertReviewed && (
-            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-              <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white">
-                <ShieldCheck className="w-2.5 h-2.5 stroke-[2.5]" />
-              </span>
-              <span className="text-[11px] sm:text-xs font-medium">Expert Reviewed</span>
-            </div>
-          )}
+      {/* Card Footer: Metadata (Minutes, Likes, Comments, Bookmark count) */}
+      <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-between mt-auto bg-surface-muted/50 select-none">
+        {/* Read time */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
+          <Clock className="w-3.5 h-3.5 text-ink-muted shrink-0" />
+          <span>{readTime}</span>
         </div>
 
-        {/* Bookmark Icon Button */}
-        <button
-          type="button"
-          onClick={handleBookmarkClick}
-          aria-label={isSaved ? "Remove from bookmarks" : "Save guide"}
-          className="p-1 text-ink-muted hover:text-ink transition-colors cursor-pointer rounded-md focus:outline-none focus:ring-1 focus:ring-coral/40"
-        >
-          <Bookmark
+        {/* Engagement Stats: Likes, Comments, Bookmark count */}
+        <div className="flex items-center gap-3 sm:gap-3.5 text-xs font-semibold text-ink-muted">
+          {/* Likes */}
+          <button
+            type="button"
+            onClick={handleLikeClick}
+            aria-label={isLiked ? "Unlike guide" : "Like guide"}
+            title="Likes"
             className={cn(
-              "w-4 h-4 transition-transform active:scale-90",
-              isSaved && "fill-ink text-ink"
+              "inline-flex items-center gap-1 transition-colors cursor-pointer rounded-sm focus:outline-none focus:ring-1 focus:ring-coral/40",
+              isLiked ? "text-coral font-bold" : "hover:text-coral text-ink-muted"
             )}
-          />
-        </button>
+          >
+            <ThumbsUp
+              className={cn(
+                "w-3.5 h-3.5 transition-transform active:scale-90 shrink-0",
+                isLiked && "fill-coral text-coral"
+              )}
+            />
+            <span>{likeCount}</span>
+          </button>
+
+          {/* Comments */}
+          <div
+            className="inline-flex items-center gap-1 text-ink-muted"
+            title="Comments"
+          >
+            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+            <span>{commentsCount}</span>
+          </div>
+
+          {/* Bookmarks */}
+          <button
+            type="button"
+            onClick={handleBookmarkClick}
+            aria-label={isSaved ? "Remove from bookmarks" : "Save guide"}
+            title="Bookmarks"
+            className={cn(
+              "inline-flex items-center gap-1 transition-colors cursor-pointer rounded-sm focus:outline-none focus:ring-1 focus:ring-coral/40",
+              isSaved ? "text-coral font-bold" : "hover:text-coral text-ink-muted"
+            )}
+          >
+            <Bookmark
+              className={cn(
+                "w-3.5 h-3.5 transition-transform active:scale-90 shrink-0",
+                isSaved && "fill-coral text-coral"
+              )}
+            />
+            <span>{bookmarkCount}</span>
+          </button>
+        </div>
       </div>
     </article>
   );

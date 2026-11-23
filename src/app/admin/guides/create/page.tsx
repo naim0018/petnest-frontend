@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
@@ -17,8 +18,8 @@ import RichTextEditor, {
   ArticleContentRenderer,
 } from "@/components/admin/guides/RichTextEditor";
 import { useHeaderAction } from "@/context/HeaderActionContext";
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import guidesApi, {
+import { useAppSelector } from "@/hooks/useRedux";
+import {
   useFindAllCategoriesPublicQuery,
   useCreateGuideMutation,
   useUpdateGuideMutation,
@@ -53,35 +54,93 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+export interface GuideFormValues {
+  title: string;
+  categoryId: string;
+  speciesId: string;
+  breedId: string;
+  summary: string;
+  content: string;
+  banglaTitle: string;
+  banglaExcerpt: string;
+  banglaContent: string;
+  displayOrder: number;
+  tags: string[];
+  coverFile: File | null;
+  coverPreviewUrl: string;
+  customReadTime: string;
+}
+
 export default function CreateGuidePage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const { setHeaderAction } = useHeaderAction();
 
   // Mode: side-by-side split (default) or full-width reader preview
   const [viewMode, setViewMode] = useState<"split" | "preview">("split");
 
-  // Form State
-  const [title, setTitle] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [speciesId, setSpeciesId] = useState("");
-  const [breedId, setBreedId] = useState("");
-  const [summary, setSummary] = useState("");
-  const [content, setContent] = useState("");
-  // Localized Bangla Variant State (Optional)
+  // React Hook Form for Guide Fields
+  const {
+    handleSubmit,
+    watch,
+    setValue,
+  } = useForm<GuideFormValues>({
+    defaultValues: {
+      title: "",
+      categoryId: "",
+      speciesId: "",
+      breedId: "",
+      summary: "",
+      content: "",
+      banglaTitle: "",
+      banglaExcerpt: "",
+      banglaContent: "",
+      displayOrder: 0,
+      tags: [],
+      coverFile: null,
+      coverPreviewUrl: "",
+      customReadTime: "",
+    },
+  });
+
+  const formValues = watch();
+  const {
+    title,
+    categoryId,
+    speciesId,
+    breedId,
+    summary,
+    content,
+    banglaTitle,
+    banglaExcerpt,
+    banglaContent,
+    displayOrder,
+    tags,
+    coverFile,
+    coverPreviewUrl,
+    customReadTime,
+  } = formValues;
+
+  const setTitle = (val: string) => setValue("title", val, { shouldDirty: true });
+  const setCategoryId = (val: string) => setValue("categoryId", val, { shouldDirty: true });
+  const setSpeciesId = (val: string) => setValue("speciesId", val, { shouldDirty: true });
+  const setBreedId = (val: string) => setValue("breedId", val, { shouldDirty: true });
+  const setSummary = (val: string) => setValue("summary", val, { shouldDirty: true });
+  const setContent = (val: string) => setValue("content", val, { shouldDirty: true });
+  const setBanglaTitle = (val: string) => setValue("banglaTitle", val, { shouldDirty: true });
+  const setBanglaExcerpt = (val: string) => setValue("banglaExcerpt", val, { shouldDirty: true });
+  const setBanglaContent = (val: string) => setValue("banglaContent", val, { shouldDirty: true });
+  const setDisplayOrder = (val: number) => setValue("displayOrder", val, { shouldDirty: true });
+  const setTags = (val: string[]) => setValue("tags", val, { shouldDirty: true });
+  const setCoverFile = (val: File | null) => setValue("coverFile", val, { shouldDirty: true });
+  const setCoverPreviewUrl = (val: string) => setValue("coverPreviewUrl", val, { shouldDirty: true });
+  const setCustomReadTime = (val: string) => setValue("customReadTime", val, { shouldDirty: true });
+
+  // Localized Bangla Variant Tab State (Optional UI toggle)
   const [activeLanguageTab, setActiveLanguageTab] = useState<"en" | "bn">("en");
-  const [banglaTitle, setBanglaTitle] = useState("");
-  const [banglaExcerpt, setBanglaExcerpt] = useState("");
-  const [banglaContent, setBanglaContent] = useState("");
-  const [displayOrder, setDisplayOrder] = useState<number>(0);
-  const [tags, setTags] = useState<string[]>([]);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>("");
   const [pendingBodyImages, setPendingBodyImages] = useState<Map<string, File>>(
     () => new Map()
   );
   const [isProcessingUploads, setIsProcessingUploads] = useState(false);
-  const [customReadTime, setCustomReadTime] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [createdGuide, setCreatedGuide] = useState<{
     id: string;
@@ -322,60 +381,22 @@ export default function CreateGuidePage() {
     }
   };
 
-  const formStateRef = React.useRef({
-    title,
-    categoryId,
-    speciesId,
-    breedId,
-    summary,
-    content,
-    banglaTitle,
-    banglaExcerpt,
-    banglaContent,
-    displayOrder,
-    tags,
-    coverFile,
-    coverPreviewUrl,
-    pendingBodyImages,
-    savedGuideId,
-  });
-
-  useEffect(() => {
-    formStateRef.current = {
-      title,
-      categoryId,
-      speciesId,
-      breedId,
-      summary,
-      content,
-      banglaTitle,
-      banglaExcerpt,
-      banglaContent,
-      displayOrder,
-      tags,
-      coverFile,
-      coverPreviewUrl,
-      pendingBodyImages,
-      savedGuideId,
-    };
-  });
-
   // Handle Save Draft, Submit for Review, or Direct Publish (Super Admin)
-  const handleSave = async (status: "DRAFT" | "IN_REVIEW" | "PUBLISHED") => {
-    const state = formStateRef.current;
-    const resolvedCategoryId = state.categoryId || basicCategory?.id;
-    if (!state.title.trim()) {
-      toast.error("Please enter an article title");
-      return;
-    }
-    if (!state.summary.trim()) {
-      toast.error("Please provide an executive summary");
-      return;
-    }
-    if (!state.content.trim()) {
-      toast.error("Please write the article content");
-      return;
-    }
+  const handleSave = (status: "DRAFT" | "IN_REVIEW" | "PUBLISHED") => {
+    return handleSubmit(async (state) => {
+      const resolvedCategoryId = state.categoryId || basicCategory?.id;
+      if (!state.title.trim()) {
+        toast.error("Please enter an article title");
+        return;
+      }
+      if (!state.summary.trim()) {
+        toast.error("Please provide an executive summary");
+        return;
+      }
+      if (!state.content.trim()) {
+        toast.error("Please write the article content");
+        return;
+      }
 
     const actionTitle =
       status === "PUBLISHED"
@@ -405,7 +426,7 @@ export default function CreateGuidePage() {
     );
 
     const pendingBodyEntries = allBlobUrls
-      .map((blobUrl) => ({ blobUrl, file: state.pendingBodyImages.get(blobUrl) }))
+      .map((blobUrl) => ({ blobUrl, file: pendingBodyImages.get(blobUrl) }))
       .filter((entry): entry is { blobUrl: string; file: File } =>
         Boolean(entry.file)
       );
@@ -513,7 +534,7 @@ export default function CreateGuidePage() {
         ),
       }));
 
-      let newGuideId = state.savedGuideId;
+      let newGuideId = savedGuideId;
       let newGuideTitle = state.title.trim();
 
       const hasBanglaContent = Boolean(
@@ -532,9 +553,9 @@ export default function CreateGuidePage() {
           }
         : {};
 
-      if (state.savedGuideId) {
+      if (savedGuideId) {
         const updateRes = await updateGuide({
-          id: state.savedGuideId,
+          id: savedGuideId,
           payload: {
             title: state.title.trim(),
             categoryId: resolvedCategoryId,
@@ -549,7 +570,7 @@ export default function CreateGuidePage() {
             translations: translationsPayload,
           },
         }).unwrap();
-        newGuideId = updateRes?.data?.id || state.savedGuideId;
+        newGuideId = updateRes?.data?.id || savedGuideId;
         newGuideTitle = updateRes?.data?.title || state.title.trim();
       } else {
         const createdRes = await createGuide({
@@ -574,7 +595,7 @@ export default function CreateGuidePage() {
       }
 
       // If there are staged FAQs that weren't auto-saved, attach them now
-      if (newGuideId && stagedFaqs.length > 0 && !state.savedGuideId) {
+      if (newGuideId && stagedFaqs.length > 0 && !savedGuideId) {
         try {
           await createFaqsBulk({
             guideId: newGuideId,
@@ -630,7 +651,8 @@ export default function CreateGuidePage() {
     } finally {
       setIsProcessingUploads(false);
     }
-  };
+  })();
+};
 
   // Header Actions
   useEffect(() => {

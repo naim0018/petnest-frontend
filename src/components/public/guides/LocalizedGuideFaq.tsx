@@ -10,6 +10,8 @@ export interface LocalizedGuideFaqProps {
   defaultSubtitle?: string;
   defaultItems: FAQItem[];
   translations?: GuideTranslationsMap | null;
+  locale?: string;
+  isNativeTranslation?: boolean;
   guideTitle: string;
   categoryName?: string;
   mascotImage?: string;
@@ -22,6 +24,8 @@ export default function LocalizedGuideFaq({
   defaultSubtitle,
   defaultItems,
   translations,
+  locale = "en",
+  isNativeTranslation = false,
   guideTitle,
   categoryName,
   mascotImage,
@@ -29,8 +33,9 @@ export default function LocalizedGuideFaq({
   viewAllHref = "/community",
 }: LocalizedGuideFaqProps) {
   const currentLang = useCurrentLanguage();
-  const isBangla = currentLang === "bn";
-  const bnVariant = isBangla ? translations?.bn : null;
+  const isServerBangla = locale === "bn" && isNativeTranslation;
+  const isClientBangla = currentLang === "bn";
+  const bnVariant = isClientBangla ? translations?.bn : null;
 
   const rawBnFaqs = bnVariant?.faqs;
   const hasBnFaqs = Array.isArray(rawBnFaqs) && rawBnFaqs.length > 0;
@@ -43,13 +48,19 @@ export default function LocalizedGuideFaq({
       }))
     : [];
 
-  const title = hasBnFaqs ? "সাধারণ প্রশ্নোত্তর" : defaultTitle;
-  const subtitle = hasBnFaqs
-    ? `${bnVariant?.title || guideTitle} সম্পর্কিত সাধারণ প্রশ্নোত্তর`
+  const isBangla = isServerBangla || (isClientBangla && hasBnFaqs);
+
+  const title = isBangla ? "সাধারণ প্রশ্নোত্তর" : defaultTitle;
+  const subtitle = isBangla
+    ? `${guideTitle} সম্পর্কিত সাধারণ প্রশ্নোত্তর`
     : defaultSubtitle || `Common questions & answers about ${guideTitle}`;
 
-  const items = hasBnFaqs ? bnFaqItems : defaultItems;
-  const viewAllText = hasBnFaqs
+  const items = isServerBangla
+    ? defaultItems
+    : hasBnFaqs
+      ? bnFaqItems
+      : defaultItems;
+  const viewAllText = isBangla
     ? "কমিউনিটিতে প্রশ্ন করুন"
     : "Ask a question in community";
 

@@ -45,6 +45,11 @@ const rawBaseQuery = fetchBaseQuery({
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (tz) headers.set("x-timezone", tz);
       } catch {}
+
+      const savedLang = localStorage.getItem("petnest_lang");
+      if (savedLang) {
+        headers.set("x-visitor-lang", savedLang);
+      }
     }
     return headers;
   },

@@ -1132,9 +1132,9 @@ const DynamicTable = <T extends object>({
                           </div>
                         )}
 
-                        {/* Title (Consistent height for 2 lines so card layouts align) */}
+                        {/* Title */}
                         <div className="min-w-0">
-                          <h3 className="font-bold font-quicksand text-base sm:text-lg text-ink leading-snug line-clamp-2 tracking-tight group-hover:text-coral transition-colors h-12 sm:h-14 flex items-start">
+                          <h3 className="font-bold font-quicksand text-base sm:text-lg text-ink leading-snug line-clamp-2 tracking-tight group-hover:text-coral transition-colors">
                             {titleNode}
                           </h3>
                         </div>
@@ -1181,9 +1181,14 @@ const DynamicTable = <T extends object>({
 
                       {/* Actions */}
                       {actions && actions.length > 0 && (
-                        <div className="flex items-center justify-end gap-2 pt-3.5 border-t border-border-peach mt-4">
+                        <div className="grid grid-flow-col auto-cols-fr gap-2 pt-3.5 border-t border-border-peach mt-4 w-full">
                           {actions.map((action, idx) => (
-                            <Tooltip key={idx} content={action.label}>
+                            <Tooltip
+                              key={idx}
+                              content={action.label}
+                              fullWidth
+                              containerClassName="w-full"
+                            >
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -1191,7 +1196,7 @@ const DynamicTable = <T extends object>({
                                   action.onClick(row, index);
                                 }}
                                 className={cn(
-                                  "size-8 rounded-lg border flex items-center justify-center transition-all duration-150 hover:scale-105 cursor-pointer shadow-2xs",
+                                  "w-full h-8 sm:h-9 rounded-lg border flex items-center justify-center transition-all duration-150 hover:scale-[1.02] cursor-pointer shadow-2xs",
                                   getActionVariantClass(action.variant, action.className),
                                 )}
                               >

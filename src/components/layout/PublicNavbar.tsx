@@ -123,6 +123,7 @@ export default function PublicNavbar() {
 
   const [isHomePopoverOpen, setIsHomePopoverOpen] = useState(false);
   const homePopoverRef = useRef<HTMLDivElement>(null);
+  const homeButtonRef = useRef<HTMLButtonElement>(null);
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
   const unreadMsgCount = messages.filter((m) => m.unread).length;
@@ -146,7 +147,11 @@ export default function PublicNavbar() {
       if (messagesRef.current && !messagesRef.current.contains(target)) {
         setIsMessagesOpen(false);
       }
-      if (homePopoverRef.current && !homePopoverRef.current.contains(target)) {
+      if (
+        homePopoverRef.current &&
+        !homePopoverRef.current.contains(target) &&
+        !homeButtonRef.current?.contains(target)
+      ) {
         setIsHomePopoverOpen(false);
       }
     };
@@ -157,7 +162,7 @@ export default function PublicNavbar() {
   return (
     <>
       {/* Top Header Navbar */}
-      <nav className="w-full h-16 sm:h-20 shrink-0 border-b border-border-peach sticky top-0 z-40 transition-colors bg-card/95 backdrop-blur-md">
+      <nav className="w-full h-16 sm:h-20 shrink-0 border-b border-border-peach sticky top-0 z-50 transition-colors bg-card/95 backdrop-blur-md">
         <CommonWrapper className="h-full py-0 px-3 sm:px-4 md:px-6 flex flex-row justify-between items-center gap-1.5 sm:gap-3 md:gap-4">
           {/* Logo Group */}
           <Link href="/" className="no-underline shrink-0">
@@ -429,20 +434,20 @@ export default function PublicNavbar() {
       </nav>
 
       {/* Bottom Mobile Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999]">
-        {/* Drawer Backdrop Overlay */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+        {/* Drawer Backdrop Overlay - Only dims content between top navbar and bottom nav */}
         {isHomePopoverOpen && (
           <div
             onClick={() => setIsHomePopoverOpen(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[9998] animate-in fade-in duration-200"
+            className="fixed inset-x-0 top-16 bottom-16 bg-black/30 z-40 animate-in fade-in duration-200"
           />
         )}
 
-        {/* Mobile Navigation Drawer Popover */}
+        {/* Mobile Navigation Drawer Popover - Anchored with bottom nav in single layer */}
         {isHomePopoverOpen && (
           <div
             ref={homePopoverRef}
-            className="fixed bottom-20 left-3 right-3 z-[9999] bg-popover/95 backdrop-blur-xl border border-border-peach shadow-2xl rounded-lg p-4 animate-in fade-in slide-in-from-bottom-5 duration-200 overflow-hidden"
+            className="fixed bottom-[4.25rem] inset-x-2.5 sm:inset-x-4 z-50 bg-popover border border-border-peach shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden"
           >
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-border-peach">
               <span className="text-xs font-bold text-ink uppercase tracking-wider">
@@ -495,7 +500,7 @@ export default function PublicNavbar() {
           </div>
         )}
 
-        <div className="w-full max-w-full bg-card/95 backdrop-blur-xl border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-5 items-center px-0.5 sm:px-2 shadow-lg">
+        <div className="relative z-50 w-full max-w-full bg-card border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-5 items-center px-0.5 sm:px-2 shadow-lg">
           <Link
             href="/feed"
             className={cn(
@@ -525,6 +530,7 @@ export default function PublicNavbar() {
           {/* Center Floating Home FAB */}
           <div className="relative -mt-5 sm:-mt-6 flex justify-center items-center min-w-0 w-full">
             <button
+              ref={homeButtonRef}
               onClick={() => setIsHomePopoverOpen(!isHomePopoverOpen)}
               className={cn(
                 "size-12 sm:size-13 bg-coral text-white rounded-full flex items-center justify-center shadow-lg shadow-coral/40 hover:shadow-coral/60 active:scale-95 transition-all border-3 sm:border-4 border-card cursor-pointer shrink-0",

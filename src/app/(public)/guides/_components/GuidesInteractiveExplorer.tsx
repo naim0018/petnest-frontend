@@ -65,6 +65,13 @@ function mapToCareArticle(guide: PublicGuideCardItem): CareArticleCardData {
     slug: guide.slug || guide.id,
     displayOrder: guide.displayOrder,
     translations: guide.translations,
+    locale: guide.locale,
+    isNativeTranslation: guide.isNativeTranslation,
+    availableLocales: guide.availableLocales,
+    likeCount: guide.likeCount ?? 0,
+    bookmarkCount: guide.bookmarkCount ?? 0,
+    commentsCount: 0,
+    isLiked: guide.isLiked,
     isBookmarked: guide.isBookmarked,
   };
 }
@@ -83,6 +90,11 @@ export default function GuidesInteractiveExplorer() {
   const selectedBreed = reduxBreed;
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
 
+  const searchLang =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("lang") || undefined
+      : undefined;
+
   // Fetch live guides:
   // - If only species is selected (breed === 'all'), fetches all guides on that species
   // - If a specific breed is selected, fetches guides targeting that breed
@@ -93,6 +105,7 @@ export default function GuidesInteractiveExplorer() {
       limit: 50,
       sortBy: "displayOrder",
       sortOrder: "asc",
+      lang: searchLang,
     });
 
   const apiGuides: PublicGuideCardItem[] = guidesResponse?.data?.items || [];
