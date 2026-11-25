@@ -2,61 +2,59 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, Menu, Check, CheckCheck, BellOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import Breadcrumbs from "./Breadcrumbs";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/context/HeaderActionContext";
+import {
+  useGetNotificationsQuery,
+  useGetUnreadCountQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+} from "@/store/Api/Notification/notification.api";
+import { useNotificationSocket } from "@/hooks/useNotificationSocket";
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
+function formatTimeAgo(isoString: string): string {
+  try {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return "Just now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour}h ago`;
+    const diffDays = Math.floor(diffHour / 24);
+    return `${diffDays}d ago`;
+  } catch {
+    return "";
+  }
 }
 
-const initialNotifications: NotificationItem[] = [
-  {
-    id: "1",
-    title: "New Breeder Verification Request",
-    description: "Willow Creek Kennels submitted license documents for review.",
-    time: "2 mins ago",
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Care Guide Submitted",
-    description: "Dr. Sarah Jenkins submitted a puppy vaccination guide.",
-    time: "15 mins ago",
-    read: false,
-  },
-  {
-    id: "3",
-    title: "Marketplace Order Placed",
-    description: "Order #PN-9281 confirmed on PetPurity Botanicals.",
-    time: "1 hour ago",
-    read: true,
-  },
-  {
-    id: "4",
-    title: "Listing Flagged",
-    description: "A customer flagged a listing for veterinary clearance verification.",
-    time: "2 hours ago",
-    read: false,
-  },
-];
-
 export default function Header({ onMenuClick }: HeaderProps) {
+  const router = useRouter();
   const { headerAction } = useHeaderAction();
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Active WebSocket listener
+  useNotificationSocket();
+
+  // Live RTK Query hooks
+  const { data: notifData } = useGetNotificationsQuery({ page: 1, limit: 20 });
+  const { data: unreadData } = useGetUnreadCountQuery();
+  const [markAsReadMutation] = useMarkAsReadMutation();
+  const [markAllAsReadMutation] = useMarkAllAsReadMutation();
+
+  const notifications = notifData?.items || [];
+  const unreadCount =
+    unreadData?.count ?? notifications.filter((n) => !n.isRead).length;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -72,16 +70,28 @@ export default function Header({ onMenuClick }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const handleItemClick = (n: {
+    id: string;
+    actionUrl?: string | null;
+    isRead: boolean;
+  }) => {
+    if (!n.isRead) {
+      markAsReadMutation(n.id);
+    }
+    if (n.actionUrl) {
+      setIsNotifOpen(false);
+      setIsModalOpen(false);
+      router.push(n.actionUrl);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+  const handleMarkAsRead = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    markAsReadMutation(id);
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutation();
   };
 
   return (
@@ -107,13 +117,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 h-full">
           {/* Dynamic Page Action Button Slot */}
           {headerAction && (
-            <div className="flex items-center shrink-0">
-              {headerAction}
-            </div>
+            <div className="flex items-center shrink-0">{headerAction}</div>
           )}
 
           {/* Notifications Dropdown Container */}
-          <div className="static sm:relative flex items-center h-full" ref={notifRef}>
+          <div
+            className="static sm:relative flex items-center h-full"
+            ref={notifRef}
+          >
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="size-9 text-ink-muted hover:text-ink hover:bg-surface-muted rounded-lg relative transition-colors cursor-pointer flex items-center justify-center"
@@ -122,7 +133,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <Bell className="size-4.5" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-coral text-[9px] font-bold text-white ring-2 ring-card">
-                  {unreadCount}
+                  {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
             </button>
@@ -136,7 +147,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   </p>
                   {unreadCount > 0 && (
                     <button
-                      onClick={markAllAsRead}
+                      onClick={handleMarkAllAsRead}
                       className="text-[11px] text-coral hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                     >
                       <CheckCheck className="size-3.5" /> Mark read
@@ -154,25 +165,33 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     notifications.map((n) => (
                       <div
                         key={n.id}
+                        onClick={() => handleItemClick(n)}
                         className={cn(
-                          "px-4 py-2.5 hover:bg-surface-muted transition-colors flex gap-2.5 items-start",
-                          !n.read && "bg-coral-light/40"
+                          "px-4 py-2.5 hover:bg-surface-muted transition-colors flex gap-2.5 items-start cursor-pointer",
+                          !n.isRead && "bg-coral-light/40"
                         )}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline gap-2">
-                            <p className={cn("text-xs truncate font-bold font-quicksand", n.read ? "text-ink-muted" : "text-ink")}>
+                            <p
+                              className={cn(
+                                "text-xs truncate font-bold font-quicksand",
+                                n.isRead ? "text-ink-muted" : "text-ink"
+                              )}
+                            >
                               {n.title}
                             </p>
-                            <span className="text-[10px] text-ink-faint shrink-0">{n.time}</span>
+                            <span className="text-[10px] text-ink-faint shrink-0">
+                              {formatTimeAgo(n.createdAt)}
+                            </span>
                           </div>
                           <p className="text-[11px] text-ink-muted mt-0.5 line-clamp-2">
-                            {n.description}
+                            {n.message}
                           </p>
                         </div>
-                        {!n.read && (
+                        {!n.isRead && (
                           <button
-                            onClick={() => markAsRead(n.id)}
+                            onClick={(e) => handleMarkAsRead(n.id, e)}
                             className="text-coral hover:text-coral-dark p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
                             title="Mark as read"
                           >
@@ -212,7 +231,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="fixed inset-0 bg-ink/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-card rounded-xl border border-border-peach max-w-lg w-full p-6 animate-in zoom-in-95 duration-200 shadow-xl">
             <div className="flex items-center justify-between border-b border-border-peach pb-4 mb-4">
-              <h3 className="text-base font-bold text-ink font-quicksand">All Notifications</h3>
+              <h3 className="text-base font-bold text-ink font-quicksand">
+                All Notifications
+              </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-ink-muted hover:text-coral font-bold text-xs cursor-pointer px-2 py-1 rounded hover:bg-surface-muted"
@@ -221,36 +242,53 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </button>
             </div>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-              {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    "p-3 rounded-lg border flex gap-3 items-start",
-                    n.read 
-                      ? "border-border-peach bg-surface-muted/60" 
-                      : "border-coral/20 bg-coral-light/50"
-                  )}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                      <h4 className={cn("text-xs font-bold font-quicksand", n.read ? "text-ink-muted" : "text-ink")}>
-                        {n.title}
-                      </h4>
-                      <span className="text-[10px] text-ink-faint shrink-0">{n.time}</span>
-                    </div>
-                    <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">{n.description}</p>
-                  </div>
-                  {!n.read && (
-                    <button
-                      onClick={() => markAsRead(n.id)}
-                      className="text-coral hover:text-coral-dark p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
-                      title="Mark as read"
-                    >
-                      <Check className="size-3.5" />
-                    </button>
-                  )}
+              {notifications.length === 0 ? (
+                <div className="p-6 text-center text-xs text-ink-faint flex flex-col items-center gap-1">
+                  <BellOff className="size-7 opacity-40 mb-1" />
+                  No notifications
                 </div>
-              ))}
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => handleItemClick(n)}
+                    className={cn(
+                      "p-3 rounded-lg border flex gap-3 items-start cursor-pointer transition-colors",
+                      n.isRead
+                        ? "border-border-peach bg-surface-muted/60"
+                        : "border-coral/20 bg-coral-light/50"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4
+                          className={cn(
+                            "text-xs font-bold font-quicksand",
+                            n.isRead ? "text-ink-muted" : "text-ink"
+                          )}
+                        >
+                          {n.title}
+                        </h4>
+                        <span className="text-[10px] text-ink-faint shrink-0">
+                          {formatTimeAgo(n.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+                        {n.message}
+                      </p>
+                    </div>
+                    {!n.isRead && (
+                      <button
+                        onClick={(e) => handleMarkAsRead(n.id, e)}
+                        className="text-coral hover:text-coral-dark p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
+                        title="Mark as read"
+                      >
+                        <Check className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

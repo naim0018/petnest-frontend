@@ -26,6 +26,7 @@ import type {
   ReviewGuidePayload,
   SingleCategoryResponse,
   SingleFaqResponse,
+  SliderGuidesResponse,
   UpdateCategoryPayload,
   UpdateFaqPayload,
   UpdateGuidePayload,
@@ -67,6 +68,17 @@ const guidesApi = baseApi.injectEndpoints({
     }),
 
     // ==================== PUBLIC GUIDES ====================
+
+    getSliderGuides: builder.query<
+      SliderGuidesResponse,
+      { species?: string; breed?: string; lang?: string } | void
+    >({
+      query: (params) => ({
+        url: "/guides/slider",
+        params: params || {},
+      }),
+      providesTags: [{ type: "Guides", id: "SLIDER" }],
+    }),
 
     findAllPublicGuides: builder.query<
       PaginatedPublicGuidesResponse,
@@ -464,6 +476,7 @@ export const {
   useFindAllCategoriesPublicQuery,
   useFindOneCategoryQuery,
   useFindAllFaqsPublicQuery,
+  useGetSliderGuidesQuery,
   useFindAllPublicGuidesQuery,
   useFindOnePublicGuideBySlugQuery,
   useFindRelatedGuidesQuery,

@@ -126,6 +126,7 @@ export const baseApi = createApi({
     "Media",
     "Settings",
     "Marketplace",
+    "Notifications",
   ],
   endpoints: () => ({}),
 });

@@ -173,6 +173,16 @@ export interface GuideQuery extends PaginationQuery {
   isFeatured?: boolean;
   authorId?: string;
   lang?: string;
+  excludeBasic?: boolean;
+}
+
+export interface SliderGuidesResponse {
+  success: boolean;
+  data: {
+    items: PublicGuideCardItem[];
+    total: number;
+  };
+  message?: string;
 }
 
 export interface BookmarkedGuideSummary extends GuideSummary {

@@ -379,3 +379,62 @@ export default function CareArticleCard({
     </article>
   );
 }
+
+export function CareArticleCardSkeleton({ className }: { className?: string }) {
+  return (
+    <article
+      className={cn(
+        "bg-card text-card-foreground rounded-lg border border-border overflow-hidden shadow-xs flex flex-col justify-between h-full select-none",
+        className
+      )}
+    >
+      <div className="flex flex-col flex-1">
+        {/* Card Media Header Skeleton */}
+        <div className="relative h-56 sm:h-64 w-full bg-surface-muted overflow-hidden animate-pulse">
+          <div className="absolute top-3.5 left-3.5 z-10">
+            <div className="h-6 w-20 rounded-full bg-card/70 border border-border/40" />
+          </div>
+        </div>
+
+        {/* Card Body Skeleton */}
+        <div className="p-4 sm:p-5 flex flex-col flex-1 animate-pulse">
+          <div className="h-5 bg-surface-muted rounded w-4/5" />
+          <div className="h-5 bg-surface-muted rounded w-3/5 mt-2" />
+
+          <div className="space-y-2 mt-3.5">
+            <div className="h-3.5 bg-surface-muted/70 rounded w-full" />
+            <div className="h-3.5 bg-surface-muted/70 rounded w-11/12" />
+            <div className="h-3.5 bg-surface-muted/70 rounded w-3/4" />
+          </div>
+
+          <div className="mt-auto pt-4">
+            <div className="h-3.5 w-20 rounded bg-coral/20" />
+          </div>
+        </div>
+      </div>
+
+      {/* Card Footer Skeleton */}
+      <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-between mt-auto bg-surface-muted/50 animate-pulse">
+        <div className="flex items-center gap-1.5">
+          <div className="size-3.5 rounded-full bg-surface-muted" />
+          <div className="h-3 w-14 rounded bg-surface-muted" />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="size-3.5 rounded bg-surface-muted" />
+            <div className="h-3 w-4 rounded bg-surface-muted" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="size-3.5 rounded bg-surface-muted" />
+            <div className="h-3 w-4 rounded bg-surface-muted" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="size-3.5 rounded bg-surface-muted" />
+            <div className="h-3 w-4 rounded bg-surface-muted" />
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}

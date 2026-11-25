@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import UserProfile from "@/components/common/UserProfile";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import LanguageSelector from "@/components/common/LanguageSelector";
@@ -16,7 +16,6 @@ import {
   X,
   Search,
   Rss,
-  MessageSquare,
   Users,
   BookOpen,
   ShoppingBag,
@@ -32,74 +31,29 @@ import { NAV_FEATURE_FLAGS, type NavFeatureKey } from "@/lib/nav";
 import { useAppSelector } from "@/hooks/useRedux";
 import PetSelectorPopover from "./PetSelectorPopover";
 import UniversalSearchBar from "./UniversalSearchBar";
+import {
+  useGetNotificationsQuery,
+  useGetUnreadCountQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+} from "@/store/Api/Notification/notification.api";
+import { useNotificationSocket } from "@/hooks/useNotificationSocket";
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
+function formatTimeAgo(isoString: string): string {
+  try {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return "Just now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour}h ago`;
+    const diffDays = Math.floor(diffHour / 24);
+    return `${diffDays}d ago`;
+  } catch {
+    return "";
+  }
 }
-
-const initialNotifications: NotificationItem[] = [
-  {
-    id: "1",
-    title: "New User Registered",
-    description: "Alex joined the PetNest admin platform as a Manager.",
-    time: "2 mins ago",
-    read: false,
-  },
-  {
-    id: "2",
-    title: "System Performance Alert",
-    description: "Database latency spiked above 250ms on node-1b.",
-    time: "10 mins ago",
-    read: false,
-  },
-  {
-    id: "3",
-    title: "Billing Invoice Paid",
-    description: "Invoice #1092-B has been paid by Client BaseKit.",
-    time: "1 hour ago",
-    read: true,
-  },
-];
-
-interface MessageItem {
-  id: string;
-  sender: string;
-  avatar: string;
-  text: string;
-  time: string;
-  unread: boolean;
-}
-
-const initialMessages: MessageItem[] = [
-  {
-    id: "m1",
-    sender: "Dr. Emily Watson",
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=100&h=100&q=80",
-    text: "Luna's vaccination checkup report is ready for download.",
-    time: "5m ago",
-    unread: true,
-  },
-  {
-    id: "m2",
-    sender: "Max (Pet Shelter)",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80",
-    text: "Thanks for inquiring about adoption for Golden Retriever pups!",
-    time: "1h ago",
-    unread: true,
-  },
-  {
-    id: "m3",
-    sender: "Jessica Alba",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80",
-    text: "See you at the weekend pet meetup!",
-    time: "3h ago",
-    unread: false,
-  },
-];
 
 interface NavLinkItem {
   label: string;
@@ -145,30 +99,54 @@ export default function PublicNavbar() {
     !NAV_FEATURE_FLAGS.adoption;
 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
-  const [messages] = useState<MessageItem[]>(initialMessages);
+  const router = useRouter();
+
+  // Active WebSocket listener
+  useNotificationSocket();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
-
   const notifRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
 
   const [isHomePopoverOpen, setIsHomePopoverOpen] = useState(false);
   const homePopoverRef = useRef<HTMLDivElement>(null);
   const homeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const unreadNotifCount = notifications.filter((n) => !n.read).length;
-  const unreadMsgCount = messages.filter((m) => m.unread).length;
+  // Live notifications RTK Query
+  const { data: notifData } = useGetNotificationsQuery(
+    { page: 1, limit: 15 },
+    { skip: !authUser?.userId }
+  );
+  const { data: unreadData } = useGetUnreadCountQuery(undefined, {
+    skip: !authUser?.userId,
+  });
+  const [markAsReadMutation] = useMarkAsReadMutation();
+  const [markAllAsReadMutation] = useMarkAllAsReadMutation();
 
-  const markNotifAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const notifications = notifData?.items || [];
+  const unreadNotifCount =
+    unreadData?.count ?? notifications.filter((n) => !n.isRead).length;
+
+  const handleNotifClick = (n: {
+    id: string;
+    actionUrl?: string | null;
+    isRead: boolean;
+  }) => {
+    if (!n.isRead) {
+      markAsReadMutation(n.id);
+    }
+    if (n.actionUrl) {
+      setIsNotifOpen(false);
+      router.push(n.actionUrl);
+    }
+  };
+
+  const markNotifAsRead = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    markAsReadMutation(id);
   };
 
   const markAllNotifsAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    markAllAsReadMutation();
   };
 
   useEffect(() => {
@@ -176,9 +154,6 @@ export default function PublicNavbar() {
       const target = event.target as Node;
       if (notifRef.current && !notifRef.current.contains(target)) {
         setIsNotifOpen(false);
-      }
-      if (messagesRef.current && !messagesRef.current.contains(target)) {
-        setIsMessagesOpen(false);
       }
       if (
         homePopoverRef.current &&
@@ -273,7 +248,6 @@ export default function PublicNavbar() {
             <button
               onClick={() => {
                 setIsNotifOpen(!isNotifOpen);
-                setIsMessagesOpen(false);
               }}
               className="size-9 sm:size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light/50 hover:bg-coral-light rounded-lg relative cursor-pointer border border-border-peach focus:outline-none transition-colors"
               aria-label="Toggle notifications"
@@ -284,7 +258,7 @@ export default function PublicNavbar() {
               {unreadNotifCount > 0 && (
                 <div className="size-4 sm:size-5 absolute -top-1.5 -right-1.5 sm:left-6 sm:-top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10 ring-2 ring-card">
                   <span className="text-[9px] sm:text-[10px] text-white font-bold whitespace-nowrap">
-                    {unreadNotifCount}
+                    {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
                   </span>
                 </div>
               )}
@@ -308,25 +282,35 @@ export default function PublicNavbar() {
                 </div>
                 <div className="max-h-72 overflow-y-auto divide-y divide-border-peach">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-ink-faint">No notifications</div>
+                    <div className="p-6 text-center text-xs text-ink-faint">
+                      No notifications
+                    </div>
                   ) : (
                     notifications.map((n) => (
                       <div
                         key={n.id}
+                        onClick={() => handleNotifClick(n)}
                         className={cn(
-                          "p-3.5 hover:bg-surface-muted transition-colors flex gap-3 items-start",
-                          !n.read && "bg-coral-light/50"
+                          "p-3.5 hover:bg-surface-muted transition-colors flex gap-3 items-start cursor-pointer",
+                          !n.isRead && "bg-coral-light/50"
                         )}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-ink truncate">{n.title}</p>
-                          <p className="text-xs text-ink-muted mt-0.5">{n.description}</p>
-                          <span className="text-[10px] text-ink-faint mt-1 block">{n.time}</span>
+                          <p className="text-xs font-bold text-ink truncate">
+                            {n.title}
+                          </p>
+                          <p className="text-xs text-ink-muted mt-0.5 line-clamp-2">
+                            {n.message}
+                          </p>
+                          <span className="text-[10px] text-ink-faint mt-1 block">
+                            {formatTimeAgo(n.createdAt)}
+                          </span>
                         </div>
-                        {!n.read && (
+                        {!n.isRead && (
                           <button
-                            onClick={() => markNotifAsRead(n.id)}
+                            onClick={(e) => markNotifAsRead(n.id, e)}
                             className="text-coral p-1 hover:bg-coral-light rounded-full shrink-0 cursor-pointer"
+                            title="Mark as read"
                           >
                             <Check className="w-3.5 h-3.5" />
                           </button>
@@ -334,66 +318,6 @@ export default function PublicNavbar() {
                       </div>
                     ))
                   )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Message Circle Button - hidden on narrow phones, accessible on sm+ */}
-          <div className="relative h-full hidden sm:flex items-center" ref={messagesRef}>
-            <button
-              onClick={() => {
-                setIsMessagesOpen(!isMessagesOpen);
-                setIsNotifOpen(false);
-              }}
-              className="size-9 sm:size-10 shrink-0 flex flex-row justify-center items-center bg-coral-light/50 hover:bg-coral-light rounded-lg relative cursor-pointer border-border-peach border focus:outline-none transition-colors"
-              aria-label="Toggle messages"
-            >
-              <div className="size-5 relative overflow-hidden flex items-center justify-center">
-                <MessageSquare className="size-4.5 sm:size-5 text-coral stroke-[2]" />
-              </div>
-              {unreadMsgCount > 0 && (
-                <div className="size-4 sm:size-5 absolute -top-1.5 -right-1.5 sm:left-6 sm:-top-2 flex flex-row justify-center items-center bg-coral rounded-full z-10 ring-2 ring-card">
-                  <span className="text-[9px] sm:text-[10px] text-white font-bold whitespace-nowrap">
-                    {unreadMsgCount}
-                  </span>
-                </div>
-              )}
-            </button>
-
-            {/* Messages Dropdown */}
-            {isMessagesOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-16 sm:top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
-                  <span className="text-xs font-bold text-ink uppercase tracking-wider">
-                    Messages
-                  </span>
-                  <span className="text-xs text-coral font-bold bg-coral-light px-2 py-0.5 rounded-full">
-                    {unreadMsgCount} Unread
-                  </span>
-                </div>
-                <div className="max-h-72 overflow-y-auto divide-y divide-border-peach">
-                  {messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={cn(
-                        "p-3.5 hover:bg-surface-muted transition-colors flex gap-3 items-center cursor-pointer",
-                        m.unread && "bg-coral-light/50"
-                      )}
-                    >
-                      <div className="size-9 rounded-full overflow-hidden shrink-0 border border-border-peach">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.avatar} alt={m.sender} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline">
-                          <p className="text-xs font-bold text-ink truncate">{m.sender}</p>
-                          <span className="text-[10px] text-ink-faint shrink-0">{m.time}</span>
-                        </div>
-                        <p className="text-xs text-ink-muted truncate mt-0.5">{m.text}</p>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}

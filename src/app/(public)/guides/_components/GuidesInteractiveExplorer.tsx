@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,7 @@ import PetCareGuideCard, {
 } from "./PetCareGuideCard";
 import CareArticleCard, {
   CareArticleCardData,
+  CareArticleCardSkeleton,
   GuideCategoryPill,
 } from "./CareArticleCard";
 import GuidesHelpBanner from "./GuidesHelpBanner";
@@ -17,7 +18,10 @@ import GuidesTopicFilterBar from "./GuidesTopicFilterBar";
 import { PET_SPECIES_FEATURED_GUIDES } from "./petCareGuideData";
 import { CATEGORY_ARTICLES_MAP, BUDGIE_CARE_ARTICLES } from "./careArticlesData";
 import { useAppSelector } from "@/hooks/useRedux";
-import { useFindAllPublicGuidesQuery } from "@/store/Api/Guides/guides.api";
+import {
+  useFindAllPublicGuidesQuery,
+  useGetSliderGuidesQuery,
+} from "@/store/Api/Guides/guides.api";
 import type { PublicGuideCardItem } from "@/store/Api/Guides/guides.types";
 import { cn } from "@/lib/utils";
 
@@ -180,22 +184,14 @@ export default function GuidesInteractiveExplorer() {
       ? new URLSearchParams(window.location.search).get("search") || undefined
       : undefined;
 
-  // Fetch live guides:
-  // - If search keyword is active, searches across all species/breeds
-  // - If only species is selected (breed === 'all'), fetches all guides on that species
-  // - If a specific breed is selected, fetches guides targeting that breed
-  const { data: guidesResponse, isLoading: isLoadingGuides } =
-    useFindAllPublicGuidesQuery({
-      species: searchQuery ? undefined : (selectedCategory !== "all" ? selectedCategory : undefined),
-      breed: searchQuery ? undefined : (selectedBreed !== "all" ? selectedBreed : undefined),
-      limit: 50,
-      sortBy: "displayOrder",
-      sortOrder: "asc",
+  // 1. Top Slider: dedicated query for basic guides
+  const { data: sliderResponse, isLoading: isLoadingSlider } =
+    useGetSliderGuidesQuery({
+      species: selectedCategory !== "all" ? selectedCategory : undefined,
+      breed: selectedBreed !== "all" ? selectedBreed : undefined,
       lang: searchLang,
-      search: searchQuery,
     });
-
-  const apiGuides: PublicGuideCardItem[] = guidesResponse?.data?.items || [];
+  const basicGuides = sliderResponse?.data?.items || [];
 
   // Fallback defaults
   const fallbackGuide =
@@ -209,9 +205,6 @@ export default function GuidesInteractiveExplorer() {
 
   const activeCategoryTitle = categoryLabelMap[selectedCategory] || "Pet";
 
-  // Partition guides:
-  // 1. Basic guides are displayed in the top row (slider when all breeds selected or >3 guides for a breed)
-  // 2. All topic-specific guides are displayed below the category slider and filtered by topic
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
   // Reset slide index if breed or category filter changes
@@ -219,61 +212,11 @@ export default function GuidesInteractiveExplorer() {
     setActiveSlideIndex(0);
   }, [selectedBreed, selectedCategory]);
 
-  const { slides, remainingArticles } = useMemo(() => {
-    const isBasicItem = (catSlug?: string | null, catName?: string | null) => {
-      const s = (catSlug || "").toLowerCase();
-      const n = (catName || "").toLowerCase();
-      return s === "basic" || n === "basic";
-    };
-
-    if (apiGuides.length > 0) {
-      // Sort helper: lower positive displayOrder first, then unranked (0 / undefined) sorted by published date
-      const sortByDisplayOrder = (
-        a: PublicGuideCardItem,
-        b: PublicGuideCardItem
-      ) => {
-        const aOrder =
-          typeof a.displayOrder === "number" && a.displayOrder > 0
-            ? a.displayOrder
-            : 9999;
-        const bOrder =
-          typeof b.displayOrder === "number" && b.displayOrder > 0
-            ? b.displayOrder
-            : 9999;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        return (
-          new Date(b.publishedAt || 0).getTime() -
-          new Date(a.publishedAt || 0).getTime()
-        );
-      };
-
-      const sortedGuides = [...apiGuides].sort(sortByDisplayOrder);
-
-      // Separate all Basic guides from Topic-categorized guides
-      const basicGuides = sortedGuides.filter((g) =>
-        isBasicItem(g.category?.slug, g.category?.name)
-      );
-      const topicGuides = sortedGuides.filter(
-        (g) => !isBasicItem(g.category?.slug, g.category?.name)
-      );
-
+  const slides = useMemo(() => {
+    if (basicGuides.length > 0) {
       const generatedSlides: BasicGuideSlide[] = [];
 
-      if (basicGuides.length === 0) {
-        const heroRecord = sortedGuides[0];
-        const hero = heroRecord
-          ? mapToHeroGuide(heroRecord, fallbackGuide)
-          : fallbackGuide;
-        const sides = topicGuides.slice(0, 2).map(mapToCareArticle);
-        generatedSlides.push({
-          id: "no-basic-slide",
-          breedKey: "all",
-          breedName: "Featured Guides",
-          hero,
-          sides,
-        });
-      } else if (selectedBreed === "all") {
-        // Condition 1: All breeds selected -> Group basic guides by breed into a slider
+      if (selectedBreed === "all") {
         const breedGroupsMap = new Map<
           string,
           { key: string; name: string; guides: PublicGuideCardItem[] }
@@ -307,7 +250,6 @@ export default function GuidesInteractiveExplorer() {
           }
         }
       } else {
-        // Condition 2: Only one breed selected -> Show slider only if basic guides > 3
         const targetBreedKey = selectedBreed.toLowerCase();
         const breedGuides = basicGuides.filter((g) => {
           const { key } = detectBreed(g);
@@ -319,12 +261,10 @@ export default function GuidesInteractiveExplorer() {
           );
         });
 
-        const activeGuides =
-          breedGuides.length > 0 ? breedGuides : basicGuides;
+        const activeGuides = breedGuides.length > 0 ? breedGuides : basicGuides;
         const breedFallback = getBreedFallback(selectedBreed, selectedCategory);
 
         if (activeGuides.length <= 3) {
-          // <= 3 basic guides: exactly 1 slide (static, no slider arrows needed)
           const hero = mapToHeroGuide(activeGuides[0], breedFallback);
           const sides = activeGuides.slice(1, 3).map(mapToCareArticle);
           generatedSlides.push({
@@ -335,7 +275,6 @@ export default function GuidesInteractiveExplorer() {
             sides,
           });
         } else {
-          // > 3 basic guides: multiple slides in the top row slider
           for (let i = 0; i < activeGuides.length; i += 3) {
             const chunk = activeGuides.slice(i, i + 3);
             const hero = mapToHeroGuide(chunk[0], breedFallback);
@@ -353,117 +292,27 @@ export default function GuidesInteractiveExplorer() {
         }
       }
 
-      // Topic Guides Grid: only topic guides (excluding all basic guides)
-      const gridGuides =
-        basicGuides.length === 0 ? topicGuides.slice(2) : topicGuides;
-
-      const gridArticles: CareArticleCardData[] =
-        gridGuides.length > 0
-          ? gridGuides.map(mapToCareArticle)
-          : fallbackArticles.filter(
-              (a) => !isBasicItem(a.categorySlug, a.category)
-            );
-
-      // Filter grid articles based on selected topic (DB slug, categoryId, or category name)
-      const filteredGrid = gridArticles.filter((article) => {
-        if (selectedTopic === "all") return true;
-        const target = selectedTopic.toLowerCase();
-        const catSlug = article.categorySlug?.toLowerCase();
-        const catId = article.categoryId?.toLowerCase();
-        const catName = article.category?.toLowerCase();
-        const normName = catName?.replace(/[^a-z0-9]+/g, "-");
-
-        return (
-          catSlug === target ||
-          catId === target ||
-          catName === target ||
-          normName === target ||
-          (catName && catName.includes(target)) ||
-          target.includes(catName || "")
-        );
-      });
-
-      return {
-        slides: generatedSlides,
-        remainingArticles: filteredGrid,
-      };
+      if (generatedSlides.length > 0) {
+        return generatedSlides;
+      }
     }
 
-    // Fallback when no live guides are loaded yet for the category
-    const sortFallback = (a: CareArticleCardData, b: CareArticleCardData) => {
-      const aOrder =
-        typeof a.displayOrder === "number" && a.displayOrder > 0
-          ? a.displayOrder
-          : 9999;
-      const bOrder =
-        typeof b.displayOrder === "number" && b.displayOrder > 0
-          ? b.displayOrder
-          : 9999;
-      return aOrder - bOrder;
-    };
-    const sortedFallback = [...fallbackArticles]
-      .filter((a) => {
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-          a.title.toLowerCase().includes(q) ||
-          a.excerpt.toLowerCase().includes(q)
-        );
-      })
-      .sort(sortFallback);
-    const basicFallback = sortedFallback.filter((a) =>
-      isBasicItem(a.categorySlug, a.category)
-    );
-    const topicFallback = sortedFallback.filter(
-      (a) => !isBasicItem(a.categorySlug, a.category)
-    );
-
-    const fallbackSlides: BasicGuideSlide[] = [
+    return [
       {
         id: "fallback-slide",
         breedKey: selectedBreed,
         breedName: activeCategoryTitle,
         hero: fallbackGuide,
-        sides:
-          basicFallback.length > 1
-            ? basicFallback.slice(1, 3)
-            : sortedFallback.slice(0, 2),
+        sides: fallbackArticles.slice(0, 2),
       },
     ];
-
-    const gridArticles =
-      basicFallback.length === 0
-        ? sortedFallback.slice(2)
-        : topicFallback.length > 0
-        ? topicFallback
-        : sortedFallback;
-
-    const filteredGrid = gridArticles.filter((article) => {
-      if (selectedTopic === "all") return true;
-      const target = selectedTopic.toLowerCase();
-      const catName = article.category?.toLowerCase();
-      const normName = catName?.replace(/[^a-z0-9]+/g, "-");
-      return (
-        catName === target ||
-        normName === target ||
-        (catName && catName.includes(target)) ||
-        target.includes(catName || "")
-      );
-    });
-
-    return {
-      slides: fallbackSlides,
-      remainingArticles: filteredGrid,
-    };
   }, [
-    apiGuides,
-    fallbackGuide,
-    fallbackArticles,
-    selectedTopic,
-    searchQuery,
+    basicGuides,
     selectedBreed,
     selectedCategory,
     activeCategoryTitle,
+    fallbackGuide,
+    fallbackArticles,
   ]);
 
   const safeSlideIndex =
@@ -477,6 +326,79 @@ export default function GuidesInteractiveExplorer() {
   const handleNextSlide = () => {
     setActiveSlideIndex((prev) => (prev < slides.length - 1 ? prev + 1 : 0));
   };
+
+  // 2. Bottom Grid: real server pagination with limit 8 (2 rows on lg:grid-cols-4)
+  const BATCH_SIZE = 8;
+  const [page, setPage] = useState<number>(1);
+  const [accumulatedArticles, setAccumulatedArticles] = useState<CareArticleCardData[]>([]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset page & accumulated items whenever filter changes
+  useEffect(() => {
+    setPage(1);
+    setAccumulatedArticles([]);
+  }, [selectedCategory, selectedBreed, selectedTopic, searchQuery]);
+
+  const {
+    data: paginatedGuidesResponse,
+    isLoading: isLoadingInitialGrid,
+    isFetching: isFetchingGrid,
+  } = useFindAllPublicGuidesQuery({
+    species: searchQuery ? undefined : (selectedCategory !== "all" ? selectedCategory : undefined),
+    breed: searchQuery ? undefined : (selectedBreed !== "all" ? selectedBreed : undefined),
+    category: selectedTopic !== "all" ? selectedTopic : undefined,
+    excludeBasic: true,
+    page,
+    limit: BATCH_SIZE,
+    sortBy: "displayOrder",
+    sortOrder: "asc",
+    lang: searchLang,
+    search: searchQuery,
+  });
+
+  // Append new articles as server pages arrive
+  useEffect(() => {
+    if (!paginatedGuidesResponse?.data?.items) return;
+    const newCards = paginatedGuidesResponse.data.items.map(mapToCareArticle);
+
+    if (page === 1) {
+      setAccumulatedArticles(newCards);
+    } else {
+      setAccumulatedArticles((prev) => {
+        const existingIds = new Set(prev.map((a) => a.id));
+        const uniqueNew = newCards.filter((a) => !existingIds.has(a.id));
+        return [...prev, ...uniqueNew];
+      });
+    }
+  }, [paginatedGuidesResponse, page]);
+
+  const meta = paginatedGuidesResponse?.data?.meta;
+  const hasNextPage = Boolean(
+    meta?.hasNextPage ?? (meta ? page < meta.totalPages : false)
+  );
+
+  // Auto-load next 8 cards on scroll when sentinel is visible
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetchingGrid) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && !isFetchingGrid && hasNextPage) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "250px", // Pre-fetch smoothly before reaching bottom
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingGrid]);
 
   return (
     <div className="space-y-8">
@@ -496,7 +418,7 @@ export default function GuidesInteractiveExplorer() {
         </div>
       )}
       {/* Top Row: Care Guide Card takes 2-card width on the left + 2 individual cards on the right */}
-      {isLoadingGuides ? (
+      {isLoadingSlider ? (
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch animate-pulse">
           <div className="md:col-span-2 lg:col-span-2 h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
           <div className="h-72 rounded-lg bg-surface-muted border border-border-peach/50" />
@@ -631,11 +553,26 @@ export default function GuidesInteractiveExplorer() {
         />
 
         {/* 4 columns on large screens, 2 on tablet, 1 on mobile */}
-        {remainingArticles.length > 0 ? (
+        {isLoadingInitialGrid ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {remainingArticles.map((article) => (
-              <CareArticleCard key={article.id} article={article} />
+            {Array.from({ length: BATCH_SIZE }).map((_, idx) => (
+              <CareArticleCardSkeleton key={`initial-skeleton-${idx}`} />
             ))}
+          </div>
+        ) : accumulatedArticles.length > 0 ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {accumulatedArticles.map((article) => (
+                <CareArticleCard key={article.id} article={article} />
+              ))}
+              {isFetchingGrid && page > 1 &&
+                Array.from({ length: BATCH_SIZE }).map((_, idx) => (
+                  <CareArticleCardSkeleton key={`more-skeleton-${idx}`} />
+                ))}
+            </div>
+
+            {/* Sentinel element for infinite scroll auto-load */}
+            {hasNextPage && <div ref={sentinelRef} className="h-8 w-full" />}
           </div>
         ) : (
           <div className="text-center py-12 px-4 rounded-lg bg-surface-muted/50 border border-border-peach dark:border-slate-800">
