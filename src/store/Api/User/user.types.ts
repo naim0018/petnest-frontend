@@ -21,6 +21,9 @@ export interface UserDetails {
   email: string;
   phone?: string | null;
   role: UserRole;
+  isBanned?: boolean;
+  bannedAt?: string | null;
+  bannedReason?: string | null;
   interestedSpeciesId?: string | null;
   interestedBreedId?: string | null;
   interestedSpecies?: {
@@ -69,7 +72,22 @@ export interface UpdateRolePayload {
   role: UserRole;
 }
 
+export interface BanUserPayload {
+  id: string;
+  isBanned: boolean;
+  reason?: string;
+}
+
+export interface UserStats {
+  totalUsers: number;
+  newThisMonth: number;
+  verifiedSellersVets: number;
+  activeStaff: number;
+  bannedUsers: number;
+}
+
 export type UserDetailsResponse = ApiResponse<UserDetails>;
+export type UserStatsResponse = ApiResponse<UserStats>;
 export type PaginatedUsersResponse = ApiResponse<PaginatedData<UserDetails>>;
 export type ChangePasswordResponse = ApiResponse<MessageResponse>;
 export type DeleteUserResponse = ApiResponse<MessageResponse>;

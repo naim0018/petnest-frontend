@@ -1,6 +1,6 @@
 import { ApiResponse, MessageResponse } from "../common.types";
 
-export type MediaFolder = "guides" | "pets" | "avatars" | "categories";
+export type MediaFolder = "guides" | "pets" | "avatars" | "categories" | "marketplace";
 
 export interface MediaAsset {
   id: string;

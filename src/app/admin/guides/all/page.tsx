@@ -25,6 +25,7 @@ import {
   useGetEditorialStatsQuery,
   useFindAllCategoriesPublicQuery,
   useDeleteGuideMutation,
+  useUpdateGuideMutation,
 } from "@/store/Api/Guides/guides.api";
 import type {
   GuideStatus,
@@ -48,6 +49,7 @@ import {
   FileArchive,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import BulkGuideImportModal from "@/components/admin/guides/BulkGuideImportModal";
 import GuideStatusDropdown from "@/components/admin/guides/GuideStatusDropdown";
 import GuideCategoryDropdown from "@/components/admin/guides/GuideCategoryDropdown";
@@ -66,12 +68,14 @@ const STATUS_OPTIONS = [
 ];
 
 const SORT_OPTIONS = [
+  { value: "displayOrder:asc", label: "Display Order (1st First)" },
+  { value: "title:asc", label: "Title (A–Z)" },
+  { value: "breeds:asc", label: "Breed (A–Z)" },
+  { value: "author:asc", label: "Author (A–Z)" },
   { value: "createdAt:desc", label: "Newest Created" },
   { value: "updatedAt:desc", label: "Recently Updated" },
-  { value: "displayOrder:asc", label: "Display Order (1st First)" },
   { value: "viewCount:desc", label: "Most Viewed" },
   { value: "likeCount:desc", label: "Most Liked" },
-  { value: "title:asc", label: "Title (A–Z)" },
 ];
 
 const STATUS_BADGE_MAP: Record<
@@ -123,9 +127,13 @@ export default function AllGuidesPage() {
   const [speciesFilter, setSpeciesFilter] = useState("");
   const [breedFilter, setBreedFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [sortValue, setSortValue] = useState("createdAt:desc");
+  const [sortValue, setSortValue] = useState("displayOrder:asc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = usePersistedPageSize("admin-guides-all", 10);
+
+  // Reorderable local state
+  const [localGuides, setLocalGuides] = useState<GuideSummary[]>([]);
+  const [updateGuide] = useUpdateGuideMutation();
 
   // Delete confirmation modal state
   const [guideToDelete, setGuideToDelete] = useState<GuideSummary | null>(null);
@@ -141,7 +149,7 @@ export default function AllGuidesPage() {
 
   const [sortBy, sortOrder] = useMemo(() => {
     const [field, order] = sortValue.split(":");
-    return [field || "createdAt", (order === "asc" ? "asc" : "desc") as "asc" | "desc"];
+    return [field || "displayOrder", (order === "asc" ? "asc" : "desc") as "asc" | "desc"];
   }, [sortValue]);
 
   // Real API queries
@@ -182,6 +190,50 @@ export default function AllGuidesPage() {
     () => categoriesResponse?.data || [],
     [categoriesResponse]
   );
+
+  // Sync local guides state with API response
+  useEffect(() => {
+    setLocalGuides(guides);
+  }, [guides]);
+
+  const handleRowReorder = async (
+    reordered: GuideSummary[],
+    _fromIndex: number,
+    _toIndex: number
+  ) => {
+    const effectiveLimit =
+      typeof pageSize === "number" ? pageSize : guides.length;
+    const baseOffset = (page - 1) * effectiveLimit;
+    const updatedWithNewOrders = reordered.map((guide, idx) => ({
+      ...guide,
+      displayOrder: baseOffset + idx + 1,
+    }));
+    setLocalGuides(updatedWithNewOrders);
+
+    try {
+      const updates = updatedWithNewOrders.filter(
+        (guide, idx) =>
+          localGuides[idx]?.id !== guide.id ||
+          (localGuides[idx]?.displayOrder ?? 0) !== guide.displayOrder
+      );
+
+      if (updates.length === 0) return;
+
+      await Promise.all(
+        updates.map((guide) =>
+          updateGuide({
+            id: guide.id,
+            payload: { displayOrder: guide.displayOrder },
+          }).unwrap()
+        )
+      );
+
+      toast.success("Guide display order updated");
+    } catch {
+      setLocalGuides(guides);
+      toast.error("Failed to update guide display order");
+    }
+  };
 
   // Dropdown options
   const categoryOptions = useMemo(
@@ -268,6 +320,15 @@ export default function AllGuidesPage() {
     debouncedSearch,
   ].filter(Boolean).length;
 
+  const isFilteredOrSorted = Boolean(
+    categoryFilter ||
+    speciesFilter ||
+    breedFilter ||
+    statusFilter ||
+    debouncedSearch ||
+    sortValue !== "displayOrder:asc"
+  );
+
   const handleResetFilters = () => {
     setSearchInput("");
     setDebouncedSearch("");
@@ -275,7 +336,7 @@ export default function AllGuidesPage() {
     setSpeciesFilter("");
     setBreedFilter("");
     setStatusFilter("");
-    setSortValue("updatedAt:desc");
+    setSortValue("displayOrder:asc");
     setPage(1);
   };
 
@@ -367,14 +428,6 @@ export default function AllGuidesPage() {
                 <span className="text-ink-muted">
                   {row.readTimeMinutes || 1} min read
                 </span>
-                {row.displayOrder > 0 && (
-                  <>
-                    <span className="text-ink-faint">•</span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-tint-mint text-success border border-success/30">
-                      Order #{row.displayOrder}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -419,7 +472,8 @@ export default function AllGuidesPage() {
     {
       key: "breeds",
       label: "Breed",
-      sortable: false,
+      sortable: true,
+      accessor: (row) => row.breeds?.map((b) => b.name).join(", ") || "",
       align: "center",
       width: "170px",
       cardSide: "right",
@@ -438,6 +492,8 @@ export default function AllGuidesPage() {
     {
       key: "author",
       label: "Author",
+      sortable: true,
+      accessor: (row) => row.author?.name || "",
       cardSide: "left",
       cardAlign: "left",
       render: (row) => {
@@ -581,10 +637,17 @@ export default function AllGuidesPage() {
       {/* Master Guides Directory: Reusable DynamicTable with unified Search & Filter By toolbar */}
       <AnimatedContainer delay={0.1}>
         <DynamicTable
-          data={guides}
+          data={localGuides.length > 0 ? localGuides : guides}
           columns={columns}
-          loading={isLoadingGuides}
+          loading={isLoadingGuides || isFetchingGuides}
           showRowNumber
+          reorderable
+          rowNumberHeader="No."
+          onRowReorder={handleRowReorder}
+          getRowNumber={(row, idx) =>
+            row.displayOrder ??
+            ((page - 1) * (typeof pageSize === "number" ? pageSize : 0) + idx + 1)
+          }
           rowNumberOffset={(page - 1) * (pageSize === "all" ? 0 : pageSize)}
           searchable
           searchValue={searchInput}
@@ -593,6 +656,17 @@ export default function AllGuidesPage() {
           searchLoading={isFetchingGuides}
           searchPlaceholder="Search guides by title, excerpt, or tag..."
           manualFiltering
+          manualSorting
+          hasActiveFilters={isFilteredOrSorted}
+          onReset={handleResetFilters}
+          sortConfig={{
+            key: sortBy,
+            direction: sortOrder,
+          }}
+          onSortChange={(key, direction) => {
+            setSortValue(`${key}:${direction}`);
+            setPage(1);
+          }}
           getRowKey={(row) => row.id}
           title="Master Guides Directory"
           titleIcon={<BookOpen className="size-5" />}
@@ -602,96 +676,102 @@ export default function AllGuidesPage() {
               : undefined
           }
           filterContent={
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  <FormSelect
-                    label="Category"
-                    placeholder={
-                      isLoadingCategories ? "Loading..." : "All Categories"
-                    }
-                    options={categoryOptions}
-                    value={categoryFilter}
-                    onChange={(val) => {
-                      setCategoryFilter(val);
-                      setPage(1);
-                    }}
-                    searchable
-                    disabled={isLoadingCategories}
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+              <FormSelect
+                label="Category"
+                placeholder={
+                  isLoadingCategories ? "Loading..." : "All Categories"
+                }
+                options={categoryOptions}
+                value={categoryFilter}
+                onChange={(val) => {
+                  setCategoryFilter(val);
+                  setPage(1);
+                }}
+                searchable
+                disabled={isLoadingCategories}
+              />
 
-                  <FormSelect
-                    label="Species"
-                    placeholder={isLoadingSpecies ? "Loading..." : "All Species"}
-                    options={speciesOptions}
-                    value={speciesFilter}
-                    onChange={(val) => {
-                      setSpeciesFilter(val);
-                      setBreedFilter("");
-                      setPage(1);
-                    }}
-                    searchable
-                    disabled={isLoadingSpecies}
-                  />
+              <FormSelect
+                label="Species"
+                placeholder={isLoadingSpecies ? "Loading..." : "All Species"}
+                options={speciesOptions}
+                value={speciesFilter}
+                onChange={(val) => {
+                  setSpeciesFilter(val);
+                  setBreedFilter("");
+                  setPage(1);
+                }}
+                searchable
+                disabled={isLoadingSpecies}
+              />
 
-                  <FormSelect
-                    label="Breed"
-                    placeholder={
-                      !speciesFilter
-                        ? "Select species first"
-                        : isLoadingBreeds
-                        ? "Loading..."
-                        : "All Breeds"
-                    }
-                    options={breedOptions}
-                    value={breedFilter}
-                    onChange={(val) => {
-                      setBreedFilter(val);
-                      setPage(1);
-                    }}
-                    searchable
-                    disabled={!speciesFilter || isLoadingBreeds}
-                  />
+              <FormSelect
+                label="Breed"
+                placeholder={
+                  !speciesFilter
+                    ? "Select species first"
+                    : isLoadingBreeds
+                    ? "Loading..."
+                    : "All Breeds"
+                }
+                options={breedOptions}
+                value={breedFilter}
+                onChange={(val) => {
+                  setBreedFilter(val);
+                  setPage(1);
+                }}
+                searchable
+                disabled={!speciesFilter || isLoadingBreeds}
+              />
 
-                  <FormSelect
-                    label="Status"
-                    placeholder="All Statuses"
-                    options={STATUS_OPTIONS}
-                    value={statusFilter}
-                    onChange={(val) => {
-                      setStatusFilter(val);
-                      setPage(1);
-                    }}
-                  />
+              <FormSelect
+                label="Status"
+                placeholder="All Statuses"
+                options={STATUS_OPTIONS}
+                value={statusFilter}
+                onChange={(val) => {
+                  setStatusFilter(val);
+                  setPage(1);
+                }}
+              />
 
-                  <FormSelect
-                    label="Sort By"
-                    placeholder="Recently Updated"
-                    options={SORT_OPTIONS}
-                    value={sortValue}
-                    onChange={(val) => {
-                      setSortValue(val || "updatedAt:desc");
-                      setPage(1);
-                    }}
-                  />
-                </div>
+              <FormSelect
+                label="Sort By"
+                placeholder="Recently Updated"
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={(val) => {
+                  setSortValue(val || "updatedAt:desc");
+                  setPage(1);
+                }}
+              />
 
-                {activeFilterCount > 0 && (
-                  <div className="flex items-center justify-between pt-2 border-t border-border-peach/70 text-xs">
-                    <span className="text-ink-muted">
-                      Showing filtered results ({meta?.total ?? guides.length}{" "}
-                      matched)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleResetFilters}
-                      className="inline-flex items-center gap-1.5 font-bold text-coral hover:underline cursor-pointer"
-                    >
-                      <RotateCcw className="size-3.5" />
-                      Reset Filters
-                    </button>
-                  </div>
-                )}
+              <div className="w-full">
+                <span className="block text-xs leading-4 font-bold uppercase tracking-wider invisible mb-1.5 select-none hidden lg:block">
+                  Reset
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  disabled={!isFilteredOrSorted}
+                  title={
+                    isFilteredOrSorted
+                      ? "Reset all filters and sorting"
+                      : "No active filters"
+                  }
+                  className={cn(
+                    "w-full h-10.5 px-3.5 rounded-lg font-bold text-xs font-quicksand transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap",
+                    isFilteredOrSorted
+                      ? "border border-coral bg-coral text-white hover:bg-coral-dark shadow-xs"
+                      : "border border-border-peach/60 bg-surface-muted/50 text-ink-muted/40 cursor-not-allowed opacity-50",
+                  )}
+                >
+                  <RotateCcw className="size-3.5 shrink-0" />
+                  <span>Reset Filters</span>
+                </button>
               </div>
+            </div>
           }
           emptyMessage={
             activeFilterCount > 0

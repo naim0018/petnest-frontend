@@ -10,6 +10,7 @@ import {
   LayoutList,
   LayoutGrid,
   GripVertical,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/common/Pagination";
@@ -125,6 +126,10 @@ export interface DynamicTableProps<T> {
   onSelectionChange?: (selectedRows: T[]) => void;
   /** Enable pagination */
   pagination?: boolean;
+  /** Current active page (optional, for controlled pagination) */
+  currentPage?: number;
+  /** Callback when page changes */
+  onPageChange?: (page: number) => void;
   /** Items per page (default: 10) */
   pageSize?: number | "all";
   /** Available page size choices (default: [10, 20, 30, 40, 50, 100, "all"]) */
@@ -149,6 +154,12 @@ export interface DynamicTableProps<T> {
   onSearchChange?: (query: string) => void;
   /** Disable client-side filtering (e.g. when server-side filtering is active) */
   manualFiltering?: boolean;
+  /** Disable client-side sorting (e.g. when server-side sorting is active) */
+  manualSorting?: boolean;
+  /** Controlled sort configuration: { key: string; direction: "asc" | "desc" } | null */
+  sortConfig?: { key: string; direction: "asc" | "desc" } | null;
+  /** Callback when a sortable column header is clicked */
+  onSortChange?: (key: string, direction: "asc" | "desc") => void;
   /** Optional suggestions for SearchField popover */
   searchSuggestions?: SearchSuggestionItem[];
   /** Search loading indicator */
@@ -170,11 +181,13 @@ export interface DynamicTableProps<T> {
   loading?: boolean;
   /** Custom row key extractor */
   getRowKey?: (row: T, index: number) => string | number;
+  /** Custom row number or order value getter (overrides default sequential 1..N index) */
+  getRowNumber?: (row: T, index: number) => number | string;
   /** Custom row className */
   rowClassName?: (row: T, index: number) => string;
   /** Enable hover effect on rows */
   hoverable?: boolean;
-  /** Enable striped rows */
+  /** Enable striped rows (default: true) */
   striped?: boolean;
   /** Table title */
   title?: React.ReactNode;
@@ -200,8 +213,16 @@ export interface DynamicTableProps<T> {
   reorderable?: boolean;
   /** Custom label for the row number / order column (default: "No.") */
   rowNumberHeader?: string;
+  /** Whether the row number / order column is sortable (default: true) */
+  rowNumberSortable?: boolean;
+  /** Key to sort by when row number column is clicked (default: "displayOrder") */
+  rowNumberSortKey?: string;
   /** Callback when rows are reordered via drag & drop */
   onRowReorder?: (newData: T[], fromIndex: number, toIndex: number) => void;
+  /** Optional callback to reset all filters and sorting */
+  onReset?: () => void;
+  /** Whether filters or sorting are currently active (shows Reset button in toolbar) */
+  hasActiveFilters?: boolean;
   /** Enable view mode switching between table and grid (default: true) */
   enableViewToggle?: boolean;
   /** Current view mode if controlled: "table" | "grid" */
@@ -315,11 +336,15 @@ const DynamicTable = <T extends object>({
   tableName,
   showRowNumber = true,
   rowNumberOffset,
+  getRowNumber,
   searchable = false,
   searchPlaceholder = "Search...",
   searchValue,
   onSearchChange,
   manualFiltering = false,
+  manualSorting = false,
+  sortConfig: controlledSortConfig,
+  onSortChange,
   searchSuggestions,
   searchLoading = false,
   onSearch,
@@ -330,7 +355,7 @@ const DynamicTable = <T extends object>({
   getRowKey,
   rowClassName,
   hoverable = true,
-  striped = false,
+  striped = true,
   title,
   titleIcon,
   countBadge,
@@ -343,7 +368,11 @@ const DynamicTable = <T extends object>({
   activeFilterCount,
   reorderable = false,
   rowNumberHeader = "No.",
+  rowNumberSortable = true,
+  rowNumberSortKey = "displayOrder",
   onRowReorder,
+  onReset,
+  hasActiveFilters = false,
   enableViewToggle = true,
   viewMode,
   defaultViewMode = "table",
@@ -379,10 +408,16 @@ const DynamicTable = <T extends object>({
   const [expandedRows, setExpandedRows] = useState<Set<string | number>>(
     new Set(),
   );
-  const [sortConfig, setSortConfig] = useState<{
+  const [internalSortConfig, setInternalSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
+
+  const effectiveSortConfig =
+    controlledSortConfig !== undefined
+      ? controlledSortConfig
+      : internalSortConfig;
+
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -409,10 +444,10 @@ const DynamicTable = <T extends object>({
   // 🔀 Sorting Logic
   // ============================================
   const sortedData = useMemo(() => {
-    if (!sortConfig) return filteredData;
+    if (manualSorting || !effectiveSortConfig) return filteredData;
 
     const sorted = [...filteredData].sort((a, b) => {
-      const column = columns.find((col) => col.key === sortConfig.key);
+      const column = columns.find((col) => col.key === effectiveSortConfig.key);
       if (!column) return 0;
 
       let aValue: unknown;
@@ -424,6 +459,9 @@ const DynamicTable = <T extends object>({
       } else if (column.accessor) {
         aValue = a[column.accessor];
         bValue = b[column.accessor];
+      } else if (column.key && a && typeof a === "object" && column.key in a) {
+        aValue = (a as any)[column.key];
+        bValue = (b as any)[column.key];
       } else {
         return 0;
       }
@@ -432,12 +470,27 @@ const DynamicTable = <T extends object>({
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
 
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const aDate = Date.parse(aValue);
+        const bDate = Date.parse(bValue);
+        if (
+          !isNaN(aDate) &&
+          !isNaN(bDate) &&
+          (aValue.includes("-") || aValue.includes(":"))
+        ) {
+          const comparison = aDate < bDate ? -1 : 1;
+          return effectiveSortConfig.direction === "asc"
+            ? comparison
+            : -comparison;
+        }
+      }
+
       const comparison = aValue < bValue ? -1 : 1;
-      return sortConfig.direction === "asc" ? comparison : -comparison;
+      return effectiveSortConfig.direction === "asc" ? comparison : -comparison;
     });
 
     return sorted;
-  }, [filteredData, sortConfig, columns]);
+  }, [filteredData, effectiveSortConfig, columns, manualSorting]);
 
   // ============================================
   // 📄 Pagination Logic
@@ -467,15 +520,17 @@ const DynamicTable = <T extends object>({
   // 🎯 Event Handlers
   // ============================================
   const handleSort = (columnKey: string) => {
-    setSortConfig((prev) => {
-      if (prev?.key === columnKey) {
-        return {
-          key: columnKey,
-          direction: prev.direction === "asc" ? "desc" : "asc",
-        };
-      }
-      return { key: columnKey, direction: "asc" };
-    });
+    const nextDirection =
+      effectiveSortConfig?.key === columnKey &&
+      effectiveSortConfig.direction === "asc"
+        ? "desc"
+        : "asc";
+
+    onSortChange?.(columnKey, nextDirection);
+
+    if (controlledSortConfig === undefined) {
+      setInternalSortConfig({ key: columnKey, direction: nextDirection });
+    }
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -780,7 +835,7 @@ const DynamicTable = <T extends object>({
                   placeholder={searchPlaceholder}
                   suggestions={searchSuggestions}
                   isLoading={searchLoading}
-                  className="h-10 rounded-lg"
+                  className="h-11 rounded-lg"
                   containerClassName="flex-1 sm:flex-initial sm:w-72 md:w-80"
                 />
               )}
@@ -790,7 +845,7 @@ const DynamicTable = <T extends object>({
                   type="button"
                   onClick={onFilterClick}
                   className={cn(
-                    "flex items-center gap-2 h-10 px-4 bg-card border rounded-lg text-sm font-semibold shadow-2xs transition-all min-w-fit cursor-pointer shrink-0",
+                    "flex items-center gap-2 h-11 px-4 bg-card border rounded-lg text-sm font-semibold shadow-2xs transition-all min-w-fit cursor-pointer shrink-0",
                     isFilterActive
                       ? "border-coral text-coral bg-coral/5"
                       : "border-border-peach text-ink-muted hover:border-coral/50 hover:text-ink",
@@ -807,15 +862,33 @@ const DynamicTable = <T extends object>({
                 </button>
               )}
 
+              {!filterContent && onReset && (
+                <button
+                  type="button"
+                  onClick={onReset}
+                  disabled={!hasActiveFilters}
+                  title={hasActiveFilters ? "Reset all filters and sorting" : "No filters active"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 h-11 px-3.5 rounded-lg border transition-all text-xs font-bold font-quicksand shadow-2xs shrink-0",
+                    hasActiveFilters
+                      ? "border-coral/40 bg-coral text-white hover:bg-coral-dark cursor-pointer shadow-xs"
+                      : "border-border-peach/60 bg-surface-muted/40 text-ink-muted/40 cursor-not-allowed opacity-60",
+                  )}
+                >
+                  <RotateCcw className="size-3.5" />
+                  <span>Reset Filters</span>
+                </button>
+              )}
+
               {/* View Mode Toggle: Table vs Grid */}
               {enableViewToggle && (
-                <div className="inline-flex items-center p-0.5 rounded-lg border border-border-peach bg-surface-muted shadow-2xs shrink-0">
+                <div className="inline-flex items-center h-11 p-1 rounded-lg border border-border-peach bg-surface-muted shadow-2xs shrink-0">
                   <button
                     type="button"
                     onClick={() => handleViewModeChange("table")}
                     title="Table View"
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
+                      "flex items-center gap-1.5 h-full px-3.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
                       currentViewMode === "table"
                         ? "bg-coral text-white shadow-2xs"
                         : "text-ink-muted hover:text-ink hover:bg-card/60",
@@ -830,7 +903,7 @@ const DynamicTable = <T extends object>({
                     onClick={() => handleViewModeChange("grid")}
                     title="Grid View"
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
+                      "flex items-center gap-1.5 h-full px-3.5 rounded-md text-xs font-bold font-quicksand transition-all cursor-pointer",
                       currentViewMode === "grid"
                         ? "bg-coral text-white shadow-2xs"
                         : "text-ink-muted hover:text-ink hover:bg-card/60",
@@ -955,6 +1028,16 @@ const DynamicTable = <T extends object>({
                 <p className="text-xs text-ink-muted">
                   Try adjusting your search or filters
                 </p>
+                {hasActiveFilters && onReset && (
+                  <button
+                    type="button"
+                    onClick={onReset}
+                    className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-coral bg-coral text-white hover:bg-coral-dark transition-all text-xs font-bold font-quicksand shadow-xs cursor-pointer"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span>Reset Filters</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -1242,12 +1325,33 @@ const DynamicTable = <T extends object>({
                       reorderable ? "w-16" : "w-10"
                     )}
                   >
-                    {rowNumberHeader}
+                    {rowNumberSortable ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(rowNumberSortKey)}
+                        className="group inline-flex items-center justify-center gap-1 text-xs font-bold font-quicksand uppercase tracking-wider text-white hover:text-white/85 transition-colors cursor-pointer w-full"
+                      >
+                        <span>{rowNumberHeader}</span>
+                        <span className="inline-flex items-center text-white/75 group-hover:text-white transition-colors shrink-0">
+                          {effectiveSortConfig?.key === rowNumberSortKey ? (
+                            effectiveSortConfig.direction === "asc" ? (
+                              <ChevronUp size={14} className="text-white" />
+                            ) : (
+                              <ChevronDown size={14} className="text-white" />
+                            )
+                          ) : (
+                            <ChevronsUpDown size={14} className="opacity-80" />
+                          )}
+                        </span>
+                      </button>
+                    ) : (
+                      rowNumberHeader
+                    )}
                   </th>
                 )}
                 {columns.map((column, colIndex) => {
                   const alignment = getColumnAlignment(column, colIndex);
-                  const isSorted = sortConfig?.key === column.key;
+                  const isSorted = effectiveSortConfig?.key === column.key;
                   return (
                     <th
                       key={column.key}
@@ -1272,7 +1376,7 @@ const DynamicTable = <T extends object>({
                           <span>{column.label}</span>
                           <span className="inline-flex items-center text-white/75 group-hover:text-white transition-colors shrink-0">
                             {isSorted ? (
-                              sortConfig.direction === "asc" ? (
+                              effectiveSortConfig.direction === "asc" ? (
                                 <ChevronUp
                                   size={14}
                                   className="text-white"
@@ -1304,42 +1408,88 @@ const DynamicTable = <T extends object>({
 
             <tbody className="">
               {loading ? (
-                Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <tr key={rowIndex} className="border-b border-border/40 animate-pulse">
+                Array.from({
+                  length:
+                    typeof effectivePageSize === "number"
+                      ? Math.min(effectivePageSize, 10)
+                      : 8,
+                }).map((_, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className={cn(
+                      "border-b border-border-peach/60 transition-colors animate-pulse",
+                      striped
+                        ? rowIndex % 2 === 0
+                          ? "bg-card"
+                          : "bg-surface-muted/40 dark:bg-surface-muted/20"
+                        : "bg-card"
+                    )}
+                  >
                     {selectable && (
-                      <td className="px-3 py-2.5">
-                        <div className="size-4 rounded bg-surface-muted" />
+                      <td className="px-3 py-3 w-10 text-center">
+                        <div className="size-4 rounded bg-surface-muted mx-auto" />
                       </td>
                     )}
                     {showRowNumber && (
-                      <td className="px-2 py-2.5 text-center">
+                      <td
+                        className={cn(
+                          "px-2 py-3 text-center",
+                          reorderable ? "w-16" : "w-10"
+                        )}
+                      >
                         <div className="h-4 w-6 rounded bg-surface-muted mx-auto" />
                       </td>
                     )}
                     {columns.map((col, colIndex) => {
                       const alignment = getColumnAlignment(col, colIndex);
+                      const isFirstCol =
+                        colIndex === 0 &&
+                        (col.key === "title" ||
+                          col.key === "name" ||
+                          col.key === "guide");
                       return (
                         <td
                           key={colIndex}
                           className={cn(
-                            "px-3 py-2.5",
-                            getAlignmentClass(alignment)
+                            "px-3 py-3",
+                            getAlignmentClass(alignment),
+                            col.hideOnMobile ? "hidden lg:table-cell" : ""
                           )}
+                          style={{ width: col.width }}
                         >
-                          <div
-                            className={cn(
-                              "h-4 bg-surface-muted rounded",
-                              alignment === "center" && "mx-auto",
-                              alignment === "right" && "ml-auto"
-                            )}
-                            style={{ width: `${55 + ((colIndex * 15) % 35)}%` }}
-                          />
+                          {isFirstCol ? (
+                            <div className="flex items-center gap-2.5 min-w-[200px]">
+                              <div className="size-10 rounded-lg bg-surface-muted shrink-0" />
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="h-3.5 bg-surface-muted rounded w-4/5" />
+                                <div className="h-2.5 bg-surface-muted/70 rounded w-2/5" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className={cn(
+                                "h-4 bg-surface-muted rounded",
+                                alignment === "center" && "mx-auto",
+                                alignment === "right" && "ml-auto"
+                              )}
+                              style={{
+                                width: `${45 + ((colIndex * 17) % 35)}%`,
+                                minWidth: "40px",
+                                maxWidth: "160px",
+                              }}
+                            />
+                          )}
                         </td>
                       );
                     })}
                     {actions && (
-                      <td className="px-2 py-2.5 text-center">
-                        <div className="h-6 w-16 bg-surface-muted rounded-full mx-auto" />
+                      <td className="px-2 py-3 text-center min-w-[140px]">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <div className="size-7 rounded-md bg-surface-muted" />
+                          <div className="size-7 rounded-md bg-surface-muted" />
+                          <div className="size-7 rounded-md bg-surface-muted" />
+                          <div className="size-7 rounded-md bg-surface-muted" />
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -1362,6 +1512,16 @@ const DynamicTable = <T extends object>({
                       <p className="text-xs text-gray-400">
                         Try adjusting your search or filters
                       </p>
+                      {hasActiveFilters && onReset && (
+                        <button
+                          type="button"
+                          onClick={onReset}
+                          className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-coral bg-coral text-white hover:bg-coral-dark transition-all text-xs font-bold font-quicksand shadow-xs cursor-pointer"
+                        >
+                          <RotateCcw className="size-3.5" />
+                          <span>Reset Filters</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -1376,7 +1536,9 @@ const DynamicTable = <T extends object>({
                       : pagination && typeof effectivePageSize === "number"
                       ? (currentPage - 1) * effectivePageSize
                       : 0;
-                  const rowNum = computedBaseOffset + index + 1;
+                  const rowNum = getRowNumber
+                    ? getRowNumber(row, index)
+                    : computedBaseOffset + index + 1;
 
                   return (
                     <tr
@@ -1426,13 +1588,13 @@ const DynamicTable = <T extends object>({
                           "border-t-2 border-coral shadow-[inset_0_2px_0_0_var(--color-coral,#ff6b6b)] bg-coral/5",
                         striped
                           ? index % 2 === 0
-                            ? "bg-stripe-1"
-                            : "bg-stripe-2"
-                          : "bg-primary-background",
+                            ? "bg-card"
+                            : "bg-surface-muted/30 dark:bg-surface-muted/20"
+                          : "bg-card",
                         hoverable &&
-                          "hover:bg-primary-brand/5 hover:shadow-[inset_4px_0_0_0_var(--secondary-brand)]",
+                          "hover:bg-coral/5 dark:hover:bg-coral/10 hover:shadow-[inset_4px_0_0_0_var(--color-coral,#ff6b6b)]",
                         isSelected &&
-                          "bg-primary-brand/[0.02] shadow-[inset_4px_0_0_0_var(--secondary-brand)]",
+                          "bg-coral/[0.04] shadow-[inset_4px_0_0_0_var(--color-coral,#ff6b6b)]",
                         rowClassName?.(row, index),
                       )}
                     >

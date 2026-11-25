@@ -1,5 +1,6 @@
 import baseApi from "../BaseApi/BaseApi";
 import type {
+  BanUserPayload,
   ChangePasswordPayload,
   ChangePasswordResponse,
   DeleteUserResponse,
@@ -8,6 +9,7 @@ import type {
   UpdateRolePayload,
   UserDetailsResponse,
   UserQuery,
+  UserStatsResponse,
 } from "./user.types";
 
 const userApi = baseApi.injectEndpoints({
@@ -49,6 +51,11 @@ const userApi = baseApi.injectEndpoints({
           : [{ type: "Users", id: "LIST" }],
     }),
 
+    getUserStats: builder.query<UserStatsResponse, void>({
+      query: () => "/users/stats",
+      providesTags: [{ type: "Users", id: "STATS" }],
+    }),
+
     getUserById: builder.query<UserDetailsResponse, string>({
       query: (id) => `/users/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Users", id }],
@@ -67,6 +74,19 @@ const userApi = baseApi.injectEndpoints({
         { type: "Users", id },
         { type: "Users", id: "LIST" },
         "Me",
+      ],
+    }),
+
+    toggleBanUser: builder.mutation<UserDetailsResponse, BanUserPayload>({
+      query: ({ id, isBanned, reason }) => ({
+        url: `/users/${id}/ban`,
+        method: "PATCH",
+        body: { isBanned, reason },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Users", id },
+        { type: "Users", id: "LIST" },
+        { type: "Users", id: "STATS" },
       ],
     }),
 
@@ -106,8 +126,10 @@ export const {
   useUpdateMeMutation,
   useChangePasswordMutation,
   useGetUsersQuery,
+  useGetUserStatsQuery,
   useGetUserByIdQuery,
   useUpdateUserRoleMutation,
+  useToggleBanUserMutation,
   useDeleteUserMutation,
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,

@@ -10,23 +10,44 @@ export interface LanguageOption {
   name: string;
   nativeName: string;
   flag: string;
+  flagPath: string;
 }
 
 export const LANGUAGES: LanguageOption[] = [
-  { code: "en", name: "English", nativeName: "English", flag: "🇺🇸" },
-  { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸" },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা", flag: "🇧🇩" },
-  { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷" },
-  { code: "de", name: "German", nativeName: "Deutsch", flag: "🇩🇪" },
-  { code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
-  { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳" },
-  { code: "zh-CN", name: "Chinese", nativeName: "简体中文", flag: "🇨🇳" },
-  { code: "ja", name: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
-  { code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇧🇷" },
-  { code: "it", name: "Italian", nativeName: "Italiano", flag: "🇮🇹" },
-  { code: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺" },
-  { code: "tr", name: "Turkish", nativeName: "Türkçe", flag: "🇹🇷" },
+  { code: "en", name: "English", nativeName: "English", flag: "🇺🇸", flagPath: "/flags/us.svg" },
+  { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", flagPath: "/flags/es.svg" },
+  { code: "bn", name: "Bengali", nativeName: "বাংলা", flag: "🇧🇩", flagPath: "/flags/bd.svg" },
+  { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷", flagPath: "/flags/fr.svg" },
+  { code: "de", name: "German", nativeName: "Deutsch", flag: "🇩🇪", flagPath: "/flags/de.svg" },
+  { code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦", flagPath: "/flags/sa.svg" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", flagPath: "/flags/in.svg" },
+  { code: "zh-CN", name: "Chinese", nativeName: "简体中文", flag: "🇨🇳", flagPath: "/flags/cn.svg" },
+  { code: "ja", name: "Japanese", nativeName: "日本語", flag: "🇯🇵", flagPath: "/flags/jp.svg" },
+  { code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇧🇷", flagPath: "/flags/br.svg" },
+  { code: "it", name: "Italian", nativeName: "Italiano", flag: "🇮🇹", flagPath: "/flags/it.svg" },
+  { code: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺", flagPath: "/flags/ru.svg" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe", flag: "🇹🇷", flagPath: "/flags/tr.svg" },
 ];
+
+const FlagImg = ({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) => (
+  // eslint-disable-next-line @next/next/no-img-element
+  <img
+    src={src}
+    alt={alt}
+    className={cn(
+      "w-5 h-3.5 object-cover rounded-xs border border-border-peach/70 shadow-2xs shrink-0",
+      className
+    )}
+  />
+);
 
 function isClientFromBd(): boolean {
   if (typeof window === "undefined") return false;
@@ -206,7 +227,10 @@ export default function LanguageSelector({
               </div>
             ) : (
               <>
-                <span className="text-base leading-none">{activeLang.flag}</span>
+                <FlagImg
+                  src={activeLang.flagPath || "/flags/us.svg"}
+                  alt={activeLang.name}
+                />
                 <span className="hidden sm:inline-block text-xs uppercase font-extrabold text-ink group-hover:text-coral transition-colors font-quicksand">
                   {activeLang.code.slice(0, 2)}
                 </span>
@@ -229,7 +253,7 @@ export default function LanguageSelector({
 
       <PopoverContent
         align="end"
-        sideOffset={2}
+        sideOffset={8}
         className="w-60 p-1.5 bg-card border border-border-peach rounded-lg shadow-xl z-50 overflow-hidden"
       >
         {/* Popover Header with Reset Action */}
@@ -240,15 +264,17 @@ export default function LanguageSelector({
               Language
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleResetToLocation}
-            className="inline-flex items-center gap-1 text-[10px] font-bold text-coral hover:text-coral-dark hover:underline cursor-pointer font-quicksand transition-colors"
-            title="Reset any custom selection and detect automatically from your location"
-          >
-            <RotateCcw className="size-3" />
-            <span>Reset (Location)</span>
-          </button>
+          {hasManualOverride && (
+            <button
+              type="button"
+              onClick={handleResetToLocation}
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-coral hover:text-coral-dark hover:underline cursor-pointer font-quicksand transition-colors"
+              title="Reset to location-detected language"
+            >
+              <RotateCcw className="size-2.5" />
+              <span>Reset</span>
+            </button>
+          )}
         </div>
 
         {/* Location Auto-detect Quick Option */}
@@ -257,25 +283,23 @@ export default function LanguageSelector({
             type="button"
             onClick={handleResetToLocation}
             className={cn(
-              "w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors text-left outline-none cursor-pointer border border-dashed",
+              "w-full flex items-center justify-between px-2.5 py-2 text-xs font-semibold rounded-md transition-colors text-left outline-none cursor-pointer border border-dashed",
               !hasManualOverride
                 ? "bg-coral/10 text-coral border-coral/40 font-bold"
                 : "border-border-peach/80 text-ink hover:bg-surface-muted hover:text-coral"
             )}
             title="Detect language automatically from your location"
           >
-            <div className="flex items-center gap-2 truncate">
+            <div className="flex items-center gap-2 min-w-0">
               <MapPin className="size-3.5 text-coral shrink-0" />
-              <div className="flex flex-col min-w-0">
-                <span className="truncate text-xs font-bold font-quicksand">
-                  Auto (Based on Location)
-                </span>
-                <span className="text-[10px] text-ink-faint truncate">
-                  {isClientFromBd()
-                    ? "🇧🇩 Detected: Bangladesh (বাংলা)"
-                    : "Detected by your IP/Country"}
-                </span>
-              </div>
+              <FlagImg
+                src={isClientFromBd() ? "/flags/bd.svg" : "/flags/us.svg"}
+                alt={isClientFromBd() ? "Bangladesh" : "United States"}
+                className="w-4 h-3 shrink-0"
+              />
+              <span className="text-xs font-bold font-quicksand truncate">
+                {isClientFromBd() ? "Bangladesh" : "United States"}
+              </span>
             </div>
             {!hasManualOverride && (
               <Check className="size-4 shrink-0 text-coral ml-2" />
@@ -299,8 +323,11 @@ export default function LanguageSelector({
                     : "text-ink hover:bg-surface-muted hover:text-coral"
                 )}
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-base leading-none">{lang.flag}</span>
+                <div className="flex items-center gap-2.5 truncate">
+                  <FlagImg
+                    src={lang.flagPath || "/flags/us.svg"}
+                    alt={lang.name}
+                  />
                   <div className="flex flex-col min-w-0">
                     <span className="truncate text-xs font-bold font-quicksand">
                       {lang.nativeName}

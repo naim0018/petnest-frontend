@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Globe2, MapPin, RefreshCw } from "lucide-react";
+import { Globe2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GeoDistribution } from "@/store/Api/Analytics/analytics.types";
 
@@ -16,7 +16,7 @@ export default function VisitorGoogleMap({
 }: VisitorGoogleMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
+  const markersRef = useRef<{ marker: any; halo: any; item: GeoDistribution }[]>([]);
   const infoWindowRef = useRef<any>(null);
 
   const [activeItem, setActiveItem] = useState<GeoDistribution | null>(
@@ -42,7 +42,7 @@ export default function VisitorGoogleMap({
           zoom: distribution.length > 1 ? 4 : 7,
           mapTypeId: "roadmap",
           mapTypeControl: true,
-          streetViewControl: true,
+          streetViewControl: false,
           fullscreenControl: true,
           zoomControl: true,
           gestureHandling: "cooperative",
@@ -58,7 +58,11 @@ export default function VisitorGoogleMap({
         mapInstanceRef.current = map;
         infoWindowRef.current = new (window as any).google.maps.InfoWindow();
 
-        markersRef.current.forEach((m) => m?.marker?.setMap(null));
+        // Clear previous markers & halos
+        markersRef.current.forEach((m) => {
+          m?.marker?.setMap(null);
+          m?.halo?.setMap(null);
+        });
         markersRef.current = [];
 
         const bounds = new (window as any).google.maps.LatLngBounds();
@@ -71,19 +75,39 @@ export default function VisitorGoogleMap({
             ? `${item.city}, ${item.country}`
             : item.country;
 
+          // 1. Radar Halo (Pulsing glowing circle around visitor dot)
+          const halo = new (window as any).google.maps.Circle({
+            map,
+            center: pos,
+            radius: Math.min(50000, Math.max(18000, item.visitors * 2000)),
+            strokeColor: "#FF5A5F",
+            strokeOpacity: 0.45,
+            strokeWeight: 1.5,
+            fillColor: "#FF5A5F",
+            fillOpacity: 0.15,
+          });
+
+          // 2. Modern SVG Visitor Dot (Replaces legacy drop pin)
           const marker = new (window as any).google.maps.Marker({
             position: pos,
             map,
             title: locationLabel,
-            animation: (window as any).google.maps.Animation.DROP,
+            icon: {
+              path: (window as any).google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#FF5A5F",
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2.5,
+            },
           });
 
-          marker.addListener("click", () => {
+          const openInfo = () => {
             setActiveItem(item);
             const contentString = `
-              <div style="padding: 6px 10px; font-family: system-ui, sans-serif; color: #1e293b; min-width: 160px;">
-                <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                  <span style="font-size: 14px;">📍</span>
+              <div style="padding: 6px 10px; font-family: system-ui, -apple-system, sans-serif; color: #0f172a; min-width: 170px;">
+                <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #FF5A5F;"></span>
                   <span>${locationLabel}</span>
                 </div>
                 <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
@@ -94,9 +118,11 @@ export default function VisitorGoogleMap({
             `;
             infoWindowRef.current.setContent(contentString);
             infoWindowRef.current.open(map, marker);
-          });
+          };
 
-          markersRef.current.push({ marker, item });
+          marker.addListener("click", openInfo);
+
+          markersRef.current.push({ marker, halo, item });
         });
 
         if (distribution.length > 1) {
@@ -142,7 +168,10 @@ export default function VisitorGoogleMap({
 
     return () => {
       isMounted = false;
-      markersRef.current.forEach((m) => m?.marker?.setMap(null));
+      markersRef.current.forEach((m) => {
+        m?.marker?.setMap(null);
+        m?.halo?.setMap(null);
+      });
       markersRef.current = [];
     };
   }, [distribution]);
@@ -161,9 +190,9 @@ export default function VisitorGoogleMap({
           ? `${item.city}, ${item.country}`
           : item.country;
         const contentString = `
-          <div style="padding: 6px 10px; font-family: system-ui, sans-serif; color: #1e293b; min-width: 160px;">
-            <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-              <span style="font-size: 14px;">📍</span>
+          <div style="padding: 6px 10px; font-family: system-ui, -apple-system, sans-serif; color: #0f172a; min-width: 170px;">
+            <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #FF5A5F;"></span>
               <span>${locationLabel}</span>
             </div>
             <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
@@ -212,7 +241,7 @@ export default function VisitorGoogleMap({
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
-            Geolocated visitor footprint rendered via Google Maps (Developers Version)
+            Geolocated visitor footprint rendered via Google Maps
           </p>
         </div>
 
@@ -247,7 +276,7 @@ export default function VisitorGoogleMap({
           {!mapLoaded && !mapError && (
             <div className="absolute inset-0 bg-card/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5 z-10 text-xs font-semibold text-ink-muted">
               <div className="size-6 border-2 border-coral border-t-transparent rounded-full animate-spin" />
-              <span>Loading Google Maps (Developer Version)...</span>
+              <span>Loading Google Maps...</span>
             </div>
           )}
 
@@ -264,43 +293,6 @@ export default function VisitorGoogleMap({
               </button>
             </div>
           )}
-
-          {/* Active Location Floating Pill */}
-          {activeItem && mapLoaded && (
-            <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-md border border-coral/30 shadow-md rounded-lg p-3 text-xs pointer-events-none transition-all z-10">
-              <div className="flex items-center gap-1.5 font-bold text-ink">
-                <MapPin className="size-3.5 text-coral shrink-0" />
-                <span>
-                  {activeItem.city
-                    ? `${activeItem.city}, ${activeItem.country}`
-                    : activeItem.country}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-coral/10 text-coral font-bold ml-1 font-mono">
-                  {activeItem.code}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 mt-1.5 text-[11px] text-ink-muted">
-                <div>
-                  <span className="font-semibold text-ink">
-                    {activeItem.visitors.toLocaleString()}
-                  </span>{" "}
-                  visitors
-                </div>
-                <div>
-                  <span className="font-semibold text-coral">
-                    {activeItem.share}
-                  </span>{" "}
-                  share
-                </div>
-                <div>
-                  <span className="font-semibold text-ink">
-                    {activeItem.totalVisits.toLocaleString()}
-                  </span>{" "}
-                  sessions
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Real Location Ranking Panel */}
@@ -315,58 +307,64 @@ export default function VisitorGoogleMap({
           </div>
 
           <div className="space-y-2 max-h-[380px] sm:max-h-[440px] overflow-y-auto pr-1 w-full">
-            {distribution.map((item, idx) => {
-              const isSelected =
-                activeItem?.country === item.country &&
-                activeItem?.city === item.city;
-              const numericShare = parseInt(item.share) || 10;
-              const displayLabel = item.city
-                ? `${item.city}, ${item.country}`
-                : item.country;
+            {distribution.length === 0 ? (
+              <div className="p-4 rounded-lg bg-surface-muted text-xs text-ink-muted text-center">
+                No geographic origin data recorded yet.
+              </div>
+            ) : (
+              distribution.map((item, idx) => {
+                const isSelected =
+                  activeItem?.country === item.country &&
+                  activeItem?.city === item.city;
+                const numericShare = parseInt(item.share) || 10;
+                const displayLabel = item.city
+                  ? `${item.city}, ${item.country}`
+                  : item.country;
 
-              return (
-                <div
-                  key={`${item.country}-${item.city || idx}`}
-                  onClick={() => handleSelectLocation(item)}
-                  className={cn(
-                    "p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 w-full",
-                    isSelected
-                      ? "bg-coral/10 border-coral text-ink shadow-xs"
-                      : "bg-surface-muted/50 border-border hover:border-coral/40 text-ink-muted hover:text-ink"
-                  )}
-                >
-                  <div className="flex items-center justify-between text-xs w-full">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono text-[10px] size-5 rounded-full bg-card border border-border flex items-center justify-center font-bold text-ink shrink-0">
-                        {idx + 1}
-                      </span>
-                      <span className="font-semibold text-ink truncate">
-                        {displayLabel}
-                      </span>
+                return (
+                  <div
+                    key={`${item.country}-${item.city || idx}`}
+                    onClick={() => handleSelectLocation(item)}
+                    className={cn(
+                      "p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 w-full",
+                      isSelected
+                        ? "bg-coral/10 border-coral text-ink shadow-xs"
+                        : "bg-surface-muted/50 border-border hover:border-coral/40 text-ink-muted hover:text-ink"
+                    )}
+                  >
+                    <div className="flex items-center justify-between text-xs w-full">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-[10px] size-5 rounded-full bg-card border border-border flex items-center justify-center font-bold text-ink shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="font-semibold text-ink truncate">
+                          {displayLabel}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 font-mono text-[11px] shrink-0">
+                        <span className="font-bold text-ink">
+                          {item.visitors.toLocaleString()}
+                        </span>
+                        <span className="font-bold text-coral">{item.share}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 font-mono text-[11px] shrink-0">
-                      <span className="font-bold text-ink">
-                        {item.visitors.toLocaleString()}
-                      </span>
-                      <span className="font-bold text-coral">{item.share}</span>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500",
+                          isSelected ? "bg-coral" : "bg-coral/70"
+                        )}
+                        style={{
+                          width: `${Math.min(100, Math.max(8, numericShare))}%`,
+                        }}
+                      />
                     </div>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
-                    <div
-                      className={cn(
-                        "h-full rounded-full transition-all duration-500",
-                        isSelected ? "bg-coral" : "bg-coral/70"
-                      )}
-                      style={{
-                        width: `${Math.min(100, Math.max(8, numericShare))}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

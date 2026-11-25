@@ -21,16 +21,21 @@ export default function GuideOrderInput({
   className,
   disabled = false,
 }: GuideOrderInputProps) {
-  const [val, setVal] = useState<number>(currentOrder);
+  const [val, setVal] = useState<number | string>(currentOrder ?? 0);
   const [updateGuide, { isLoading: isUpdating }] = useUpdateGuideMutation();
 
   useEffect(() => {
     setVal(currentOrder ?? 0);
   }, [currentOrder]);
 
-  const commitOrder = async (newOrder: number) => {
-    const validOrder = Math.max(0, Math.round(newOrder));
-    if (validOrder === currentOrder) return;
+  const commitOrder = async (targetVal: number | string) => {
+    const parsed = typeof targetVal === "string" ? parseInt(targetVal, 10) : targetVal;
+    const validOrder = isNaN(parsed) ? 0 : Math.max(0, Math.round(parsed));
+
+    if (validOrder === currentOrder) {
+      setVal(currentOrder);
+      return;
+    }
 
     setVal(validOrder);
 
@@ -59,23 +64,27 @@ export default function GuideOrderInput({
 
   const handleStep = (step: number) => {
     if (disabled || isUpdating) return;
-    const next = Math.max(0, val + step);
+    const currentNum = typeof val === "string" ? parseInt(val, 10) || 0 : val;
+    const next = Math.max(0, currentNum + step);
     commitOrder(next);
   };
+
+  const currentNum = typeof val === "string" ? parseInt(val, 10) || 0 : val;
 
   return (
     <div
       className={cn(
-        "inline-flex items-center border border-border-peach rounded-lg bg-surface-soft hover:border-coral/40 focus-within:border-coral focus-within:ring-1 focus-within:ring-coral/20 transition-all shadow-2xs select-none",
+        "inline-flex items-center border border-border-peach rounded-lg bg-surface-soft hover:border-coral/40 focus-within:border-coral focus-within:ring-1 focus-within:ring-coral/20 transition-all shadow-2xs select-none h-7",
         isUpdating && "opacity-80 pointer-events-none",
         className
       )}
       onClick={(e) => e.stopPropagation()}
+      title="Click + / - or type a number to change display order"
     >
       <button
         type="button"
         onClick={() => handleStep(-1)}
-        disabled={disabled || isUpdating || val <= 0}
+        disabled={disabled || isUpdating || currentNum <= 0}
         aria-label="Decrease display order"
         className="size-7 flex items-center justify-center text-ink-muted hover:text-coral hover:bg-coral/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer rounded-l-lg shrink-0"
       >
@@ -89,7 +98,12 @@ export default function GuideOrderInput({
           value={val}
           disabled={disabled || isUpdating}
           onChange={(e) => {
-            const parsed = parseInt(e.target.value, 10);
+            const raw = e.target.value;
+            if (raw === "") {
+              setVal("");
+              return;
+            }
+            const parsed = parseInt(raw, 10);
             setVal(isNaN(parsed) ? 0 : Math.max(0, parsed));
           }}
           onBlur={() => commitOrder(val)}

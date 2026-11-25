@@ -97,6 +97,8 @@ export interface PublicGuideCardItem {
   lastReviewedAt?: string | null;
   translations?: Record<string, { title?: string; excerpt?: string }> | null;
   category: PublicGuideCardCategory;
+  species?: { id: string; name: string; slug: string } | null;
+  breeds?: { id: string; name: string; slug: string }[];
   expertReviewed?: boolean;
   locale?: string;
   isNativeTranslation?: boolean;

@@ -50,6 +50,13 @@ const rawBaseQuery = fetchBaseQuery({
       if (savedLang) {
         headers.set("x-visitor-lang", savedLang);
       }
+
+      try {
+        const path = window.location.pathname;
+        if (path) {
+          headers.set("x-page-path", path);
+        }
+      } catch {}
     }
     return headers;
   },
@@ -118,6 +125,7 @@ export const baseApi = createApi({
     "Bookmarks",
     "Media",
     "Settings",
+    "Marketplace",
   ],
   endpoints: () => ({}),
 });

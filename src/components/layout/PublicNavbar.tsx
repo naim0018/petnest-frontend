@@ -22,9 +22,16 @@ import {
   ShoppingBag,
   HeartHandshake,
   Building2,
+  Layers,
+  Menu,
+  LayoutDashboard,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NAV_FEATURE_FLAGS, type NavFeatureKey } from "@/lib/nav";
+import { useAppSelector } from "@/hooks/useRedux";
 import PetSelectorPopover from "./PetSelectorPopover";
+import UniversalSearchBar from "./UniversalSearchBar";
 
 interface NotificationItem {
   id: string;
@@ -94,23 +101,49 @@ const initialMessages: MessageItem[] = [
   },
 ];
 
-const navLinks = [
-  { label: "Guides", href: "/", icon: BookOpen },
+interface NavLinkItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  feature: NavFeatureKey;
+}
+
+const allNavLinks: NavLinkItem[] = [
+  { label: "Guides", href: "/", icon: BookOpen, feature: "guides" },
+  { label: "Feed", href: "/feed", icon: Rss, feature: "feed" },
+  { label: "Community", href: "/community", icon: Users, feature: "community" },
+  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag, feature: "marketplace" },
+  { label: "Adoption", href: "/adoption", icon: HeartHandshake, feature: "adoption" },
 ];
 
-const mobileDrawerLinks = [
-  { label: "Guides", href: "/", icon: BookOpen },
-  { label: "Feed", href: "/feed", icon: Rss },
-  { label: "Community", href: "/community", icon: Users },
-  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-  { label: "Adoption", href: "/adoption", icon: HeartHandshake },
-  { label: "Shelter", href: "/shelter", icon: Building2 },
+const allDrawerLinks: NavLinkItem[] = [
+  { label: "Care Guides", href: "/", icon: BookOpen, feature: "guides" },
+  { label: "Browse Topics", href: "/#topics", icon: Layers, feature: "guides" },
+  { label: "Feed", href: "/feed", icon: Rss, feature: "feed" },
+  { label: "Community", href: "/community", icon: Users, feature: "community" },
+  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag, feature: "marketplace" },
+  { label: "Adoption", href: "/adoption", icon: HeartHandshake, feature: "adoption" },
+  { label: "Shelter", href: "/shelter", icon: Building2, feature: "shelter" },
 ];
 
 export default function PublicNavbar() {
   const pathname = usePathname();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // Redux user for staff shortcuts in mobile drawer
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const authUser = useAppSelector((state) => (state.auth as any)?.user);
+  const userRole = (authUser?.role || "").toUpperCase();
+  const isStaff = ["SUPERADMIN", "ADMIN", "VET", "AUTHOR"].includes(userRole);
+
+  const navLinks = allNavLinks.filter((item) => NAV_FEATURE_FLAGS[item.feature]);
+  const mobileDrawerLinks = allDrawerLinks.filter((item) => NAV_FEATURE_FLAGS[item.feature]);
+  const isOnlyGuidesActive =
+    NAV_FEATURE_FLAGS.guides &&
+    !NAV_FEATURE_FLAGS.feed &&
+    !NAV_FEATURE_FLAGS.community &&
+    !NAV_FEATURE_FLAGS.marketplace &&
+    !NAV_FEATURE_FLAGS.adoption;
+
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [messages] = useState<MessageItem[]>(initialMessages);
@@ -169,27 +202,9 @@ export default function PublicNavbar() {
             <Logo />
           </Link>
 
-        {/* Search Bar - Fluid responsive */}
-        <div className="hidden md:flex flex-1 min-w-[140px] max-w-xs xl:max-w-sm h-10 lg:h-11 flex-row gap-2.5 px-3.5 lg:px-4 justify-start items-center bg-surface-muted rounded-full mx-1.5 lg:mx-3 border border-transparent focus-within:border-coral/40 transition-all">
-          <div className="size-4 shrink-0 relative overflow-hidden flex items-center justify-center">
-            <Search className="size-3.5 text-ink-faint" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search pets, posts, guides, people..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs lg:text-sm text-ink placeholder:text-ink-faint focus:outline-none"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="p-1 text-ink-muted hover:text-ink cursor-pointer"
-            >
-              <X className="size-3.5" />
-            </button>
-          )}
+        {/* Universal Search Bar - Fluid responsive with instant dropdown */}
+        <div className="hidden md:flex flex-1 min-w-[140px] max-w-xs xl:max-w-sm mx-1.5 lg:mx-3">
+          <UniversalSearchBar />
         </div>
 
         {/* Nav Tabs */}
@@ -402,29 +417,16 @@ export default function PublicNavbar() {
         {/* Mobile Search Expandable Bar */}
         {isMobileSearchOpen && (
           <div className="md:hidden w-full px-3 sm:px-4 py-2 bg-card border-t border-border-peach animate-in fade-in slide-in-from-top-2 duration-150 shadow-xs">
-            <div className="flex items-center gap-2 h-10 px-3 bg-surface-muted rounded-full border border-border-peach/70">
-              <Search className="size-4 text-ink-faint shrink-0" />
-              <input
-                type="text"
+            <div className="flex items-center gap-2">
+              <UniversalSearchBar
                 autoFocus
-                placeholder="Search pets, posts, guides, people..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+                isMobileModal
+                onClose={() => setIsMobileSearchOpen(false)}
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="p-1 text-ink-muted hover:text-ink cursor-pointer"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => setIsMobileSearchOpen(false)}
-                className="text-xs font-bold text-coral px-1 hover:underline cursor-pointer shrink-0"
+                className="text-xs font-bold text-coral px-2 py-1.5 hover:underline cursor-pointer shrink-0"
               >
                 Done
               </button>
@@ -471,12 +473,20 @@ export default function PublicNavbar() {
                 const active =
                   pathname === item.href ||
                   (item.href !== "/" && pathname.startsWith(item.href + "/")) ||
-                  (item.href === "/" && item.label === "Guides" && (pathname === "/" || pathname.startsWith("/guides")));
+                  (item.href === "/" && (pathname === "/" || pathname.startsWith("/guides")));
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setIsHomePopoverOpen(false)}
+                    onClick={(e) => {
+                      if (item.href === "/#topics" && (pathname === "/" || pathname === "/guides")) {
+                        e.preventDefault();
+                        setIsHomePopoverOpen(false);
+                        document.getElementById("topics")?.scrollIntoView({ behavior: "smooth" });
+                        return;
+                      }
+                      setIsHomePopoverOpen(false);
+                    }}
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg no-underline transition-all duration-200 border",
                       active
@@ -496,78 +506,194 @@ export default function PublicNavbar() {
                   </Link>
                 );
               })}
+
+              {isStaff && (
+                <>
+                  <Link
+                    href="/admin/guides"
+                    onClick={() => setIsHomePopoverOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-lg no-underline transition-all duration-200 border bg-surface-muted border-border-peach text-ink hover:border-coral/40"
+                  >
+                    <div className="p-2 rounded-lg flex items-center justify-center shrink-0 bg-coral/10 text-coral">
+                      <LayoutDashboard className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold truncate">Admin Hub</span>
+                  </Link>
+
+                  <Link
+                    href="/admin/guides/create"
+                    onClick={() => setIsHomePopoverOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-lg no-underline transition-all duration-200 border bg-surface-muted border-border-peach text-ink hover:border-coral/40"
+                  >
+                    <div className="p-2 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <PlusCircle className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold truncate">Create Guide</span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        <div className="relative z-50 w-full max-w-full bg-card border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-5 items-center px-0.5 sm:px-2 shadow-lg">
-          <Link
-            href="/feed"
-            className={cn(
-              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
-              pathname.startsWith("/feed") ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
-            )}
-          >
-            <Rss className="size-5 mb-0.5 shrink-0" />
-            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
-              Feed
-            </span>
-          </Link>
+        {/* Bottom Bar: Clean 4-item navigation when only Guides is active; multi-module layout when others are enabled */}
+        {isOnlyGuidesActive ? (
+          <div className="relative z-50 w-full max-w-full bg-card/95 backdrop-blur-md border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-4 items-center px-1 sm:px-3 shadow-lg select-none">
+            {/* 1. Guides / Home Tab */}
+            <Link
+              href="/"
+              onClick={(e) => {
+                if (pathname === "/" || pathname === "/guides") {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className={cn(
+                "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors cursor-pointer",
+                pathname === "/" || pathname.startsWith("/guides")
+                  ? "text-coral font-bold"
+                  : "text-ink-muted hover:text-coral"
+              )}
+            >
+              <BookOpen className="size-5 mb-0.5 shrink-0" />
+              <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                Guides
+              </span>
+            </Link>
 
-          <Link
-            href="/community"
-            className={cn(
-              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
-              pathname === "/community" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
-            )}
-          >
-            <Users className="size-5 mb-0.5 shrink-0" />
-            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
-              Community
-            </span>
-          </Link>
+            {/* 2. Topics Tab (Smooth scroll to topic category filters) */}
+            <Link
+              href="/#topics"
+              onClick={(e) => {
+                if (pathname === "/" || pathname === "/guides") {
+                  e.preventDefault();
+                  document.getElementById("topics")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors cursor-pointer text-ink-muted hover:text-coral"
+            >
+              <Layers className="size-5 mb-0.5 shrink-0" />
+              <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                Topics
+              </span>
+            </Link>
 
-          {/* Center Floating Home FAB */}
-          <div className="relative -mt-5 sm:-mt-6 flex justify-center items-center min-w-0 w-full">
+            {/* 3. Search Toggle Tab */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSearchOpen((prev) => !prev);
+                if (!isMobileSearchOpen) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className={cn(
+                "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors cursor-pointer",
+                isMobileSearchOpen ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+              )}
+              aria-label="Search guides"
+            >
+              <Search className="size-5 mb-0.5 shrink-0" />
+              <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                Search
+              </span>
+            </button>
+
+            {/* 4. Menu Drawer Toggle Tab */}
             <button
               ref={homeButtonRef}
-              onClick={() => setIsHomePopoverOpen(!isHomePopoverOpen)}
+              type="button"
+              onClick={() => setIsHomePopoverOpen((prev) => !prev)}
               className={cn(
-                "size-12 sm:size-13 bg-coral text-white rounded-full flex items-center justify-center shadow-lg shadow-coral/40 hover:shadow-coral/60 active:scale-95 transition-all border-3 sm:border-4 border-card cursor-pointer shrink-0",
-                isHomePopoverOpen && "rotate-45"
+                "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors cursor-pointer",
+                isHomePopoverOpen ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
               )}
-              aria-label="Open home menu"
+              aria-label="Open menu drawer"
             >
-              <Home className="size-5.5 sm:size-6" />
+              <Menu className="size-5 mb-0.5 shrink-0" />
+              <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                Menu
+              </span>
             </button>
           </div>
-
-          <Link
-            href="/marketplace"
-            className={cn(
-              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
-              pathname === "/marketplace" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+        ) : (
+          <div className="relative z-50 w-full max-w-full bg-card border-t border-border-peach h-16 pb-[env(safe-area-inset-bottom,0px)] grid grid-cols-5 items-center px-0.5 sm:px-2 shadow-lg">
+            {NAV_FEATURE_FLAGS.feed && (
+              <Link
+                href="/feed"
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
+                  pathname.startsWith("/feed") ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+                )}
+              >
+                <Rss className="size-5 mb-0.5 shrink-0" />
+                <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                  Feed
+                </span>
+              </Link>
             )}
-          >
-            <ShoppingBag className="size-5 mb-0.5 shrink-0" />
-            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
-              Marketplace
-            </span>
-          </Link>
 
-          <Link
-            href="/adoption"
-            className={cn(
-              "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
-              pathname === "/adoption" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+            {NAV_FEATURE_FLAGS.community && (
+              <Link
+                href="/community"
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
+                  pathname === "/community" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+                )}
+              >
+                <Users className="size-5 mb-0.5 shrink-0" />
+                <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                  Community
+                </span>
+              </Link>
             )}
-          >
-            <HeartHandshake className="size-5 mb-0.5 shrink-0" />
-            <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
-              Adoption
-            </span>
-          </Link>
-        </div>
+
+            {/* Center Floating Home FAB */}
+            <div className="relative -mt-5 sm:-mt-6 flex justify-center items-center min-w-0 w-full">
+              <button
+                ref={homeButtonRef}
+                onClick={() => setIsHomePopoverOpen(!isHomePopoverOpen)}
+                className={cn(
+                  "size-12 sm:size-13 bg-coral text-white rounded-full flex items-center justify-center shadow-lg shadow-coral/40 hover:shadow-coral/60 active:scale-95 transition-all border-3 sm:border-4 border-card cursor-pointer shrink-0",
+                  isHomePopoverOpen && "rotate-45"
+                )}
+                aria-label="Open home menu"
+              >
+                <Home className="size-5.5 sm:size-6" />
+              </button>
+            </div>
+
+            {NAV_FEATURE_FLAGS.marketplace && (
+              <Link
+                href="/marketplace"
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
+                  pathname === "/marketplace" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+                )}
+              >
+                <ShoppingBag className="size-5 mb-0.5 shrink-0" />
+                <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                  Marketplace
+                </span>
+              </Link>
+            )}
+
+            {NAV_FEATURE_FLAGS.adoption && (
+              <Link
+                href="/adoption"
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-0 w-full py-1 no-underline transition-colors",
+                  pathname === "/adoption" ? "text-coral font-bold" : "text-ink-muted hover:text-coral"
+                )}
+              >
+                <HeartHandshake className="size-5 mb-0.5 shrink-0" />
+                <span className="text-[10px] sm:text-xs tracking-tight font-medium truncate w-full text-center px-0.5">
+                  Adoption
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
