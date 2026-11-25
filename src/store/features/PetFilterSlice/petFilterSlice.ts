@@ -9,11 +9,11 @@ export interface PetFilterState {
 }
 
 const initialState: PetFilterState = {
-  selectedType: "birds",
-  selectedTypeLabel: "Birds",
+  selectedType: "all",
+  selectedTypeLabel: "All Pets",
   selectedBreed: "all",
-  selectedBreedLabel: "All Birds",
-  image: "/CareGuide/categories/bird.png",
+  selectedBreedLabel: "All",
+  image: undefined,
 };
 
 export const petFilterSlice = createSlice({

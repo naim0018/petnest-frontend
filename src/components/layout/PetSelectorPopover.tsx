@@ -113,7 +113,7 @@ export default function PetSelectorPopover({
     });
   }, [speciesResponse]);
 
-  const selectedType = reduxFilter?.selectedType ?? "birds";
+  const selectedType = reduxFilter?.selectedType ?? "all";
   const selectedBreed = reduxFilter?.selectedBreed ?? "all";
 
   const popoverRef = useRef<HTMLDivElement>(null);

@@ -122,10 +122,10 @@ export default function PetCareGuideCard({
 
         {/* Headline & Description */}
         <div className="space-y-3">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink font-quicksand leading-tight tracking-tight drop-shadow-2xs max-w-sm">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink font-quicksand leading-tight tracking-tight drop-shadow-2xs max-w-lg line-clamp-3">
             {title}
           </h2>
-          <p className="text-base sm:text-lg text-ink-muted leading-relaxed max-w-xl font-medium">
+          <p className="text-base sm:text-lg text-ink-muted leading-relaxed max-w-xl font-medium line-clamp-3">
             {description}
           </p>
         </div>

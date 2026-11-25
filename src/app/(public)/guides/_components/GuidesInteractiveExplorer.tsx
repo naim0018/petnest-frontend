@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PetCareGuideCard, {
   PetCareGuideCardData,
@@ -68,13 +68,19 @@ function getBreedFallback(breedKey: string, category: string): PetCareGuideCardD
   if (PET_SPECIES_FEATURED_GUIDES[normalizedKey]) {
     return PET_SPECIES_FEATURED_GUIDES[normalizedKey];
   }
-  return PET_SPECIES_FEATURED_GUIDES[category] || DEFAULT_BUDGIE_GUIDE;
+  if (category && category !== "all" && PET_SPECIES_FEATURED_GUIDES[category]) {
+    return PET_SPECIES_FEATURED_GUIDES[category];
+  }
+  return DEFAULT_BUDGIE_GUIDE;
 }
 
 function detectBreed(guide: PublicGuideCardItem): { key: string; name: string } {
   if (guide.breeds && guide.breeds.length > 0) {
     const b = guide.breeds[0];
     return { key: b.slug || b.id, name: b.name };
+  }
+  if (guide.species) {
+    return { key: guide.species.slug || guide.species.id, name: guide.species.name };
   }
   const t = (guide.title || "").toLowerCase();
   const s = (guide.slug || "").toLowerCase();
@@ -102,6 +108,7 @@ function detectBreed(guide: PublicGuideCardItem): { key: string; name: string } 
 }
 
 const categoryLabelMap: Record<string, string> = {
+  all: "All Pets",
   birds: "Budgie & Bird",
   dogs: "Puppy & Dog",
   cats: "Cat & Kitten",
@@ -163,15 +170,9 @@ function mapToCareArticle(guide: PublicGuideCardItem): CareArticleCardData {
 export default function GuidesInteractiveExplorer() {
   const reduxFilter = useAppSelector((state) => state.petFilter);
 
-  // Sync selectedCategory and selectedBreed with Redux (fallback to birds / all if 'all')
-  const reduxType =
-    reduxFilter?.selectedType && reduxFilter.selectedType !== "all"
-      ? reduxFilter.selectedType
-      : "birds";
-  const reduxBreed = reduxFilter?.selectedBreed || "all";
-
-  const selectedCategory = reduxType;
-  const selectedBreed = reduxBreed;
+  // Sync selectedCategory and selectedBreed with Redux
+  const selectedCategory = reduxFilter?.selectedType || "all";
+  const selectedBreed = reduxFilter?.selectedBreed || "all";
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
 
   const searchLang =
@@ -331,7 +332,7 @@ export default function GuidesInteractiveExplorer() {
   const BATCH_SIZE = 8;
   const [page, setPage] = useState<number>(1);
   const [accumulatedArticles, setAccumulatedArticles] = useState<CareArticleCardData[]>([]);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Reset page & accumulated items whenever filter changes
   useEffect(() => {
@@ -377,28 +378,37 @@ export default function GuidesInteractiveExplorer() {
     meta?.hasNextPage ?? (meta ? page < meta.totalPages : false)
   );
 
-  // Auto-load next 8 cards on scroll when sentinel is visible
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasNextPage || isFetchingGrid) return;
+  const handleLoadMore = useCallback(() => {
+    if (!isFetchingGrid && hasNextPage) {
+      setPage((prev) => prev + 1);
+    }
+  }, [isFetchingGrid, hasNextPage]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const target = entries[0];
-        if (target.isIntersecting && !isFetchingGrid && hasNextPage) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "250px", // Pre-fetch smoothly before reaching bottom
-        threshold: 0.1,
+  // Robust callback ref: auto-loads on scroll while keeping observer synced
+  const sentinelCallbackRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
       }
-    );
+      if (!node || !hasNextPage || isFetchingGrid) return;
 
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingGrid]);
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting && hasNextPage && !isFetchingGrid) {
+            setPage((prev) => prev + 1);
+          }
+        },
+        {
+          root: null,
+          rootMargin: "300px",
+          threshold: 0.05,
+        }
+      );
+      observerRef.current.observe(node);
+    },
+    [hasNextPage, isFetchingGrid]
+  );
 
   return (
     <div className="space-y-8">
@@ -433,7 +443,9 @@ export default function GuidesInteractiveExplorer() {
               <div className="flex items-center gap-2">
                 <div className="size-2 rounded-full bg-coral animate-pulse" />
                 <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-ink font-quicksand">
-                  {selectedBreed === "all"
+                  {selectedCategory === "all"
+                    ? "All Essential Care Guides"
+                    : selectedBreed === "all"
                     ? "Essential Breed Guides"
                     : `${currentSlide.breedName} Guides`}
                 </span>
@@ -560,7 +572,7 @@ export default function GuidesInteractiveExplorer() {
             ))}
           </div>
         ) : accumulatedArticles.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {accumulatedArticles.map((article) => (
                 <CareArticleCard key={article.id} article={article} />
@@ -571,8 +583,41 @@ export default function GuidesInteractiveExplorer() {
                 ))}
             </div>
 
-            {/* Sentinel element for infinite scroll auto-load */}
-            {hasNextPage && <div ref={sentinelRef} className="h-8 w-full" />}
+            {/* Load More Controls & Auto-scroll Sentinel */}
+            {hasNextPage ? (
+              <div
+                ref={sentinelCallbackRef}
+                className="flex flex-col items-center justify-center gap-3 pt-6 pb-2"
+              >
+                <p className="text-xs font-semibold text-ink-muted font-quicksand">
+                  Showing {accumulatedArticles.length} of {meta?.total ?? accumulatedArticles.length} guides
+                </p>
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isFetchingGrid}
+                  className="inline-flex items-center gap-2 h-11 px-7 rounded-xl bg-coral text-white hover:bg-coral-dark font-bold font-quicksand text-sm shadow-xs transition-all cursor-pointer disabled:opacity-60"
+                >
+                  {isFetchingGrid ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Loading next guides...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Load More Guides</span>
+                      <ChevronDown className="size-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center pt-6 pb-2">
+                <p className="text-xs font-bold text-ink-muted/80 font-quicksand">
+                  Showing all {meta?.total ?? accumulatedArticles.length} care guides
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12 px-4 rounded-lg bg-surface-muted/50 border border-border-peach dark:border-slate-800">
