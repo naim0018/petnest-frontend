@@ -33,6 +33,11 @@ export interface ReusableChartProps {
   strokeColor?: string;
   fillColor?: string;
   margin?: { top: number; right: number; left: number; bottom: number };
+  yAxisFormatter?: (val: any) => string;
+  tooltipFormatter?: (value: any, name?: any) => [string, string];
+  showDots?: boolean;
+  yDomain?: [number | string, number | string];
+  yTicks?: number[];
 }
 
 export default function ReusableChart({
@@ -43,11 +48,23 @@ export default function ReusableChart({
   strokeColor = "#3b82f6",
   fillColor,
   margin = { top: 20, right: 30, left: 20, bottom: 20 },
+  yAxisFormatter,
+  tooltipFormatter,
+  showDots = false,
+  yDomain,
+  yTicks,
 }: ReusableChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(51,123,255,0.08)";
   const effectiveFill = fillColor || strokeColor;
+
+  const defaultYFormatter = (val: any) =>
+    val === 0 ? "Tk0.00" : `$${Number(val || 0).toLocaleString()}`;
+  const defaultTooltipFormatter = (value: any) => [
+    `$${Number(value || 0).toLocaleString()}`,
+    "Value",
+  ] as [string, string];
 
   const renderChart = () => {
     switch (chartType) {
@@ -77,8 +94,10 @@ export default function ReusableChart({
             <YAxis
               tickLine={false}
               axisLine={false}
+              domain={yDomain}
+              ticks={yTicks}
               tick={{ fill: "#94a3b8", fontSize: 11 }}
-              tickFormatter={(val) => val === 0 ? "Tk0.00" : `$${val.toLocaleString()}`}
+              tickFormatter={yAxisFormatter || defaultYFormatter}
             />
             <Tooltip
               contentStyle={{
@@ -87,7 +106,7 @@ export default function ReusableChart({
                 borderRadius: "8px",
                 color: isDark ? "#f8fafc" : "#0f172a",
               }}
-              formatter={(value) => [`$${Number(value || 0).toLocaleString()}`, "Value"]}
+              formatter={tooltipFormatter || defaultTooltipFormatter}
             />
             <Area
               type="monotone"
@@ -96,6 +115,12 @@ export default function ReusableChart({
               strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#reusableAreaGrad)"
+              dot={
+                showDots
+                  ? { r: 3.5, stroke: strokeColor, strokeWidth: 2, fill: "white" }
+                  : false
+              }
+              activeDot={{ r: 5, stroke: strokeColor, strokeWidth: 2, fill: strokeColor }}
             />
           </AreaChart>
         );
@@ -119,8 +144,10 @@ export default function ReusableChart({
             <YAxis
               tickLine={false}
               axisLine={false}
+              domain={yDomain}
+              ticks={yTicks}
               tick={{ fill: "#94a3b8", fontSize: 11 }}
-              tickFormatter={(val) => val === 0 ? "Tk0.00" : `$${val.toLocaleString()}`}
+              tickFormatter={yAxisFormatter || defaultYFormatter}
             />
             <Tooltip
               contentStyle={{
@@ -129,7 +156,7 @@ export default function ReusableChart({
                 borderRadius: "8px",
                 color: isDark ? "#f8fafc" : "#0f172a",
               }}
-              formatter={(value) => [`$${Number(value || 0).toLocaleString()}`, "Value"]}
+              formatter={tooltipFormatter || defaultTooltipFormatter}
             />
             <Line
               type="monotone"
@@ -161,8 +188,10 @@ export default function ReusableChart({
             <YAxis
               tickLine={false}
               axisLine={false}
+              domain={yDomain}
+              ticks={yTicks}
               tick={{ fill: "#94a3b8", fontSize: 11 }}
-              tickFormatter={(val) => val === 0 ? "Tk0.00" : `$${val.toLocaleString()}`}
+              tickFormatter={yAxisFormatter || defaultYFormatter}
             />
             <Tooltip
               contentStyle={{

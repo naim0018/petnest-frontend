@@ -19,6 +19,8 @@ export default function UserLayout({
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+      sessionStorage.removeItem("just_logged_out");
+      router.replace("/");
       return;
     }
     const isLoggedIn = Boolean(
@@ -31,6 +33,8 @@ export default function UserLayout({
   }, [user, router]);
 
   if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+    sessionStorage.removeItem("just_logged_out");
+    router.replace("/");
     return null;
   }
 

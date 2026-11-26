@@ -37,7 +37,7 @@ import {
   Stethoscope,
   BookOpen,
   User,
-  Sparkles,
+  UserCog,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -697,7 +697,7 @@ export default function UserDetailsPage() {
         onClose={() => !isUpdatingRole && setPendingRole(null)}
         onConfirm={handleConfirmRoleChange}
         variant="warning"
-        icon={<Sparkles className="size-6 text-amber-500" />}
+        icon={<UserCog className="size-6 text-amber-500" />}
         title={`Change Role to "${formatRole(pendingRole || undefined)}"?`}
         description={`Are you sure you want to change ${user.name}'s system role to ${formatRole(
           pendingRole || undefined

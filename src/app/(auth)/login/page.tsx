@@ -19,6 +19,8 @@ import {
   Users,
   ShoppingCart,
   Check,
+  Info,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -58,7 +60,13 @@ const signupSchema = z.object({
   password: z
     .string()
     .min(1, { message: "Password is required" })
-    .min(6, { message: "Password must be at least 6 characters" }),
+    .min(6, { message: "Password must be at least 6 characters" })
+    .regex(/[A-Z]/, { message: "Must contain at least one uppercase letter" })
+    .regex(/[a-z]/, { message: "Must contain at least one lowercase letter" })
+    .regex(/[0-9]/, { message: "Must contain at least one number" })
+    .regex(/[^A-Za-z0-9]/, {
+      message: "Must contain at least one special character",
+    }),
   petType: z.string().min(1, { message: "Please select pet type" }),
   breed: z.string().min(1, { message: "Please select breed" }),
   agreeTerms: z.boolean().refine((val) => val === true, {
@@ -104,6 +112,7 @@ export default function LoginPage() {
     register: registerSignup,
     handleSubmit: handleSignupSubmit,
     setValue: setSignupValue,
+    setError: setSignupError,
     watch: watchSignup,
     formState: { errors: signupErrors },
   } = useForm<SignupFormValues>({
@@ -120,6 +129,34 @@ export default function LoginPage() {
 
   const rememberMe = watchLogin("rememberMe");
   const agreeTerms = watchSignup("agreeTerms");
+  const signupPassword = watchSignup("password") || "";
+
+  // Password Requirements State & Helpers
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const passwordPopoverRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        passwordPopoverRef.current &&
+        !passwordPopoverRef.current.contains(e.target as Node)
+      ) {
+        setShowPasswordRequirements(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const passwordChecks = React.useMemo(() => [
+    { id: "length", label: "At least 6 characters", met: signupPassword.length >= 6 },
+    { id: "uppercase", label: "At least one uppercase letter (A-Z)", met: /[A-Z]/.test(signupPassword) },
+    { id: "lowercase", label: "At least one lowercase letter (a-z)", met: /[a-z]/.test(signupPassword) },
+    { id: "number", label: "At least one number (0-9)", met: /[0-9]/.test(signupPassword) },
+    { id: "special", label: "At least one special character (!@#$%...)", met: /[^A-Za-z0-9]/.test(signupPassword) },
+  ], [signupPassword]);
+
+  const allPasswordChecksMet = passwordChecks.every((c) => c.met);
 
   // 🐶 Pet Types & Breeds Options for Sign Up Form
   const petTypeOptions = PET_CATEGORIES_WITH_BREEDS.map((cat) => ({
@@ -201,14 +238,31 @@ export default function LoginPage() {
         err?.data?.message ||
         err?.message ||
         "Failed to create account. Please check your details.";
-      toast.error(errorMessage);
+
+      const isPasswordError =
+        typeof errorMessage === "string" &&
+        (errorMessage.toLowerCase().includes("password") ||
+          errorMessage.toLowerCase().includes("uppercase") ||
+          errorMessage.toLowerCase().includes("lowercase") ||
+          errorMessage.toLowerCase().includes("special character"));
+
+      if (isPasswordError) {
+        setSignupError("password", { message: errorMessage });
+        setShowPasswordRequirements(true);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSocialLogin = (provider: "Google" | "Apple") => {
-    toast.info(`Connecting to ${provider}...`);
+  const handleSocialLogin = (_provider: "Google" = "Google") => {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ||
+      process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/api\/v1\/?$/, "") ||
+      "http://localhost:5000";
+    window.location.href = `${backendUrl}/api/v1/auth/google`;
   };
 
   // ============================================
@@ -547,20 +601,6 @@ export default function LoginPage() {
                       </svg>
                       <span>Continue with Google</span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSocialLogin("Apple")}
-                      className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                    >
-                      <svg
-                        className="size-5 shrink-0 fill-current text-ink"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
-                      </svg>
-                      <span>Continue with Apple</span>
-                    </button>
                   </div>
 
                   {/* Footer prompt that flips card to Sign Up */}
@@ -671,7 +711,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Password */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative" ref={passwordPopoverRef}>
                       <div
                         className={cn(
                           "flex items-center gap-3 px-4 h-[42px] shrink-0 box-border rounded-md border bg-surface-soft dark:bg-surface-muted transition-colors",
@@ -689,19 +729,90 @@ export default function LoginPage() {
                           className="w-full bg-transparent text-sm text-ink placeholder:text-ink-faint focus:outline-none"
                           {...registerSignup("password")}
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowSignupPassword(!showSignupPassword)}
-                          aria-label={showSignupPassword ? "Hide password" : "Show password"}
-                          className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
-                        >
-                          {showSignupPassword ? (
-                            <EyeOff className="size-4" />
-                          ) : (
-                            <Eye className="size-4" />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Info Icon with Password Requirements Popover */}
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswordRequirements((prev) => !prev)}
+                            onMouseEnter={() => setShowPasswordRequirements(true)}
+                            aria-label="View password requirements"
+                            title="Password Requirements"
+                            className={cn(
+                              "p-1 rounded-md transition-colors cursor-pointer",
+                              showPasswordRequirements || (!allPasswordChecksMet && signupPassword.length > 0)
+                                ? "text-coral"
+                                : "text-ink-muted hover:text-coral"
+                            )}
+                          >
+                            <Info className="size-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowSignupPassword(!showSignupPassword)}
+                            aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                            className="text-ink-muted hover:text-coral p-1 transition-colors shrink-0 cursor-pointer"
+                          >
+                            {showSignupPassword ? (
+                              <EyeOff className="size-4" />
+                            ) : (
+                              <Eye className="size-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Floating Password Requirements Popover */}
+                      <AnimatePresence>
+                        {showPasswordRequirements && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-card border border-border-peach rounded-xl shadow-xl z-50 text-xs font-quicksand space-y-2 pointer-events-auto"
+                          >
+                            <div className="flex items-center justify-between border-b border-border-peach pb-1.5">
+                              <span className="font-bold text-ink flex items-center gap-1.5 text-xs">
+                                <ShieldCheck className="size-3.5 text-coral shrink-0" />
+                                Password Requirements
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowPasswordRequirements(false)}
+                                className="text-[10px] text-ink-muted hover:text-coral font-bold cursor-pointer"
+                              >
+                                Close
+                              </button>
+                            </div>
+                            <ul className="space-y-1.5">
+                              {passwordChecks.map((rule) => (
+                                <li
+                                  key={rule.id}
+                                  className={cn(
+                                    "flex items-center gap-2 text-[11px] transition-colors",
+                                    rule.met
+                                      ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                                      : "text-ink-muted"
+                                  )}
+                                >
+                                  {rule.met ? (
+                                    <div className="size-3.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center shrink-0">
+                                      <Check className="size-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
+                                    </div>
+                                  ) : (
+                                    <div className="size-3.5 rounded-full bg-surface-muted border border-border-peach flex items-center justify-center shrink-0">
+                                      <div className="size-1 rounded-full bg-ink-faint" />
+                                    </div>
+                                  )}
+                                  <span>{rule.label}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       {signupErrors.password && (
                         <p className="text-xs font-semibold text-red-500 px-1">
                           {signupErrors.password.message}
@@ -822,20 +933,6 @@ export default function LoginPage() {
                         />
                       </svg>
                       <span>Sign up with Google</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSocialLogin("Apple")}
-                      className="w-full h-10 flex items-center justify-center gap-3 rounded-full border border-border-peach bg-surface-soft dark:bg-surface-muted hover:bg-card text-ink font-semibold text-xs sm:text-sm transition-all shadow-2xs hover:border-coral/50 cursor-pointer"
-                    >
-                      <svg
-                        className="size-4 shrink-0 fill-current text-ink"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.67-.82 1.13-1.96.99-3.1-.97.05-2.16.66-2.85 1.48-.61.71-1.14 1.87-.99 2.98 1.09.08 2.22-.56 2.85-1.36z" />
-                      </svg>
-                      <span>Sign up with Apple</span>
                     </button>
                   </div>
 

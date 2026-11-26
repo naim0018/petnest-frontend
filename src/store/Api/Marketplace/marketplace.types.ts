@@ -64,6 +64,7 @@ export interface LivePetListing {
   status: ListingStatus;
   price: number;
   salePrice?: number | null;
+  buyingPrice?: number | null;
   quantity: number;
   speciesId: string;
   breedId?: string | null;
@@ -81,9 +82,11 @@ export interface LivePetListing {
   deliveryMethod: LiveDeliveryMethod;
   transitGuarantee: boolean;
   pickupAddress?: string | null;
+  thumbnailImage?: string | null;
   coverImage: string;
   galleryImages: string[];
   videoUrl?: string | null;
+  videoUrls?: string[];
   description: string;
   isFeatured: boolean;
   storeName: string;
@@ -97,6 +100,7 @@ export interface CreateLivePetPayload {
   title: string;
   price: number;
   salePrice?: number;
+  buyingPrice?: number;
   quantity?: number;
   speciesId: string;
   breedId?: string;
@@ -114,9 +118,11 @@ export interface CreateLivePetPayload {
   deliveryMethod?: LiveDeliveryMethod;
   transitGuarantee?: boolean;
   pickupAddress?: string;
-  coverImage: string;
+  thumbnailImage?: string;
+  coverImage?: string;
   galleryImages?: string[];
   videoUrl?: string;
+  videoUrls?: string[];
   description: string;
   isFeatured?: boolean;
   status?: ListingStatus;
@@ -133,6 +139,7 @@ export interface PetFoodListing {
   status: ListingStatus;
   price: number;
   salePrice?: number | null;
+  buyingPrice?: number | null;
   stockQuantity: number;
   sku?: string | null;
   brand: string;
@@ -145,8 +152,10 @@ export interface PetFoodListing {
   guaranteedAnalysis?: any;
   expiryDate?: string | null;
   isOrganic: boolean;
+  thumbnailImage?: string | null;
   coverImage: string;
   galleryImages: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured: boolean;
   storeName: string;
@@ -159,6 +168,7 @@ export interface CreatePetFoodPayload {
   title: string;
   price: number;
   salePrice?: number;
+  buyingPrice?: number;
   stockQuantity?: number;
   sku?: string;
   brand: string;
@@ -171,8 +181,10 @@ export interface CreatePetFoodPayload {
   guaranteedAnalysis?: any;
   expiryDate?: string;
   isOrganic?: boolean;
-  coverImage: string;
+  thumbnailImage?: string;
+  coverImage?: string;
   galleryImages?: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured?: boolean;
   status?: ListingStatus;
@@ -189,6 +201,7 @@ export interface PetAccessoryListing {
   status: ListingStatus;
   price: number;
   salePrice?: number | null;
+  buyingPrice?: number | null;
   stockQuantity: number;
   sku?: string | null;
   category: AccessoryCategory;
@@ -199,8 +212,10 @@ export interface PetAccessoryListing {
   material?: string | null;
   color?: string | null;
   sizeOption?: string | null;
+  thumbnailImage?: string | null;
   coverImage: string;
   galleryImages: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured: boolean;
   storeName: string;
@@ -212,6 +227,7 @@ export interface CreateAccessoryPayload {
   title: string;
   price: number;
   salePrice?: number;
+  buyingPrice?: number;
   stockQuantity?: number;
   sku?: string;
   category: AccessoryCategory;
@@ -222,8 +238,10 @@ export interface CreateAccessoryPayload {
   material?: string;
   color?: string;
   sizeOption?: string;
-  coverImage: string;
+  thumbnailImage?: string;
+  coverImage?: string;
   galleryImages?: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured?: boolean;
   status?: ListingStatus;
@@ -240,6 +258,7 @@ export interface PetBookListing {
   status: ListingStatus;
   price: number;
   salePrice?: number | null;
+  buyingPrice?: number | null;
   stockQuantity: number;
   author: string;
   publisher?: string | null;
@@ -251,8 +270,10 @@ export interface PetBookListing {
   edition?: string | null;
   downloadUrl?: string | null;
   samplePdfUrl?: string | null;
+  thumbnailImage?: string | null;
   coverImage: string;
   galleryImages: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured: boolean;
   storeName: string;
@@ -264,6 +285,7 @@ export interface CreateBookPayload {
   title: string;
   price: number;
   salePrice?: number;
+  buyingPrice?: number;
   stockQuantity?: number;
   author: string;
   publisher?: string;
@@ -275,8 +297,10 @@ export interface CreateBookPayload {
   edition?: string;
   downloadUrl?: string;
   samplePdfUrl?: string;
-  coverImage: string;
+  thumbnailImage?: string;
+  coverImage?: string;
   galleryImages?: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured?: boolean;
   status?: ListingStatus;
@@ -293,6 +317,7 @@ export interface PetMedicineListing {
   status: ListingStatus;
   price: number;
   salePrice?: number | null;
+  buyingPrice?: number | null;
   stockQuantity: number;
   sku?: string | null;
   genericName: string;
@@ -304,8 +329,10 @@ export interface PetMedicineListing {
   dosageInstructions: string;
   expiryDate?: string | null;
   batchNumber?: string | null;
+  thumbnailImage?: string | null;
   coverImage: string;
   galleryImages: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured: boolean;
   storeName: string;
@@ -317,6 +344,7 @@ export interface CreateMedicinePayload {
   title: string;
   price: number;
   salePrice?: number;
+  buyingPrice?: number;
   stockQuantity?: number;
   sku?: string;
   genericName: string;
@@ -328,8 +356,10 @@ export interface CreateMedicinePayload {
   dosageInstructions: string;
   expiryDate?: string;
   batchNumber?: string;
-  coverImage: string;
+  thumbnailImage?: string;
+  coverImage?: string;
   galleryImages?: string[];
+  videoUrls?: string[];
   description: string;
   isFeatured?: boolean;
   status?: ListingStatus;
@@ -347,6 +377,12 @@ export interface MarketplaceOverviewResponse {
     accessories: number;
     books: number;
     medicine: number;
+  };
+  valuation?: {
+    totalCostValuation: number;
+    totalRetailValuation: number;
+    estimatedGrossProfit: number;
+    avgMarginPercent: number;
   };
   recent: Array<{
     id: string;

@@ -7,8 +7,9 @@ import { StatsCard } from "@/components/common/StatsCard";
 import DynamicTable, { Column } from "@/components/common/DynamicTable";
 import ReusableChart, { ChartType } from "@/components/common/ReusableChart";
 import { FilterSelect } from "@/components/common/FilterSelect";
-import { Store, ShoppingBag, DollarSign, Clock, Plus, Star, TrendingUp } from "lucide-react";
+import { Store, ShoppingBag, DollarSign, Clock, Plus, Star, TrendingUp, Boxes } from "lucide-react";
 import Link from "next/link";
+import { useGetMarketplaceOverviewQuery } from "@/store/Api/Marketplace/marketplace.api";
 
 interface RecentListingRecord {
   id: string;
@@ -79,6 +80,7 @@ const salesMonthlyData = [
 
 export default function MarketplaceOverviewPage() {
   const [chartType, setChartType] = useState<ChartType>("Area");
+  const { data: overview } = useGetMarketplaceOverviewQuery();
 
   const columns: Column<RecentListingRecord>[] = [
     {
@@ -138,7 +140,7 @@ export default function MarketplaceOverviewPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -174,17 +176,24 @@ export default function MarketplaceOverviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <StatsCard
             title="Active Listings"
-            value="1,290"
-            trendText="+8.2% vs last week"
+            value={overview?.counts?.total?.toString() ?? "1,290"}
+            trendText="Across all 5 domains"
             trendType="positive"
             icon={<ShoppingBag className="size-5 text-coral" />}
           />
           <StatsCard
-            title="Pending Approval"
-            value="18 Listings"
-            trendText="6 require vet license check"
+            title="Inventory Cost Valuation"
+            value={overview?.valuation ? `৳${overview.valuation.totalCostValuation.toLocaleString()}` : "৳148,500"}
+            trendText="Capital invested in inventory"
             trendType="neutral"
-            icon={<Clock className="size-5 text-coral" />}
+            icon={<Boxes className="size-5 text-coral" />}
+          />
+          <StatsCard
+            title="Estimated Gross Profit"
+            value={overview?.valuation ? `৳${overview.valuation.estimatedGrossProfit.toLocaleString()}` : "৳56,200"}
+            trendText={overview?.valuation ? `${overview.valuation.avgMarginPercent}% avg margin` : "+18.4% gross margin"}
+            trendType="positive"
+            icon={<TrendingUp className="size-5 text-emerald-600" />}
           />
           <StatsCard
             title="Verified Partner Stores"
@@ -192,13 +201,6 @@ export default function MarketplaceOverviewPage() {
             trendText="+12 onboarding this month"
             trendType="positive"
             icon={<Store className="size-5 text-coral" />}
-          />
-          <StatsCard
-            title="Monthly GMV"
-            value="$94,500"
-            trendText="+16.4% marketplace volume"
-            trendType="positive"
-            icon={<DollarSign className="size-5 text-coral" />}
           />
         </div>
       </AnimatedContainer>

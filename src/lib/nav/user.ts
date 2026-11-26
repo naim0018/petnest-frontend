@@ -1,9 +1,11 @@
 import {
   LayoutDashboard,
-  User,
+  BookOpen,
+  Heart,
+  History,
+  Bell,
   Settings,
   Headphones,
-  Compass,
   PawPrint,
 } from "lucide-react";
 import { NavGroup } from "./types";
@@ -12,24 +14,19 @@ export const userNavItems: NavGroup[] = [
   {
     group: "Dashboard",
     items: [
-      { name: "Overview", path: "/user/dashboard", icon: LayoutDashboard },
-      { 
-        name: "Help & Support", path: "/user/help/support", icon: Headphones,
-      },
+      { name: "Dashboard", path: "/user/dashboard", icon: LayoutDashboard },
+      { name: "Pet Guides", path: "/guides", icon: BookOpen },
+      { name: "My Favorites", path: "/user/profile", icon: Heart },
+      { name: "My Activity", path: "/user/dashboard", icon: History },
+      { name: "Notifications", path: "/user/profile", icon: Bell },
+      { name: "Settings", path: "/user/settings", icon: Settings },
     ],
   },
   {
     group: "Explore PetNest",
     items: [
-      { name: "Care Guides", path: "/guides", icon: Compass },
       { name: "Adopt a Pet", path: "/adoption", icon: PawPrint },
-    ],
-  },
-  {
-    group: "Settings",
-    items: [
-      { name: "My Profile", path: "/user/profile", icon: User },
-      { name: "Settings", path: "/user/settings", icon: Settings },
+      { name: "Help & Support", path: "/user/help/support", icon: Headphones },
     ],
   },
 ];

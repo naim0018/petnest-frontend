@@ -86,7 +86,7 @@ export default function MarketplaceListingCard({
         {/* 1. PRODUCT / PET IMAGE CONTAINER */}
         <div className="relative h-44 sm:h-48 w-full bg-surface-muted overflow-hidden">
           <Image
-            src={item.image}
+            src={item.thumbnailImage || item.coverImage || item.image}
             alt={item.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

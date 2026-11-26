@@ -41,7 +41,7 @@ export default function MarketplaceProductCard({
         {/* Image Box */}
         <div className="relative h-44 sm:h-48 w-full bg-surface-muted overflow-hidden">
           <Image
-            src={product.image}
+            src={product.thumbnailImage || product.coverImage || product.image}
             alt={product.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

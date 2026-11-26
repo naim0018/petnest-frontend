@@ -17,6 +17,15 @@ const mediaApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "Media", id: "LIST" }],
     }),
 
+    uploadVideo: builder.mutation<UploadMediaResponse, FormData>({
+      query: (formData) => ({
+        url: "/media/upload-video",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: [{ type: "Media", id: "LIST" }],
+    }),
+
     deleteMedia: builder.mutation<DeleteMediaResponse, string>({
       query: (id) => ({
         url: `/media/${id}`,
@@ -40,6 +49,7 @@ const mediaApi = baseApi.injectEndpoints({
 
 export const {
   useUploadMediaMutation,
+  useUploadVideoMutation,
   useDeleteMediaMutation,
   useCleanupOrphansMutation,
 } = mediaApi;

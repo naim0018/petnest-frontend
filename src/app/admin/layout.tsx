@@ -20,6 +20,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+      sessionStorage.removeItem("just_logged_out");
+      router.replace("/");
       return;
     }
 
@@ -53,6 +55,8 @@ export default function AdminLayout({
 
   // If logging out, do not render admin shell while redirecting to homepage
   if (typeof window !== "undefined" && sessionStorage.getItem("just_logged_out")) {
+    sessionStorage.removeItem("just_logged_out");
+    router.replace("/");
     return null;
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AnimatedContainer from "@/components/common/AnimatedContainer";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import ConfirmModal from "@/components/reuseable/ConfirmModal";
@@ -9,14 +9,21 @@ import {
   useRemoveGeminiKeyMutation,
   useTestGeminiKeyMutation,
   useUpdateGeminiKeyMutation,
+  useGetGoogleOAuthConfigQuery,
+  useUpdateGoogleOAuthConfigMutation,
+  useRemoveGoogleOAuthConfigMutation,
 } from "@/store/Api/Settings/settings.api";
 import {
+  Check,
   CheckCircle2,
+  Copy,
   Cpu,
   Database,
+  ExternalLink,
   Eye,
   EyeOff,
   FileCode,
+  Globe2,
   KeyRound,
   Lock,
   RefreshCw,
@@ -88,6 +95,77 @@ export default function AdminSettingsPage() {
     } catch (err: any) {
       toast.error(
         err?.data?.message || err?.message || "Failed to remove key."
+      );
+    }
+  };
+
+  // ========================================================
+  // GOOGLE OAUTH CONFIGURATION STATE & HANDLERS
+  // ========================================================
+  const { data: googleConfig, isLoading: isLoadingGoogle } =
+    useGetGoogleOAuthConfigQuery();
+  const [updateGoogleOAuth, { isLoading: isSavingGoogle }] =
+    useUpdateGoogleOAuthConfigMutation();
+  const [removeGoogleOAuth, { isLoading: isRemovingGoogle }] =
+    useRemoveGoogleOAuthConfigMutation();
+
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleClientSecret, setGoogleClientSecret] = useState("");
+  const [googleIsEnabled, setGoogleIsEnabled] = useState(false);
+  const [showGoogleSecretInput, setShowGoogleSecretInput] = useState(false);
+  const [showGoogleDeleteModal, setShowGoogleDeleteModal] = useState(false);
+  const [copiedRedirectUri, setCopiedRedirectUri] = useState(false);
+
+  useEffect(() => {
+    if (googleConfig) {
+      if (googleConfig.clientId) setGoogleClientId(googleConfig.clientId);
+      setGoogleIsEnabled(googleConfig.isEnabled ?? false);
+    }
+  }, [googleConfig]);
+
+  const handleSaveGoogleOAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateGoogleOAuth({
+        clientId: googleClientId.trim() || undefined,
+        clientSecret: googleClientSecret.trim() || undefined,
+        isEnabled: googleIsEnabled,
+      }).unwrap();
+      toast.success(
+        "Google OAuth credentials encrypted with AES-256-GCM and saved successfully!"
+      );
+      setGoogleClientSecret("");
+      setShowGoogleSecretInput(false);
+    } catch (err: any) {
+      toast.error(
+        err?.data?.message ||
+          err?.message ||
+          "Failed to save Google OAuth configuration."
+      );
+    }
+  };
+
+  const handleCopyRedirectUri = () => {
+    if (!googleConfig?.redirectUri) return;
+    navigator.clipboard.writeText(googleConfig.redirectUri);
+    setCopiedRedirectUri(true);
+    toast.success("Authorized redirect URI copied to clipboard!");
+    setTimeout(() => setCopiedRedirectUri(false), 2000);
+  };
+
+  const handleRemoveGoogleOAuth = async () => {
+    try {
+      await removeGoogleOAuth().unwrap();
+      toast.success("Google OAuth configuration removed from database.");
+      setGoogleClientId("");
+      setGoogleClientSecret("");
+      setGoogleIsEnabled(false);
+      setShowGoogleDeleteModal(false);
+    } catch (err: any) {
+      toast.error(
+        err?.data?.message ||
+          err?.message ||
+          "Failed to remove Google OAuth config."
       );
     }
   };
@@ -338,6 +416,216 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
+        {/* ========================================================
+            2. Google OAuth 2.0 Integration Card
+        ======================================================== */}
+        <div className="w-full rounded-lg border border-border bg-card shadow-xs p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-lg bg-surface-muted border border-border-peach flex items-center justify-center text-ink shrink-0">
+                <svg className="size-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-foreground font-quicksand">
+                  Google OAuth 2.0 Single Sign-On
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Allow users to register and sign in seamlessly with their Google Accounts
+                </p>
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {googleConfig?.isConfigured ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20 font-quicksand">
+                  <CheckCircle2 className="size-3.5" />
+                  Credentials Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-500/20 font-quicksand">
+                  <ShieldAlert className="size-3.5" />
+                  Not Configured
+                </span>
+              )}
+
+              {googleConfig?.isEnabled && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-coral-light/60 text-coral border border-coral/20 font-quicksand">
+                  Sign-In Enabled
+                </span>
+              )}
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveGoogleOAuth} className="space-y-4">
+            {/* 1. Client ID */}
+            <div>
+              <label
+                htmlFor="googleClientId"
+                className="block text-xs font-bold text-ink uppercase tracking-wider mb-1.5 font-quicksand"
+              >
+                Google Client ID
+              </label>
+              <div className="relative">
+                <input
+                  id="googleClientId"
+                  type="text"
+                  value={googleClientId}
+                  onChange={(e) => setGoogleClientId(e.target.value)}
+                  placeholder="e.g. 1234567890-abcdef.apps.googleusercontent.com"
+                  className="w-full h-11 px-3.5 text-sm rounded-lg border border-border-peach bg-surface-soft dark:bg-surface-muted text-ink focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            {/* 2. Client Secret */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="googleClientSecret"
+                  className="block text-xs font-bold text-ink uppercase tracking-wider font-quicksand"
+                >
+                  Google Client Secret
+                </label>
+                {googleConfig?.maskedSecret && !showGoogleSecretInput && (
+                  <span className="text-xs text-ink-muted font-mono">
+                    Stored Secret: {googleConfig.maskedSecret}
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <input
+                  id="googleClientSecret"
+                  type={showGoogleSecretInput ? "text" : "password"}
+                  value={googleClientSecret}
+                  onChange={(e) => setGoogleClientSecret(e.target.value)}
+                  placeholder={
+                    googleConfig?.maskedSecret
+                      ? "Enter new secret to update, or leave blank to keep current"
+                      : "e.g. GOCSPX-xxxxxxxxxxxxxxxxxxxx"
+                  }
+                  className="w-full h-11 px-3.5 pr-10 text-sm rounded-lg border border-border-peach bg-surface-soft dark:bg-surface-muted text-ink focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral transition-all font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleSecretInput(!showGoogleSecretInput)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showGoogleSecretInput ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Authorized Redirect URI Box */}
+            <div className="rounded-lg border border-border-peach/80 bg-surface-muted/50 p-4 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-bold text-ink uppercase tracking-wider font-quicksand">
+                  Google Cloud Authorized Redirect URI
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyRedirectUri}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-coral hover:text-coral-dark font-quicksand transition-colors cursor-pointer"
+                >
+                  {copiedRedirectUri ? (
+                    <>
+                      <Check className="size-3.5" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5" />
+                      <span>Copy URI</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="p-2.5 rounded-md bg-card border border-border font-mono text-xs text-ink select-all break-all">
+                {googleConfig?.redirectUri || "http://localhost:5000/api/v1/auth/google/callback"}
+              </div>
+              <p className="text-[11px] text-ink-muted leading-relaxed">
+                Add this exact URL into your{" "}
+                <strong className="text-ink">
+                  Google Cloud Console &gt; APIs &amp; Services &gt; Credentials &gt; Authorized redirect URIs
+                </strong>
+                .
+              </p>
+            </div>
+
+            {/* 4. Enable Google Sign-In Toggle */}
+            <div className="flex items-center justify-between p-3.5 rounded-lg border border-border-peach bg-card">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-ink font-quicksand">
+                  Enable Google Sign-In on Auth Pages
+                </span>
+                <span className="text-[11px] text-ink-muted">
+                  Displays &quot;Continue with Google&quot; on both login and registration forms
+                </span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={googleIsEnabled}
+                  onChange={(e) => setGoogleIsEnabled(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-surface-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-coral border border-border-peach" />
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between gap-3 pt-2 flex-wrap">
+              <PrimaryButton
+                type="submit"
+                variant="primary"
+                size="md"
+                rounded="lg"
+                isLoading={isSavingGoogle}
+              >
+                <Lock className="size-4 mr-2" />
+                Save &amp; Encrypt Google OAuth
+              </PrimaryButton>
+
+              {googleConfig?.source === "DATABASE" && (
+                <PrimaryButton
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  rounded="lg"
+                  onClick={() => setShowGoogleDeleteModal(true)}
+                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border-rose-200"
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Clear Stored Credentials
+                </PrimaryButton>
+              )}
+            </div>
+          </form>
+        </div>
+
         {/* System & Architecture Info Card */}
         <div className="w-full rounded-lg border border-border bg-card shadow-xs p-6 space-y-4">
           <div className="flex items-center gap-3 border-b border-border pb-4">
@@ -393,6 +681,19 @@ export default function AdminSettingsPage() {
         confirmText="Remove Key"
         rounded="rounded-lg"
         loading={isRemoving}
+      />
+
+      {/* Google OAuth Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showGoogleDeleteModal}
+        onClose={() => setShowGoogleDeleteModal(false)}
+        onConfirm={handleRemoveGoogleOAuth}
+        title="Remove Google OAuth Credentials from Database?"
+        description="This will permanently delete the stored Google OAuth Client ID and encrypted Client Secret from the database. Social Sign-In will be disabled until reconfigured."
+        variant="danger"
+        confirmText="Remove Credentials"
+        rounded="rounded-lg"
+        loading={isRemovingGoogle}
       />
     </div>
   );

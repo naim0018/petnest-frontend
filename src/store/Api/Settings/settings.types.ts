@@ -18,3 +18,23 @@ export interface TestGeminiKeyResponse {
   message: string;
   modelCount?: number;
 }
+
+export interface GoogleOAuthConfigResponse {
+  isConfigured: boolean;
+  isEnabled: boolean;
+  clientId: string;
+  maskedSecret: string;
+  redirectUri: string;
+  source: 'DATABASE' | 'ENV' | 'NONE';
+  updatedAt: string | null;
+}
+
+export interface UpdateGoogleOAuthPayload {
+  clientId?: string;
+  clientSecret?: string;
+  isEnabled?: boolean;
+}
+
+export interface OAuthStatusResponse {
+  googleEnabled: boolean;
+}

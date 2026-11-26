@@ -2,12 +2,18 @@ export interface MarketplacePetType {
   id: string;
   name: string;
   image: string;
+  thumbnailImage?: string;
+  coverImage?: string;
+  videoUrls?: string[];
 }
 
 export interface MarketplaceBreed {
   id: string;
   name: string;
   image: string;
+  thumbnailImage?: string;
+  coverImage?: string;
+  videoUrls?: string[];
   petTypeId: string;
 }
 
@@ -26,6 +32,9 @@ export interface MarketplaceListing {
   condition: "New" | "Like New" | "Good" | "Used";
   listingType: "for-sale" | "free" | "swap";
   image: string;
+  thumbnailImage?: string;
+  coverImage?: string;
+  videoUrls?: string[];
   location: string;
   timeAgo: string;
   isLivePet?: boolean; // Live animal sale or adoption vs supplies

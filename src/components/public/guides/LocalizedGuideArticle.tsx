@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useCurrentLanguage } from "@/hooks/useCurrentLanguage";
 import { ArticleContentRenderer } from "@/components/admin/guides/RichTextEditor";
-import { Sparkles, CheckCircle2, User, Calendar, Languages, Clock, Eye } from "lucide-react";
+import { CheckCircle2, User, Calendar, Languages, Clock, Eye } from "lucide-react";
 import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 export interface LocalizedGuideArticleProps {
@@ -112,7 +112,7 @@ export default function LocalizedGuideArticle({
       <div className="flex flex-wrap items-center justify-between gap-3">
         {isBangla ? (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-quicksand select-none shadow-2xs">
-            <Sparkles className="size-3.5 text-emerald-500" />
+            <CheckCircle2 className="size-3.5 text-emerald-500" />
             <span>অনুমোদিত বাংলা সংস্করণ (Curated Native Bangla)</span>
           </div>
         ) : (
