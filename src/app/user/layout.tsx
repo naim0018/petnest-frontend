@@ -61,7 +61,7 @@ export default function UserLayout({
               </div>
             ))}
           </div>
-          <div className="h-64 rounded-2xl bg-card border border-border-peach shadow-2xs" />
+          <div className="h-64 rounded-xl bg-card border border-border-peach shadow-2xs" />
         </div>
       </DashboardShell>
     );

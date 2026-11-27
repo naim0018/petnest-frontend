@@ -28,7 +28,7 @@ function AuthCallbackContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-surface-soft dark:bg-surface-dark font-quicksand">
       <div className="flex flex-col items-center gap-4 text-center max-w-sm p-8 rounded-3xl bg-card border border-border-peach shadow-sm">
-        <div className="size-12 rounded-2xl bg-coral/10 text-coral flex items-center justify-center">
+        <div className="size-12 rounded-xl bg-coral/10 text-coral flex items-center justify-center">
           <Loader2 className="size-6 animate-spin" />
         </div>
         <div className="space-y-1">

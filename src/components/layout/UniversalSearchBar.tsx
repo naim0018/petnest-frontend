@@ -228,7 +228,7 @@ export default function UniversalSearchBar({
       {showDropdown && (
         <div
           className={cn(
-            "absolute left-0 mt-2 bg-popover border border-border-peach rounded-2xl shadow-2xl z-50 overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150",
+            "absolute left-0 mt-2 bg-popover border border-border-peach rounded-xl shadow-2xl z-50 overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150",
             isMobileModal
               ? "right-0 max-h-[calc(80vh-4rem)] overflow-y-auto"
               : "w-full md:w-[460px] lg:w-[520px] max-h-[480px] overflow-y-auto"

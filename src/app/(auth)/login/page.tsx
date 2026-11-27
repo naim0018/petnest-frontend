@@ -417,10 +417,10 @@ export default function LoginPage() {
                   exit={{ rotateY: 75, opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                   style={{ transformOrigin: "center center" }}
-                  className="w-full bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
+                  className="w-full bg-card border border-border-peach rounded-xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
                 >
                   {/* Decorative Watermark Paw in Top Right */}
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
                     <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
                       <PawPrint className="size-24" />
                     </div>
@@ -626,10 +626,10 @@ export default function LoginPage() {
                   exit={{ rotateY: 75, opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                   style={{ transformOrigin: "center center" }}
-                  className="w-full bg-card border border-border-peach rounded-2xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
+                  className="w-full bg-card border border-border-peach rounded-xl shadow-md p-6 sm:px-8 sm:py-6 flex flex-col relative"
                 >
                   {/* Decorative Watermark Paw in Top Right */}
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                  <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
                     <div className="absolute -top-4 -right-4 opacity-40 dark:opacity-20 text-coral/10">
                       <PawPrint className="size-24" />
                     </div>

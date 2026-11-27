@@ -64,7 +64,7 @@ export default function ProcessingModal({
     >
       <div
         className={cn(
-          "w-full max-w-md bg-card border border-border-peach rounded-2xl p-6 sm:p-8 shadow-2xl relative text-center select-none animate-in zoom-in-95 duration-200 overflow-hidden",
+          "w-full max-w-md bg-card border border-border-peach rounded-xl p-6 sm:p-8 shadow-2xl relative text-center select-none animate-in zoom-in-95 duration-200 overflow-hidden",
           className
         )}
       >

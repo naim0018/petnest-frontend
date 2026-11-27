@@ -131,7 +131,7 @@ export default function MarketplaceFilterBar({
   return (
     <div
       ref={filterBarRef}
-      className="bg-card/90 backdrop-blur-md border border-border-peach/70 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm"
+      className="bg-card/90 backdrop-blur-md border border-border-peach/70 dark:border-slate-800 rounded-xl p-3 sm:p-4 shadow-sm"
     >
       <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap lg:flex-nowrap">
         {/* 1. PET TYPE BUTTON & DROPDOWN */}
@@ -177,7 +177,7 @@ export default function MarketplaceFilterBar({
 
           {/* Pet Type Dropdown Menu */}
           {petTypeOpen && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
               <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-lg bg-surface-muted border border-border-peach/50">
                 <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" />
                 <input
@@ -273,7 +273,7 @@ export default function MarketplaceFilterBar({
           </button>
 
           {breedOpen && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-60 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-60 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
               <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-lg bg-surface-muted border border-border-peach/50">
                 <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" />
                 <input
@@ -359,7 +359,7 @@ export default function MarketplaceFilterBar({
           </button>
 
           {categoryOpen && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
               <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-lg bg-surface-muted border border-border-peach/50">
                 <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" />
                 <input
@@ -434,7 +434,7 @@ export default function MarketplaceFilterBar({
           </button>
 
           {locationOpen && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-2 animate-in fade-in-50 zoom-in-95 duration-150">
               <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1.5 rounded-lg bg-surface-muted border border-border-peach/50">
                 <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" />
                 <input
@@ -509,7 +509,7 @@ export default function MarketplaceFilterBar({
           </button>
 
           {conditionOpen && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-36 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-36 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
               {TOP_CONDITIONS.map((cond: string) => {
                 const isSelected = filters.condition === cond;
                 return (
@@ -573,7 +573,7 @@ export default function MarketplaceFilterBar({
           </button>
 
           {priceOpen && (
-            <div className="absolute top-[calc(100%+6px)] right-0 w-44 bg-card border border-border-peach dark:border-slate-700 rounded-2xl shadow-xl z-50 p-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="absolute top-[calc(100%+6px)] right-0 w-44 bg-card border border-border-peach dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
               {TOP_PRICE_RANGES.map((pr: { label: string; min: number; max: number }, idx: number) => {
                 const isSelected = filters.priceIndex === idx;
                 return (

@@ -23,9 +23,9 @@ const Unauthorized = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-background py-12">
       <CommonWrapper className="flex justify-center">
-        <div className="w-full max-w-md text-center bg-card rounded-2xl border border-border-peach shadow-xl p-8 md:p-10">
+        <div className="w-full max-w-md text-center bg-card rounded-xl border border-border-peach shadow-xl p-8 md:p-10">
           {/* Icon */}
-          <div className="size-16 mx-auto mb-6 rounded-2xl bg-coral-light flex items-center justify-center text-coral shadow-xs">
+          <div className="size-16 mx-auto mb-6 rounded-xl bg-coral-light flex items-center justify-center text-coral shadow-xs">
             <Lock className="size-8" />
           </div>
 

@@ -10,7 +10,7 @@
   - **Text Scale**: `text-ink` (primary), `text-ink-muted` (subtext/labels), `text-ink-faint` (placeholders/time)
 
 - **Border Radii Rules**:
-  - **Containers & Cards (Max `rounded-xl`)**: All cards, headers, panels, modals, popovers, and layout containers must use at most `rounded-xl` (or `rounded-lg` / `rounded-md`). **NEVER use `rounded-2xl` or `rounded-3xl` for containers!**
+  - **Containers & Cards (Max `rounded-xl`)**: All cards, headers, panels, modals, popovers, and layout containers must use at most `rounded-xl` (or `rounded-lg` / `rounded-md`). **NEVER use `rounded-xl` or `rounded-3xl` for containers!**
   - **Buttons & Chips**: Interactive buttons and chips can be `rounded-md`, `rounded-lg`, `rounded-xl`, or `rounded-full` (for full pill buttons / circular FABs).
   - **Avatars**: `rounded-full` for circular user/pet photos.
 

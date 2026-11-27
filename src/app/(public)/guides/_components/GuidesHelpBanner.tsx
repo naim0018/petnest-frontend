@@ -14,7 +14,7 @@ export default function GuidesHelpBanner({ className }: GuidesHelpBannerProps) {
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-linear-to-r from-[#fff1eb] via-[#fff4ef] to-[#ffede5] dark:from-[#261b17] dark:via-[#2b1f1a] dark:to-[#33221c] border border-[#ffdcd2]/80 dark:border-border shadow-xs px-6 py-6 sm:px-8 sm:py-7",
+        "relative overflow-hidden rounded-xl bg-linear-to-r from-[#fff1eb] via-[#fff4ef] to-[#ffede5] dark:from-[#261b17] dark:via-[#2b1f1a] dark:to-[#33221c] border border-[#ffdcd2]/80 dark:border-border shadow-xs px-6 py-6 sm:px-8 sm:py-7",
         className
       )}
     >

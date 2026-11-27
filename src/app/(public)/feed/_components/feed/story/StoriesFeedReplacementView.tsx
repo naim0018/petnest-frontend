@@ -289,7 +289,7 @@ export default function StoriesFeedReplacementView({
             </div>
 
             {/* "Your Story" Creation Card */}
-            <div className="p-3.5 rounded-2xl bg-linear-to-r from-[#fff1eb] to-[#fff6f2] dark:from-[#2a1d18] dark:to-[#221a16] border border-border-peach flex items-center gap-3.5 transition-all hover:shadow-xs cursor-pointer group shrink-0">
+            <div className="p-3.5 rounded-xl bg-linear-to-r from-[#fff1eb] to-[#fff6f2] dark:from-[#2a1d18] dark:to-[#221a16] border border-border-peach flex items-center gap-3.5 transition-all hover:shadow-xs cursor-pointer group shrink-0">
               <div className="relative shrink-0">
                 <div className="size-12 rounded-full overflow-hidden border-2 border-white dark:border-zinc-800 shadow-2xs">
                   <Image
@@ -357,7 +357,7 @@ export default function StoriesFeedReplacementView({
                       setActiveStoryId(story.id);
                     }}
                     className={cn(
-                      "w-full flex items-center justify-between p-2.5 rounded-2xl transition-all cursor-pointer group",
+                      "w-full flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer group",
                       isSelected
                         ? "bg-linear-to-r from-coral/10 via-coral/5 to-transparent border border-coral/20 shadow-2xs"
                         : "hover:bg-surface-muted/60 border border-transparent"

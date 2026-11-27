@@ -4,7 +4,7 @@ import CommonWrapper from "@/components/common/CommonWrapper";
 export default function GuidesBanner() {
   return (
     <CommonWrapper className="">
-      <header className="px-5 md:px-8 lg:px-10 rounded-2xl relative w-full overflow-hidden border border-border bg-linear-to-r from-amber-50/90 via-orange-50/80 to-amber-100/40 dark:from-stone-900/90 dark:via-stone-900/80 dark:to-stone-800/60 h-full">
+      <header className="px-5 md:px-8 lg:px-10 rounded-xl relative w-full overflow-hidden border border-border bg-linear-to-r from-amber-50/90 via-orange-50/80 to-amber-100/40 dark:from-stone-900/90 dark:via-stone-900/80 dark:to-stone-800/60 h-full">
         <div className="absolute inset-0 z-0 h-full">
           <Image
             src="/CareGuide/petnest-guides.png"

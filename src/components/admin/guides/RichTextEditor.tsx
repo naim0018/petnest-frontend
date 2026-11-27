@@ -1465,7 +1465,7 @@ export default function RichTextEditor({
               return (
                 <div
                   key={block.id}
-                  className="relative rounded-2xl border border-border-peach bg-surface-muted/30 overflow-hidden my-3 group shadow-2xs"
+                  className="relative rounded-xl border border-border-peach bg-surface-muted/30 overflow-hidden my-3 group shadow-2xs"
                 >
                   {/* Top Overlay Badge & Action Controls */}
                   <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">

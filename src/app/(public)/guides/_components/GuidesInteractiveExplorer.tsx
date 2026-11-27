@@ -414,7 +414,7 @@ export default function GuidesInteractiveExplorer() {
     <div className="space-y-8">
       {/* Active Search Filter Banner */}
       {searchQuery && (
-        <div className="flex items-center justify-between p-3.5 bg-coral-light/60 border border-coral/30 rounded-2xl shadow-xs">
+        <div className="flex items-center justify-between p-3.5 bg-coral-light/60 border border-coral/30 rounded-xl shadow-xs">
           <div className="flex items-center gap-2 text-xs font-bold text-coral font-quicksand">
             <Search className="size-4" />
             <span>Search results for &quot;{searchQuery}&quot;</span>

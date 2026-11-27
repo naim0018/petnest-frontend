@@ -6,7 +6,7 @@ export default function GuidesHubLoading() {
       {/* Hero Care Guide Section Skeleton: Hero card + 2 Side cards */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full">
         {/* Main Hero Card */}
-        <div className="col-span-1 lg:col-span-8 rounded-2xl bg-surface-muted/70 p-6 sm:p-8 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between">
+        <div className="col-span-1 lg:col-span-8 rounded-xl bg-surface-muted/70 p-6 sm:p-8 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between">
           <div className="space-y-4 max-w-lg">
             <div className="h-6 w-28 bg-surface-muted rounded-full" />
             <div className="space-y-2">
@@ -26,7 +26,7 @@ export default function GuidesHubLoading() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="flex-1 rounded-2xl bg-card border border-border-peach/60 p-4 sm:p-5 flex gap-4 items-center"
+              className="flex-1 rounded-xl bg-card border border-border-peach/60 p-4 sm:p-5 flex gap-4 items-center"
             >
               <div className="size-20 sm:size-24 rounded-xl bg-surface-muted shrink-0" />
               <div className="flex-1 space-y-2">

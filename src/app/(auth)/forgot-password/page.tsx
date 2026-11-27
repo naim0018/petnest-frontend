@@ -53,7 +53,7 @@ function StepHeader({ step }: { step: "email" | "otp" | "reset" }) {
   const { imageSrc, altText, title, description } = getStepDetails(step);
   return (
     <div className="flex flex-col items-center gap-6 text-center">
-      <div className="relative w-[110px] h-[110px] shrink-0 bg-brand-purple/20 rounded-2xl">
+      <div className="relative w-[110px] h-[110px] shrink-0 bg-brand-purple/20 rounded-xl">
         <Image
           src={imageSrc}
           alt={altText}

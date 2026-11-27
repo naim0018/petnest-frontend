@@ -36,7 +36,7 @@ export default function MarketplaceProductCard({
   };
 
   return (
-    <article className="group bg-card border border-border-peach/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md hover:border-coral/40 transition-all duration-200 flex flex-col justify-between">
+    <article className="group bg-card border border-border-peach/80 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs hover:shadow-md hover:border-coral/40 transition-all duration-200 flex flex-col justify-between">
       <div>
         {/* Image Box */}
         <div className="relative h-44 sm:h-48 w-full bg-surface-muted overflow-hidden">

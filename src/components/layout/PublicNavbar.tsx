@@ -373,7 +373,7 @@ export default function PublicNavbar() {
         {isHomePopoverOpen && (
           <div
             ref={homePopoverRef}
-            className="fixed bottom-[4.25rem] inset-x-2.5 sm:inset-x-4 z-50 bg-popover border border-border-peach shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden"
+            className="fixed bottom-[4.25rem] inset-x-2.5 sm:inset-x-4 z-50 bg-popover border border-border-peach shadow-2xl rounded-xl p-4 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden"
           >
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-border-peach">
               <span className="text-xs font-bold text-ink uppercase tracking-wider">

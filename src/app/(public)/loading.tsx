@@ -4,7 +4,7 @@ export default function GenericPublicLoading() {
   return (
     <CommonWrapper className="py-6 sm:py-8 lg:py-10 animate-pulse space-y-8">
       {/* Top Banner / Hero Skeleton */}
-      <div className="w-full h-48 sm:h-64 rounded-2xl bg-surface-muted" />
+      <div className="w-full h-48 sm:h-64 rounded-xl bg-surface-muted" />
 
       {/* Grid Content Skeletons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

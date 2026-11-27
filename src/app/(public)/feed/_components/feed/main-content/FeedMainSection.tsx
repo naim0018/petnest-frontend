@@ -114,7 +114,7 @@ export function FeedMainSection({ posts }: FeedMainSectionProps) {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 px-4 bg-card border border-border-peach rounded-2xl space-y-3">
+            <div className="text-center py-12 px-4 bg-card border border-border-peach rounded-xl space-y-3">
               <div className="size-12 rounded-full bg-coral-light flex items-center justify-center mx-auto text-coral">
                 <PawPrint className="size-6" />
               </div>

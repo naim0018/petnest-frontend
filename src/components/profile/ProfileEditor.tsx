@@ -279,7 +279,7 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card border border-border-peach rounded-2xl p-6 space-y-4">
+            <div className="bg-card border border-border-peach rounded-xl p-6 space-y-4">
               <div className="h-5 w-36 bg-surface-muted rounded" />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
@@ -297,7 +297,7 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
               </div>
             </div>
           </div>
-          <div className="bg-card border border-border-peach rounded-2xl p-6 flex flex-col items-center gap-4">
+          <div className="bg-card border border-border-peach rounded-xl p-6 flex flex-col items-center gap-4">
             <div className="size-28 rounded-full bg-surface-muted" />
             <div className="h-4 w-32 bg-surface-muted rounded" />
             <div className="h-3 w-24 bg-surface-muted/60 rounded" />
@@ -524,7 +524,7 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
               </div>
 
               {/* Avatar Photo Frame */}
-              <div className="relative mx-auto size-32 rounded-2xl overflow-hidden border-2 border-border-peach bg-surface-muted shadow-xs group">
+              <div className="relative mx-auto size-32 rounded-xl overflow-hidden border-2 border-border-peach bg-surface-muted shadow-xs group">
                 <Image
                   src={displayAvatar}
                   alt={name || "Avatar"}

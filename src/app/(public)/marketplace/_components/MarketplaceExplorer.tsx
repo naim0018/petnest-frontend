@@ -277,7 +277,7 @@ export default function MarketplaceExplorer() {
           <button
             type="button"
             onClick={() => setMobileFilterOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 font-quicksand shadow-xs"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 font-quicksand shadow-xs"
           >
             <SlidersHorizontal className="w-4 h-4 text-coral" />
             <span>Sidebar Filters</span>
