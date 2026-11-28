@@ -253,7 +253,7 @@ export default function LanguageSelector({
 
       <PopoverContent
         align="end"
-        sideOffset={20}
+        sideOffset={24}
         className="w-60 p-1.5 bg-card border border-border-peach rounded-lg shadow-xl z-50 overflow-hidden"
       >
         {/* Popover Header with Reset Action */}
