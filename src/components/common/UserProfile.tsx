@@ -6,7 +6,7 @@ import {
   ChevronsUpDown,
   Power,
   LayoutDashboard,
-  User,
+  Bookmark,
   Settings,
   Activity,
   LogIn,
@@ -205,12 +205,12 @@ export default function UserProfile({
             bgColor="bg-blue-500/10 dark:bg-blue-500/20"
           />
           <DropdownLink
-            to={profilePath}
-            icon={User}
-            label="My Profile"
+            to="/user/bookmarks"
+            icon={Bookmark}
+            label="Bookmarks"
             onClick={() => setIsOpen(false)}
-            iconColor="text-purple-500"
-            bgColor="bg-purple-500/10 dark:bg-purple-500/20"
+            iconColor="text-coral"
+            bgColor="bg-coral/10 dark:bg-coral/20"
           />
           <DropdownLink
             to={settingsPath}

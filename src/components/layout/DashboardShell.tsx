@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { NavGroup } from "@/lib/nav";
+import { HeaderActionProvider } from "@/context/HeaderActionContext";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -20,7 +21,8 @@ export default function DashboardShell({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <HeaderActionProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <Sidebar
         navGroups={navGroups}
@@ -47,5 +49,6 @@ export default function DashboardShell({
         </main>
       </div>
     </div>
+    </HeaderActionProvider>
   );
 }

@@ -140,7 +140,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
             {/* Notification Dropdown Panel */}
             {isNotifOpen && (
-              <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-full mt-[2px] w-auto sm:w-80 bg-card border border-border-peach rounded-xl py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-full mt-2 w-auto sm:w-80 bg-card border border-border-peach rounded-lg py-2 z-50 shadow-lg animate-in fade-in zoom-in-95 duration-100">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border-peach mb-1">
                   <p className="text-xs text-ink font-bold uppercase tracking-wider font-quicksand">
                     Notifications
@@ -229,7 +229,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       {/* View All Notifications Modal Dialog */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-ink/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl border border-border-peach max-w-lg w-full p-6 animate-in zoom-in-95 duration-200 shadow-xl">
+          <div className="bg-card rounded-lg border border-border-peach max-w-lg w-full p-6 animate-in zoom-in-95 duration-200 shadow-xl">
             <div className="flex items-center justify-between border-b border-border-peach pb-4 mb-4">
               <h3 className="text-base font-bold text-ink font-quicksand">
                 All Notifications

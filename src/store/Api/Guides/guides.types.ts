@@ -356,7 +356,39 @@ export type EditorialStatsResponse = ApiResponse<EditorialStats>;
 export type LikeResponse = ApiResponse<LikeResponseData>;
 export type BookmarkResponse = ApiResponse<BookmarkResponseData>;
 export type BookmarksResponse = ApiResponse<PaginatedData<BookmarkedGuideSummary>>;
+export type LikesResponse = ApiResponse<PaginatedData<BookmarkedGuideSummary>>;
 export type DeleteGuideResponse = ApiResponse<MessageResponse>;
+
+export interface GuideCommentUser {
+  id: string;
+  name: string;
+  role?: string;
+  profile?: {
+    avatar?: string | null;
+  } | null;
+}
+
+export interface GuideCommentItem {
+  id: string;
+  content: string;
+  guideId: string;
+  parentId: string | null;
+  isEdited: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user: GuideCommentUser;
+}
+
+export type GuideCommentsResponse = ApiResponse<{
+  items: GuideCommentItem[];
+  total: number;
+}>;
+export type GuideCommentResponse = ApiResponse<GuideCommentItem>;
+export type DeleteGuideCommentResponse = ApiResponse<{
+  deleted: boolean;
+  commentId: string;
+  commentCount: number;
+}>;
 
 export interface BulkImportGuideResult {
   index: number;

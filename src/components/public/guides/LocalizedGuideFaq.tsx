@@ -35,7 +35,7 @@ export default function LocalizedGuideFaq({
   const currentLang = useCurrentLanguage();
   const isServerBangla = locale === "bn" && isNativeTranslation;
   const isClientBangla = currentLang === "bn";
-  const bnVariant = isClientBangla ? translations?.bn : null;
+  const bnVariant = isServerBangla || isClientBangla ? translations?.bn : null;
 
   const rawBnFaqs = bnVariant?.faqs;
   const hasBnFaqs = Array.isArray(rawBnFaqs) && rawBnFaqs.length > 0;
@@ -55,9 +55,8 @@ export default function LocalizedGuideFaq({
     ? `${guideTitle} সম্পর্কিত সাধারণ প্রশ্নোত্তর`
     : defaultSubtitle || `Common questions & answers about ${guideTitle}`;
 
-  const items = isServerBangla
-    ? defaultItems
-    : hasBnFaqs
+  const items =
+    (isServerBangla || isClientBangla) && hasBnFaqs
       ? bnFaqItems
       : defaultItems;
   const viewAllText = isBangla

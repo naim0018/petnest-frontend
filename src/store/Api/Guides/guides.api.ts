@@ -16,9 +16,13 @@ import type {
   GenerateGuideAiPayload,
   GenerateGuideAiResponse,
   GuideDetailResponse,
+  GuideCommentsResponse,
+  GuideCommentResponse,
+  DeleteGuideCommentResponse,
   GuideQuery,
   GuideSummary,
   LikeResponse,
+  LikesResponse,
   PaginatedGuidesResponse,
   PaginatedPublicGuidesResponse,
   PublicCategoriesResponse,
@@ -156,6 +160,67 @@ const guidesApi = baseApi.injectEndpoints({
               { type: "Bookmarks", id: "LIST" },
             ]
           : [{ type: "Bookmarks", id: "LIST" }],
+    }),
+
+    getMyLikes: builder.query<
+      LikesResponse,
+      { page?: number; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/guides/me/likes",
+        params: params || {},
+      }),
+      providesTags: [{ type: "Guides", id: "LIKES_LIST" }],
+    }),
+
+    getGuideComments: builder.query<GuideCommentsResponse, string>({
+      query: (guideId) => `/guides/${guideId}/comments`,
+      providesTags: (_result, _error, guideId) => [
+        { type: "Guides", id: `COMMENTS_${guideId}` },
+      ],
+    }),
+
+    createGuideComment: builder.mutation<
+      GuideCommentResponse,
+      { guideId: string; content: string; parentId?: string }
+    >({
+      query: ({ guideId, content, parentId }) => ({
+        url: `/guides/${guideId}/comments`,
+        method: "POST",
+        body: { content, parentId },
+      }),
+      invalidatesTags: (_result, _error, { guideId }) => [
+        { type: "Guides", id: `COMMENTS_${guideId}` },
+        { type: "Guides", id: guideId },
+      ],
+    }),
+
+    updateGuideComment: builder.mutation<
+      GuideCommentResponse,
+      { commentId: string; guideId: string; content: string }
+    >({
+      query: ({ commentId, content }) => ({
+        url: `/guides/comments/${commentId}`,
+        method: "PATCH",
+        body: { content },
+      }),
+      invalidatesTags: (_result, _error, { guideId }) => [
+        { type: "Guides", id: `COMMENTS_${guideId}` },
+      ],
+    }),
+
+    deleteGuideComment: builder.mutation<
+      DeleteGuideCommentResponse,
+      { commentId: string; guideId: string }
+    >({
+      query: ({ commentId }) => ({
+        url: `/guides/comments/${commentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { guideId }) => [
+        { type: "Guides", id: `COMMENTS_${guideId}` },
+        { type: "Guides", id: guideId },
+      ],
     }),
 
     // ==================== ALL GUIDES & STATS ====================
@@ -486,6 +551,11 @@ export const {
   useToggleLikeMutation,
   useToggleBookmarkMutation,
   useGetMyBookmarksQuery,
+  useGetMyLikesQuery,
+  useGetGuideCommentsQuery,
+  useCreateGuideCommentMutation,
+  useUpdateGuideCommentMutation,
+  useDeleteGuideCommentMutation,
   // Editorial
   useGetEditorialStatsQuery,
   useFindAllEditorialQuery,

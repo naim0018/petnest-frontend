@@ -70,7 +70,7 @@ export default function PetCareGuideCard({
   return (
     <article
       className={cn(
-        "relative overflow-hidden rounded-lg border border-emerald-900/10 shadow-sm transition-all duration-300 min-h-[380px] sm:min-h-[420px] flex items-center",
+        "relative overflow-hidden rounded-lg border border-emerald-900/10 dark:border-white/10 shadow-sm transition-all duration-300 min-h-[380px] sm:min-h-[420px] flex items-center",
         bgGradient,
         className
       )}
@@ -78,7 +78,7 @@ export default function PetCareGuideCard({
       {/* Decorative organic background bubble */}
       <div
         className={cn(
-          "absolute -bottom-16 left-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-80 z-10",
+          "absolute -bottom-16 left-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-80 dark:opacity-20 z-10",
           bubbleColor
         )}
       />
@@ -99,13 +99,13 @@ export default function PetCareGuideCard({
           className={cn(
             "absolute inset-0 pointer-events-none",
             guide.blendOverlayClass ||
-            "bg-linear-to-r from-[#f0fbf5] via-[#f0fbf5]/95 via-40% sm:via-[#f0fbf5]/80 sm:via-50% md:via-[#f0fbf5]/60 md:via-55% to-transparent"
+            "bg-linear-to-r from-[#f0fbf5] via-[#f0fbf5]/95 via-40% sm:via-[#f0fbf5]/80 sm:via-50% md:via-[#f0fbf5]/60 md:via-55% to-transparent dark:from-[#0f172a] dark:via-[#0f172a]/95 dark:sm:via-[#0f172a]/85 dark:md:via-[#0f172a]/65 dark:to-transparent"
           )}
         />
 
         {/* Subtle top & bottom edge softening */}
-        <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-[#f0fbf5]/50 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-[#f0fbf5]/50 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-[#f0fbf5]/50 dark:from-[#0f172a]/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-[#f0fbf5]/50 dark:from-[#0f172a]/60 to-transparent pointer-events-none" />
       </div>
 
       {/* Foreground Content Container */}

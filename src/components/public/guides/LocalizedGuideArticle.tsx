@@ -108,44 +108,6 @@ export default function LocalizedGuideArticle({
       className={isBangla ? "notranslate space-y-6" : "space-y-6"}
       translate={isBangla ? "no" : undefined}
     >
-      {/* Top Locale Bar: Native Badge & One-Click Dual Language Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {isBangla ? (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-quicksand select-none shadow-2xs">
-            <CheckCircle2 className="size-3.5 text-emerald-500" />
-            <span>অনুমোদিত বাংলা সংস্করণ (Curated Native Bangla)</span>
-          </div>
-        ) : (
-          <div />
-        )}
-
-        {hasBothLocales && (
-          <div className="flex items-center gap-2">
-            {isBangla ? (
-              <button
-                type="button"
-                onClick={() => switchLanguage("en")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-ink-muted hover:text-coral hover:bg-surface-muted border border-border-peach/80 transition-colors cursor-pointer font-quicksand"
-                title="Switch to English version"
-              >
-                <span>🇺🇸</span>
-                <span>Read in English</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => switchLanguage("bn")}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-coral/10 text-coral hover:bg-coral hover:text-white border border-coral/30 transition-all cursor-pointer font-quicksand shadow-2xs"
-                title="বাংলায় পড়ুন"
-              >
-                <span>🇧🇩</span>
-                <span>বাংলায় পড়ুন (Curated Bangla)</span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Article Title */}
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink leading-tight font-quicksand">
         {title}

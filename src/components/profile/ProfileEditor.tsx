@@ -24,6 +24,7 @@ import PasswordInput from "@/components/common/PasswordInput";
 import FormTextarea from "@/components/common/FormTextarea";
 import FormSelect from "@/components/common/FormSelect";
 import { useAppDispatch } from "@/hooks/useRedux";
+import { useHeaderAction } from "@/context/HeaderActionContext";
 import { setUser } from "@/store/features/AuthSlice/authSlice";
 import {
   useGetMeQuery,
@@ -36,11 +37,17 @@ import { toast } from "sonner";
 
 interface ProfileEditorProps {
   roleScope: "admin" | "user";
+  hideHeader?: boolean;
 }
 
-export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
+export default function ProfileEditor({
+  roleScope,
+  hideHeader = false,
+}: ProfileEditorProps) {
   const dispatch = useAppDispatch();
+  const { setHeaderAction } = useHeaderAction();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const saveProfileRef = useRef<() => void>(() => {});
 
   // Queries & Mutations
   const { data: meResponse, isLoading: isMeLoading } = useGetMeQuery();
@@ -48,6 +55,24 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
   const [updateMe, { isLoading: isUpdating }] = useUpdateMeMutation();
   const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
   const [uploadMedia, { isLoading: isUploadingAvatar }] = useUploadMediaMutation();
+
+  useEffect(() => {
+    if (!hideHeader) return;
+    setHeaderAction(
+      <PrimaryButton
+        variant="primary"
+        size="sm"
+        rounded="lg"
+        leftIcon={<Save className="size-4" />}
+        isLoading={isUpdating || isUploadingAvatar}
+        onClick={() => saveProfileRef.current()}
+        className="font-bold cursor-pointer"
+      >
+        Save Profile Changes
+      </PrimaryButton>
+    );
+    return () => setHeaderAction(null);
+  }, [hideHeader, isUpdating, isUploadingAvatar, setHeaderAction]);
 
   const user = meResponse?.data;
   const speciesList = speciesResponse?.data?.items || [];
@@ -322,31 +347,35 @@ export default function ProfileEditor({ roleScope }: ProfileEditorProps) {
       })
     : "Recently";
 
+  saveProfileRef.current = handleSaveProfile;
+
   return (
     <div className="w-full space-y-6">
       {/* Top Bar Header with Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-quicksand text-ink">
-            {roleScope === "admin" ? "Admin Profile" : "My Profile"}
-          </h2>
-          <p className="text-sm text-ink-muted mt-1">
-            Manage your personal credentials, contact details, pet preferences, and security.
-          </p>
+      {!hideHeader && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold font-quicksand text-ink">
+              {roleScope === "admin" ? "Admin Profile" : "My Profile"}
+            </h2>
+            <p className="text-sm text-ink-muted mt-1">
+              Manage your personal credentials, contact details, pet preferences, and security.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <PrimaryButton
+              variant="primary"
+              size="md"
+              leftIcon={<Save className="size-4" />}
+              isLoading={isUpdating || isUploadingAvatar}
+              onClick={() => handleSaveProfile()}
+              className="font-bold cursor-pointer"
+            >
+              Save Profile Changes
+            </PrimaryButton>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <PrimaryButton
-            variant="primary"
-            size="md"
-            leftIcon={<Save className="size-4" />}
-            isLoading={isUpdating || isUploadingAvatar}
-            onClick={() => handleSaveProfile()}
-            className="font-bold cursor-pointer"
-          >
-            Save Profile Changes
-          </PrimaryButton>
-        </div>
-      </div>
+      )}
 
       {/* Main Grid: 2 Columns on Desktop */}
       <AnimatedContainer delay={0.1}>

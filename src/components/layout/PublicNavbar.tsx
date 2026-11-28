@@ -266,7 +266,7 @@ export default function PublicNavbar() {
 
             {/* Notification Dropdown */}
             {isNotifOpen && (
-              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-16 sm:top-20 md:top-full mt-[2px] w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-16 sm:top-20 md:top-full mt-2 w-auto md:w-88 bg-popover border border-border-peach rounded-lg z-50 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-peach bg-surface-muted/50">
                   <span className="text-xs font-bold text-ink uppercase tracking-wider">
                     Notifications

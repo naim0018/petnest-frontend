@@ -19,6 +19,7 @@ import CommonWrapper from "@/components/common/CommonWrapper";
 import { FAQItem } from "@/components/common/ReusableFAQ";
 import LocalizedGuideArticle from "@/components/public/guides/LocalizedGuideArticle";
 import LocalizedGuideFaq from "@/components/public/guides/LocalizedGuideFaq";
+import GuideCommentsSection from "@/components/public/guides/GuideCommentsSection";
 import type { GuideTranslationsMap } from "@/store/Api/Guides/guides.types";
 
 interface GuidePageProps {
@@ -37,6 +38,8 @@ export interface RelatedGuideItem {
   species?: { id: string; name: string; slug: string } | null;
   publishedAt?: string;
   viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
   locale?: string;
   isNativeTranslation?: boolean;
   availableLocales?: string[];
@@ -191,6 +194,8 @@ async function getGuide(
               })
             : undefined,
           viewCount: r.viewCount,
+          likeCount: r.likeCount ?? r._count?.likes ?? 0,
+          commentCount: r.commentCount ?? r._count?.comments ?? 0,
           locale: r.locale,
           isNativeTranslation: r.isNativeTranslation,
           availableLocales: r.availableLocales,
@@ -228,6 +233,8 @@ async function getGuide(
                     })
                   : undefined,
                 viewCount: r.viewCount,
+                likeCount: r.likeCount ?? r._count?.likes ?? 0,
+                commentCount: r.commentCount ?? r._count?.comments ?? 0,
                 locale: r.locale,
                 isNativeTranslation: r.isNativeTranslation,
                 availableLocales: r.availableLocales,
@@ -472,28 +479,36 @@ export default async function GuideDetailPage({
               viewCount={guide.viewCount}
             />
           </article>
+
+          <GuideCommentsSection
+            guideId={guide.id}
+            initialLikeCount={guide.likeCount ?? 0}
+            initialBookmarkCount={guide.bookmarkCount ?? 0}
+            initialIsLiked={Boolean(guide.isLiked)}
+            initialIsBookmarked={Boolean(guide.isBookmarked)}
+          />
         </div>
 
         {/* ======================================================== */}
         {/* 🧭 RIGHT SIDEBAR: RELATED GUIDES & WIDGETS (Right: 3 Cols)*/}
         {/* ======================================================== */}
-        <aside className="col-span-1 lg:col-span-3 w-full space-y-6 lg:sticky lg:top-24">
+        <aside className="col-span-1 lg:col-span-3 w-full space-y-6">
           {/* Related Guides Card - Unbordered */}
           <div className="space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-border-peach">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-coral/10 text-coral">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-quicksand font-bold text-sm sm:text-base text-ink">
-                    Related Guides
-                  </h3>
-                  <p className="text-[11px] text-ink-muted">
-                    {guide.category ? `More in ${guide.category}` : "Recommended for you"}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center justify-between gap-2 pb-3 border-b border-border-peach">
+              <h3 className="font-quicksand font-bold text-base sm:text-lg text-ink">
+                Related Guides
+              </h3>
+              <Link
+                href={
+                  guide.category
+                    ? `/guides?category=${encodeURIComponent(guide.category)}`
+                    : "/guides"
+                }
+                className="text-xs font-semibold text-coral hover:text-coral-dark hover:underline transition-colors shrink-0"
+              >
+                {guide.category ? `More in ${guide.category}` : "Recommended for you"}
+              </Link>
             </div>
 
             {relatedGuides.length > 0 ? (
@@ -502,23 +517,18 @@ export default async function GuideDetailPage({
                   <Link
                     key={item.id}
                     href={`/guides/${item.slug}`}
-                    className="group flex items-start gap-3 p-2 rounded-lg hover:bg-surface-muted/60 transition-colors"
+                    className="group flex items-stretch gap-3 p-2 rounded-lg hover:bg-surface-muted/60 transition-colors"
                   >
-                    <div className="relative w-18 h-18 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-surface-muted">
+                    <div className="relative w-24 sm:w-28 self-stretch min-h-[96px] shrink-0 rounded-lg overflow-hidden bg-surface-muted">
                       <Image
                         src={item.coverImage || "/CareGuideCard/budgie-faq-mascot.png"}
                         alt={item.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="80px"
+                        sizes="112px"
                       />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
-                      {item.category && (
-                        <span className="inline-block text-[10px] font-bold text-coral bg-coral/10 px-2 py-0.5 rounded-full">
-                          {item.category.name}
-                        </span>
-                      )}
                       <h4 className="font-quicksand font-bold text-xs sm:text-sm text-ink group-hover:text-coral transition-colors line-clamp-2 leading-snug">
                         {item.title}
                       </h4>
@@ -527,19 +537,26 @@ export default async function GuideDetailPage({
                           {item.excerpt.replace(/<[^>]+>/g, "").trim()}
                         </p>
                       )}
-                      <div className="flex items-center gap-2 text-[11px] text-ink-faint pt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-coral" />
-                          {item.readTimeMinutes || 5} min
-                        </span>
-                        {item.viewCount !== undefined && item.viewCount > 0 && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-3 h-3 text-ink-muted" />
-                              {item.viewCount}
-                            </span>
-                          </>
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-ink-faint pt-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-coral" />
+                            {item.readTimeMinutes || 5} min
+                          </span>
+                          {item.viewCount !== undefined && item.viewCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-ink-muted" />
+                                {item.viewCount}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {item.category && (
+                          <span className="inline-block text-[10px] font-bold text-coral bg-coral/10 px-2 py-0.5 rounded-full shrink-0">
+                            {item.category.name}
+                          </span>
                         )}
                       </div>
                     </div>
